@@ -30,7 +30,27 @@ export class YamlLoader {
     const content = fs.readFileSync(this.configPath, 'utf8');
     const processedContent = this.processIncludes(content, path.dirname(this.configPath));
     const mainConfig = yaml.load(processedContent) as { bots: any[] };
+
+    // Validate configuration
+    this.validateConfig(mainConfig);
+
     return { bots: mainConfig.bots };
+  }
+
+  private validateConfig(config: { bots: any[] }): void {
+    if (!config.bots || !Array.isArray(config.bots)) {
+      throw new Error('Configuration must contain a "bots" array');
+    }
+
+    for (const bot of config.bots) {
+      if (!bot.id) {
+        throw new Error('Each bot must have an "id"');
+      }
+      if (!bot.name) {
+        throw new Error(`Bot ${bot.id} must have a "name"`);
+      }
+      // Add more validations as needed
+    }
   }
 
   private processIncludes(content: string, baseDir: string): string {
