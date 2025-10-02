@@ -13,8 +13,8 @@ auto_responses:
       Sábados: 10am - 2pm
     priority: 10
 webhooks:
-  - name: "procesar-pedido"
-    pattern: "pedido|comprar|ordenar"
+  - pattern: "pedido|comprar|ordenar"
+    name: "procesar-pedido"
     url: "http://localhost:5000/webhook"
     method: POST
     headers:
@@ -22,6 +22,15 @@ webhooks:
     timeout: 5000
     retry: 3
     priority: 5
+  - pattern: "ayuda|help|soporte"
+    name: "soporte-webhook"
+    url: "http://localhost:5000/support"
+    method: POST
+    headers:
+      Authorization: "Bearer token456"
+    timeout: 3000
+    retry: 2
+    priority: 10
 settings:
   simulate_typing: true
   typing_delay: 1000
