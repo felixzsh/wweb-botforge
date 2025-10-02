@@ -1,0 +1,11 @@
+bots:
+  - id: extra-bot
+    name: "Bot with extra fields"
+    extra_field: "ignored"
+    another: 123
+    settings:
+      simulate_typing: true
+    auto_responses:
+      - pattern: "hello"
+        response: "Hi!"
+        extra_in_response: "ignored"

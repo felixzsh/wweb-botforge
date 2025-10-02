@@ -1,0 +1,3 @@
+bots:
+  - id: test-bot
+    settings: {}

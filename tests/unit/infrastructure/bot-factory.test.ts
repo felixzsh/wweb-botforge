@@ -195,7 +195,7 @@ describe('BotFactory', () => {
         ]
       };
 
-      const bots = factory.createBots(rawConfig);
+      const bots = factory.createBots(rawConfig.bots);
 
       expect(bots).toHaveLength(2);
       expect(bots[0].id.value).toBe('bot1');

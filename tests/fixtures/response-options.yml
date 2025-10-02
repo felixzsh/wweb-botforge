@@ -1,0 +1,10 @@
+bots:
+  - id: response-options-bot
+    name: "Bot with response options"
+    settings: {}
+    auto_responses:
+      - pattern: "hello"
+        response: "Hi!"
+        response_options:
+          link_preview: true
+          send_audio_as_voice: false

@@ -1,0 +1,3 @@
+bots:
+  - id: minimal-bot
+    name: "Minimal Bot"

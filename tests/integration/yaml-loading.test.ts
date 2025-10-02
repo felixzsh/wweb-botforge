@@ -14,7 +14,7 @@ describe('YAML Loading Integration', () => {
       const loader = new YamlLoader(path.join(__dirname, '../fixtures/main-single.yml'));
       const rawConfig = await loader.loadMainConfig();
 
-      expect(rawConfig.bots).toHaveLength(2);
+      expect(rawConfig).toHaveLength(2);
 
       const bots = factory.createBots(rawConfig);
       expect(bots).toHaveLength(2);
@@ -42,7 +42,7 @@ describe('YAML Loading Integration', () => {
       const loader = new YamlLoader(path.join(__dirname, '../fixtures/main.yml'));
       const rawConfig = await loader.loadMainConfig();
 
-      expect(rawConfig.bots).toHaveLength(2);
+      expect(rawConfig).toHaveLength(2);
 
       const bots = factory.createBots(rawConfig);
       expect(bots).toHaveLength(2);
@@ -101,6 +101,112 @@ describe('YAML Loading Integration', () => {
         expect(singleBot.autoResponses.length).toBeLessThanOrEqual(includeBot.autoResponses.length);
         expect(singleBot.webhooks.length).toBe(includeBot.webhooks.length);
       }
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should throw error for missing bots key', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/missing-bots.yml'));
+      await expect(loader.loadMainConfig()).rejects.toThrow('Configuration must contain a "bots" array');
+    });
+
+    it('should throw error for bots not being an array', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/bots-not-array.yml'));
+      await expect(loader.loadMainConfig()).rejects.toThrow('Configuration must contain a "bots" array');
+    });
+
+    it('should throw error for bot missing id', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/bot-missing-id.yml'));
+      await expect(loader.loadMainConfig()).rejects.toThrow('Each bot must have an "id"');
+    });
+
+    it('should throw error for bot missing name', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/bot-missing-name.yml'));
+      await expect(loader.loadMainConfig()).rejects.toThrow('must have a "name"');
+    });
+
+    it('should throw error for invalid bot id during bot creation', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/invalid-bot-id.yml'));
+      const rawConfig = await loader.loadMainConfig();
+      expect(() => factory.createBots(rawConfig)).toThrow('Bot ID must be at least 3 characters long');
+    });
+
+    it('should throw error for invalid phone number during bot creation', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/invalid-phone.yml'));
+      const rawConfig = await loader.loadMainConfig();
+      expect(() => factory.createBots(rawConfig)).toThrow('Invalid phone number format');
+    });
+
+  });
+
+  describe('Flexible configurations', () => {
+    it('should load minimal bot configuration', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/minimal-bot.yml'));
+      const rawConfig = await loader.loadMainConfig();
+
+      expect(rawConfig).toHaveLength(1);
+
+      const bots = factory.createBots(rawConfig);
+      expect(bots).toHaveLength(1);
+
+      const bot = bots[0];
+      expect(bot.id.value).toBe('minimal-bot');
+      expect(bot.name).toBe('Minimal Bot');
+      expect(bot.phone).toBeUndefined();
+      expect(bot.autoResponses).toHaveLength(0);
+      expect(bot.webhooks).toHaveLength(0);
+      // Check defaults
+      expect(bot.settings.simulateTyping).toBe(true);
+      expect(bot.settings.typingDelay).toBe(1000);
+      expect(bot.settings.readReceipts).toBe(true);
+      expect(bot.settings.ignoreGroups).toBe(true);
+      expect(bot.settings.adminNumbers).toHaveLength(0);
+      expect(bot.settings.logLevel).toBe('info');
+    });
+
+    it('should handle camelCase settings', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/camel-case-settings.yml'));
+      const rawConfig = await loader.loadMainConfig();
+
+      const bots = factory.createBots(rawConfig);
+      const bot = bots[0];
+
+      expect(bot.settings.simulateTyping).toBe(false);
+      expect(bot.settings.typingDelay).toBe(2000);
+      expect(bot.settings.readReceipts).toBe(false);
+      expect(bot.settings.ignoreGroups).toBe(false);
+      expect(bot.settings.adminNumbers).toHaveLength(1);
+      expect(bot.settings.adminNumbers[0].value).toBe('+521234567891');
+      expect(bot.settings.logLevel).toBe('debug');
+    });
+
+    it('should ignore extra fields in configuration', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/extra-fields.yml'));
+      const rawConfig = await loader.loadMainConfig();
+
+      const bots = factory.createBots(rawConfig);
+      expect(bots).toHaveLength(1);
+
+      const bot = bots[0];
+      expect(bot.id.value).toBe('extra-bot');
+      expect(bot.name).toBe('Bot with extra fields');
+      expect(bot.autoResponses).toHaveLength(1);
+      expect(bot.autoResponses[0].pattern).toBe('hello');
+      expect(bot.autoResponses[0].response).toBe('Hi!');
+    });
+
+    it('should handle response_options in auto_responses', async () => {
+      const loader = new YamlLoader(path.join(__dirname, '../fixtures/response-options.yml'));
+      const rawConfig = await loader.loadMainConfig();
+
+      const bots = factory.createBots(rawConfig);
+      const bot = bots[0];
+
+      expect(bot.autoResponses).toHaveLength(1);
+      const response = bot.autoResponses[0];
+      expect(response.responseOptions).toBeDefined();
+      expect(response.responseOptions!.linkPreview).toBe(true);
+      expect(response.responseOptions!.sendAudioAsVoice).toBe(false);
     });
   });
 });

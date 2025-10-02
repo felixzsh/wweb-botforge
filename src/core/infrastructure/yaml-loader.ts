@@ -1,22 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-
-interface RawConfig {
-  bots: (BotConfig | IncludeReference)[];
-}
+import { BotConfiguration } from '../domain/entities/bot.entity';
 
 interface IncludeReference {
   '!include': string;
-}
-
-interface BotConfig {
-  id: string;
-  name: string;
-  phone?: string;
-  auto_responses?: any[];
-  webhooks?: any[];
-  settings?: any;
 }
 
 export class YamlLoader {
@@ -26,15 +14,15 @@ export class YamlLoader {
     this.configPath = configPath;
   }
 
-  async loadMainConfig(): Promise<RawConfig> {
+  async loadMainConfig(): Promise<BotConfiguration[]> {
     const content = fs.readFileSync(this.configPath, 'utf8');
     const processedContent = this.processIncludes(content, path.dirname(this.configPath));
-    const mainConfig = yaml.load(processedContent) as { bots: any[] };
+    const mainConfig = yaml.load(processedContent) as { bots: BotConfiguration[] };
 
     // Validate configuration
     this.validateConfig(mainConfig);
 
-    return { bots: mainConfig.bots };
+    return mainConfig.bots;
   }
 
   private validateConfig(config: { bots: any[] }): void {
@@ -52,6 +40,7 @@ export class YamlLoader {
       // Add more validations as needed
     }
   }
+
 
   private processIncludes(content: string, baseDir: string): string {
     const lines = content.split('\n');

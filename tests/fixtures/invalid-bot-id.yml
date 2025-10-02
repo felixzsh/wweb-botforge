@@ -1,0 +1,4 @@
+bots:
+  - id: ab
+    name: "Bot with invalid ID"
+    settings: {}
