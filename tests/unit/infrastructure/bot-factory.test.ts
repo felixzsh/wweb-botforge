@@ -1,6 +1,4 @@
 import { BotFactory } from '../../../src/core/infrastructure/bot-factory';
-import { BotId } from '../../../src/core/domain/value-objects/bot-id.vo';
-import { PhoneNumber } from '../../../src/core/domain/value-objects/phone-number.vo';
 
 describe('BotFactory', () => {
   let factory: BotFactory;

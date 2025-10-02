@@ -1,25 +1,29 @@
-import { Bot } from '../../../src/core/domain/entities/bot.entity';
+import { Bot, BotSettingsData, AutoResponseData, WebhookData } from '../../../src/core/domain/entities/bot.entity';
 import { BotId } from '../../../src/core/domain/value-objects/bot-id.vo';
 import { PhoneNumber } from '../../../src/core/domain/value-objects/phone-number.vo';
-import { BotSettings } from '../../../src/core/domain/entities/bot-settings.entity';
-import { AutoResponse } from '../../../src/core/domain/entities/auto-response.entity';
-import { Webhook } from '../../../src/core/domain/entities/webhook.entity';
 
 describe('Bot', () => {
   let botId: BotId;
-  let settings: BotSettings;
-  let autoResponses: AutoResponse[];
-  let webhooks: Webhook[];
+  let settings: BotSettingsData;
+  let autoResponses: AutoResponseData[];
+  let webhooks: WebhookData[];
 
   beforeEach(() => {
     botId = new BotId('test-bot');
-    settings = new BotSettings();
+    settings = {
+      simulateTyping: true,
+      typingDelay: 1000,
+      readReceipts: true,
+      ignoreGroups: true,
+      adminNumbers: [],
+      logLevel: 'info'
+    };
     autoResponses = [
-      new AutoResponse('hello', 'Hi!', false, 1),
-      new AutoResponse('bye', 'Goodbye!', false, 2),
+      { pattern: 'hello', response: 'Hi!', caseInsensitive: false, priority: 1 },
+      { pattern: 'bye', response: 'Goodbye!', caseInsensitive: false, priority: 2 },
     ];
     webhooks = [
-      new Webhook('greeting-webhook', 'hello', 'http://example.com', 'POST', {}, 5000, 3, 1),
+      { name: 'greeting-webhook', pattern: 'hello', url: 'http://example.com', method: 'POST', headers: {}, timeout: 5000, retry: 3, priority: 1 },
     ];
   });
 
@@ -57,8 +61,8 @@ describe('Bot', () => {
     });
 
     it('should prioritize higher priority responses', () => {
-      const highPriorityResponse = new AutoResponse('test', 'High priority', false, 10);
-      const lowPriorityResponse = new AutoResponse('test', 'Low priority', false, 1);
+      const highPriorityResponse: AutoResponseData = { pattern: 'test', response: 'High priority', caseInsensitive: false, priority: 10 };
+      const lowPriorityResponse: AutoResponseData = { pattern: 'test', response: 'Low priority', caseInsensitive: false, priority: 1 };
       const bot = new Bot(
         botId,
         'Test Bot',
@@ -69,7 +73,7 @@ describe('Bot', () => {
       );
 
       const response = bot.findMatchingAutoResponse('test');
-      expect(response).toBe(highPriorityResponse);
+      expect(response).toEqual(highPriorityResponse);
     });
   });
 
@@ -89,8 +93,8 @@ describe('Bot', () => {
     });
 
     it('should prioritize higher priority webhooks', () => {
-      const highPriorityWebhook = new Webhook('high', 'test', 'http://example.com', 'POST', {}, 5000, 3, 10);
-      const lowPriorityWebhook = new Webhook('low', 'test', 'http://example.com', 'POST', {}, 5000, 3, 1);
+      const highPriorityWebhook: WebhookData = { name: 'high', pattern: 'test', url: 'http://example.com', method: 'POST', headers: {}, timeout: 5000, retry: 3, priority: 10 };
+      const lowPriorityWebhook: WebhookData = { name: 'low', pattern: 'test', url: 'http://example.com', method: 'POST', headers: {}, timeout: 5000, retry: 3, priority: 1 };
       const bot = new Bot(
         botId,
         'Test Bot',
@@ -101,7 +105,7 @@ describe('Bot', () => {
       );
 
       const webhook = bot.findMatchingWebhook('test');
-      expect(webhook).toBe(highPriorityWebhook);
+      expect(webhook).toEqual(highPriorityWebhook);
     });
   });
 });
