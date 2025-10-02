@@ -58,3 +58,5 @@ playwright/.cache/
 .cache/
 *.tgz
 *.tar.gz
+
+drafts
