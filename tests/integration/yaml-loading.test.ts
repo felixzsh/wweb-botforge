@@ -25,7 +25,7 @@ describe('YAML Loading Integration', () => {
       expect(soporteBot!.name).toBe('Bot de Soporte');
       expect(soporteBot!.phone?.value).toBe('+521234567890');
       expect(soporteBot!.autoResponses).toHaveLength(1);
-      expect(soporteBot!.webhooks).toHaveLength(1);
+      expect(soporteBot!.webhooks).toHaveLength(2);
 
       // Check second bot
       const ventasBot = bots.find(b => b.id.value === 'ventas-bot');
@@ -53,7 +53,7 @@ describe('YAML Loading Integration', () => {
       expect(soporteBot!.name).toBe('Bot de Soporte');
       expect(soporteBot!.phone?.value).toBe('+521234567890');
       expect(soporteBot!.autoResponses).toHaveLength(2); // More responses in include file
-      expect(soporteBot!.webhooks).toHaveLength(1);
+      expect(soporteBot!.webhooks).toHaveLength(2);
 
       // Check second bot
       const ventasBot = bots.find(b => b.id.value === 'ventas-bot');

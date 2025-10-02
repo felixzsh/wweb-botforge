@@ -23,7 +23,8 @@ describe('Bot', () => {
       { pattern: 'bye', response: 'Goodbye!', caseInsensitive: false, priority: 2 },
     ];
     webhooks = [
-      { name: 'greeting-webhook', pattern: 'hello', url: 'http://example.com', method: 'POST', headers: {}, timeout: 5000, retry: 3, priority: 1 },
+      { pattern: 'hello', name: 'greeting-webhook', url: 'http://example.com', method: 'POST', headers: {}, timeout: 5000, retry: 3, priority: 1 },
+      { pattern: 'bye', name: 'farewell-webhook', url: 'http://example.com/farewell', method: 'POST', headers: {}, timeout: 5000, retry: 3, priority: 2 },
     ];
   });
 
@@ -82,7 +83,14 @@ describe('Bot', () => {
       const bot = new Bot(botId, 'Test Bot', settings, undefined, [], webhooks);
 
       const webhook = bot.findMatchingWebhook('hello');
-      expect(webhook).toBe(webhooks[0]);
+      expect(webhook).toBe(webhooks[0]); // 'hello' matches first webhook with priority 1
+    });
+
+    it('should return the second webhook for bye pattern', () => {
+      const bot = new Bot(botId, 'Test Bot', settings, undefined, [], webhooks);
+
+      const webhook = bot.findMatchingWebhook('bye');
+      expect(webhook).toBe(webhooks[1]); // 'bye' matches second webhook
     });
 
     it('should return null if no match', () => {

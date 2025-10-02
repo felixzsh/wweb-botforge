@@ -74,8 +74,8 @@ describe('BotFactory', () => {
         auto_responses: [],
         webhooks: [
           {
-            name: 'test-webhook',
             pattern: 'order.*',
+            name: 'test-webhook',
             url: 'http://example.com/webhook',
             method: 'POST',
             headers: { 'Authorization': 'Bearer token' },
@@ -97,6 +97,53 @@ describe('BotFactory', () => {
       expect(bot.webhooks[0].timeout).toBe(10000);
       expect(bot.webhooks[0].retry).toBe(5);
       expect(bot.webhooks[0].priority).toBe(10);
+    });
+
+    it('should create a Bot with multiple webhooks', () => {
+      const config = {
+        id: 'test-bot',
+        name: 'Test Bot',
+        settings: {},
+        auto_responses: [],
+        webhooks: [
+          {
+            pattern: 'order.*',
+            name: 'order-webhook',
+            url: 'http://example.com/order',
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer token1' },
+            timeout: 5000,
+            retry: 3,
+            priority: 5
+          },
+          {
+            pattern: 'support.*',
+            name: 'support-webhook',
+            url: 'http://example.com/support',
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer token2' },
+            timeout: 10000,
+            retry: 5,
+            priority: 10
+          }
+        ]
+      };
+
+      const bot = factory.createFromConfig(config);
+
+      expect(bot.webhooks).toHaveLength(2);
+
+      // Check first webhook
+      expect(bot.webhooks[0].name).toBe('order-webhook');
+      expect(bot.webhooks[0].pattern).toBe('order.*');
+      expect(bot.webhooks[0].url).toBe('http://example.com/order');
+      expect(bot.webhooks[0].priority).toBe(5);
+
+      // Check second webhook
+      expect(bot.webhooks[1].name).toBe('support-webhook');
+      expect(bot.webhooks[1].pattern).toBe('support.*');
+      expect(bot.webhooks[1].url).toBe('http://example.com/support');
+      expect(bot.webhooks[1].priority).toBe(10);
     });
 
     it('should create a Bot with custom settings', () => {
