@@ -1,0 +1,40 @@
+bots:
+  - id: soporte-bot
+    name: "Bot de Soporte"
+    phone: "+521234567890"
+    auto_responses:
+      - pattern: "^hola|hi|hello$"
+        response: "¡Hola! ¿En qué puedo ayudarte?"
+        case_insensitive: true
+        priority: 1
+    webhooks:
+      - name: "procesar-pedido"
+        pattern: "pedido|comprar|ordenar"
+        url: "http://localhost:5000/webhook"
+        method: POST
+        headers:
+          Authorization: "Bearer token123"
+        timeout: 5000
+        retry: 3
+        priority: 5
+    settings:
+      simulate_typing: true
+      typing_delay: 1000
+      read_receipts: true
+      ignore_groups: true
+      admin_numbers:
+        - "+521234567891"
+      log_level: "info"
+  - id: ventas-bot
+    name: "Bot de Ventas"
+    auto_responses:
+      - pattern: "precio|cuanto cuesta"
+        response: "Nuestros precios varían según el producto. ¿Qué te interesa?"
+        priority: 1
+    webhooks: []
+    settings:
+      simulate_typing: false
+      typing_delay: 500
+      read_receipts: true
+      ignore_groups: false
+      log_level: "debug"

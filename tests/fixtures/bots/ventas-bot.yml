@@ -1,0 +1,13 @@
+id: ventas-bot
+name: "Bot de Ventas"
+auto_responses:
+  - pattern: "precio|cuanto cuesta"
+    response: "Nuestros precios varían según el producto. ¿Qué te interesa?"
+    priority: 1
+webhooks: []
+settings:
+  simulate_typing: false
+  typing_delay: 500
+  read_receipts: true
+  ignore_groups: false
+  log_level: "debug"
