@@ -1,70 +1,78 @@
-# WhatsApp BotForge
+# WWeb BotForge
 
-[![npm version](https://badge.fury.io/js/whatsapp-botforge.svg)](https://badge.fury.io/js/whatsapp-botforge)
+[![npm version](https://badge.fury.io/js/wa-botforge.svg)](https://badge.fury.io/js/wa-botforge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Create multiple WhatsApp bots without writing code** - Just configure in YAML!
+**Create powerful WhatsApp bots with YAML configuration**
 
-WhatsApp BotForge lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required!
+## 🎯 Why WWeb BotForge?
+
+WWeb BotForge is built on top of the amazing [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides granular control over WhatsApp Web automation. While WhatsApp Web JS is a powerful API for automating WhatsApp Web clients, WWeb BotForge specifically abstracts the creation of bots that:
+
+- **Capture incoming messages** and automatically respond
+- **Delegate message handling** to external software
+- **Simplify bot creation** through YAML configuration
+
+This project enables direct management of WhatsApp bots through YAML configuration, focusing on automated responses and message processing, without being limited to a single programming language.
+
+**Current Focus**: Auto-responses with regex patterns and message queues  
+**Coming Soon**: Webhooks and REST API for advanced integrations
 
 ## ✨ What Can You Do?
 
 - 🤖 **Multiple Bots**: Run several WhatsApp bots from one server
 - 📝 **YAML Configuration**: Define bot behavior in simple YAML files
-- 🔗 **Webhooks**: Connect to your existing apps (Python, PHP, Node.js, etc.)
 - 📱 **Auto-Responses**: Set up instant replies to common messages
 - 🚀 **Quick Setup**: Get your first bot running in minutes
-- 🌐 **REST API**: Send messages programmatically
 
 ## 🚀 Quick Start (5 minutes!)
 
 ### 1. Install
 
 ```bash
-npm install -g whatsapp-botforge
-# or for local development
-git clone https://github.com/yourusername/whatsapp-botforge.git
-cd whatsapp-botforge
-pnpm install
+npm install -g wa-botforge
 ```
 
 ### 2. Create Your First Bot
 
 ```bash
-npx botforge create-bot
+npx wa-botforge create-bot
 ```
 
 Answer the questions:
-- **Bot ID**: `my-first-bot`
 - **Bot Name**: `My Awesome Bot`
-- **Webhook URL**: (leave empty for now)
 
-### 3. Configure Your Bot
+The command will:
+- Generate a unique bot ID automatically
+- Show a QR code for WhatsApp authentication
+- Create the bot configuration with your phone number
+- Save everything to `config/main.yml`
 
-Edit `config/main.yml`:
+### 3. Configure Auto-Responses (Optional)
+
+Edit `config/main.yml` to add more auto-responses:
 
 ```yaml
 bots:
-  - id: my-first-bot
+  - id: bot-abc123  # Auto-generated
     name: "My Awesome Bot"
+    phone: "+1234567890"  # Auto-filled
     auto_responses:
-      - pattern: "hello|hi|hey"
+      - pattern: "\\b(hello|hi|hey)\\b"
         response: "Hello! How can I help you today?"
         case_insensitive: true
 
-      - pattern: "bye|goodbye"
+      - pattern: "\\b(bye|goodbye)\\b"
         response: "Goodbye! Have a great day! 👋"
 ```
 
 ### 4. Start Your Bot
 
 ```bash
-npm start
+wa-botforge start
 ```
 
-1. Scan the QR code with WhatsApp on your phone
-2. Send "hello" to your bot
-3. Get instant response!
+Your bot is now running with auto-responses! Send messages to test it.
 
 ## 📖 Examples
 
@@ -80,22 +88,6 @@ bots:
 
       - pattern: "price|cost"
         response: "Check our pricing at website.com/pricing"
-```
-
-### E-commerce Bot with Webhook
-
-```yaml
-bots:
-  - id: shop-bot
-    name: "Shop Bot"
-    auto_responses:
-      - pattern: "catalog|products"
-        response: "Here's our catalog: [link]"
-
-    webhooks:
-      - pattern: "order|buy"
-        url: "https://your-api.com/process-order"
-        method: POST
 ```
 
 ### Multi-Bot Setup
@@ -121,12 +113,11 @@ bots:
 
 Each bot in your `main.yml` can have:
 
-- **`id`**: Unique identifier (used for sessions)
+- **`id`**: Unique identifier (auto-generated from bot name)
 - **`name`**: Display name
-- **`phone`**: Phone number (optional)
-- **`auto_responses`**: Instant replies
-- **`webhooks`**: Delegate to external services
-- **`settings`**: Bot behavior options
+- **`phone`**: Phone number (auto-filled after WhatsApp authentication)
+- **`auto_responses`**: Instant replies based on message patterns
+- **`settings`**: Bot behavior options (delays, filters, etc.)
 
 ### Auto-Responses
 
@@ -138,18 +129,17 @@ auto_responses:
     priority: 1            # optional, lower = higher priority
 ```
 
-### Webhooks
+For advanced usage, you can include `response_options` to access WhatsApp Web's [Message Send Options](https://docs.wwebjs.dev/global.html#MessageSendOptions) like link previews, media handling, and more (all optional).
+
+Example with media:
 
 ```yaml
-webhooks:
-  - name: "my-webhook"
-    pattern: "trigger words"
-    url: "https://your-api.com/webhook"
-    method: POST
-    headers:
-      Authorization: "Bearer your-token"
-    timeout: 5000
-    retry: 3
+auto_responses:
+  - pattern: "image|photo"
+    response: "Here's an image:"
+    response_options:
+      media: "https://example.com/image.jpg"
+      caption: "Check this out!"
 ```
 
 ### Settings
@@ -165,31 +155,20 @@ settings:
   log_level: "info"
 ```
 
-## 🌐 REST API
+## 🚀 Roadmap
 
-Send messages programmatically:
+### ✅ **Already Implemented**
+- YAML configuration loading
+- Basic auto-responses with regex patterns
+- Message queues with configurable delays (in validation)
 
-```bash
-curl -X POST http://localhost:3000/api/v1/bots/my-bot/messages \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "1234567890",
-    "message": "Hello from API!"
-  }'
-```
+### 🔄 **Coming Soon**
+- Webhooks for advanced integrations
+- REST API for external message sending
+- Distribution as ready-to-use service
+- Web management interface
 
-## 📂 Project Structure
-
-```
-whatsapp-botforge/
-├── config/
-│   └── main.yml          # Your bot configurations
-├── src/                  # Source code
-├── .wwebjs_auth/         # WhatsApp sessions
-└── package.json
-```
-
-## 🛠️ Advanced Usage
+## 🤝 Use Cases
 
 ### Using Includes
 
@@ -202,58 +181,13 @@ bots:
   - !include bots/sales.yml
 ```
 
-### Environment Variables
-
-```bash
-# .env
-WEBHOOK_SECRET=your-secret
-API_KEY=your-api-key
-```
-
-### Docker Deployment
-
-```dockerfile
-FROM node:18
-WORKDIR /app
-COPY package*.json ./
-RUN pnpm install
-COPY . .
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-## 🤝 Use Cases
-
 - **Customer Support**: Auto-respond to common questions
-- **E-commerce**: Handle orders via webhooks
+- **E-commerce**: Handle product inquiries and basic orders
 - **Notifications**: Send alerts from your systems
 - **Lead Generation**: Capture and route inquiries
 - **Internal Tools**: Team communication bots
-- **AI Integration**: Connect to ChatGPT, Claude, etc.
+- **Business Automation**: Streamline repetitive tasks
 
-## ❓ Troubleshooting
-
-**QR Code not showing?**
-- Make sure no other WhatsApp sessions are active
-- Try restarting the bot
-
-**Messages not sending?**
-- Check bot status: `GET /health`
-- Verify phone number format
-
-**Webhook not working?**
-- Test your endpoint with a tool like Postman
-- Check logs for timeout errors
-
-## 📚 Resources
-
-- [Full Documentation](https://docs.botforge.dev)
-- [Configuration Examples](https://github.com/yourusername/whatsapp-botforge/tree/main/examples)
-- [Community Discord](https://discord.gg/botforge)
-
-## 🤝 Contributing
-
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md).
 
 ## 📄 License
 
@@ -261,6 +195,11 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ---
 
-**Made with ❤️ for the no-code bot community**
+## 🙏 Acknowledgments
 
-*Have questions? Open an issue or join our Discord!*
+This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WA BotForge wouldn't be possible without this foundational work.
+
+**Made with ❤️ for the bot automation community**
+
+
+
