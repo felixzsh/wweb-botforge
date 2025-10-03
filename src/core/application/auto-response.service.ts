@@ -1,10 +1,13 @@
 import { Bot, AutoResponseData } from '../domain/entities/bot.entity';
 import { WhatsAppMessage } from '../domain/interfaces/i-whatsapp-client.interface';
+import { MessageQueueService } from './message-queue.service';
 
 /**
  * Service for handling automatic responses based on message patterns
  */
 export class AutoResponseService {
+  constructor(private messageQueue: MessageQueueService) {}
+
   /**
    * Process an incoming message and find matching auto-responses
    */
@@ -97,6 +100,36 @@ export class AutoResponseService {
    */
   private normalizePhoneNumber(phone: string): string {
     return phone.replace(/\D/g, '');
+  }
+
+  /**
+   * Send an auto-response using the message queue
+   */
+  sendAutoResponse(
+    bot: Bot,
+    originalMessage: WhatsAppMessage,
+    autoResponse: any
+  ): string {
+    try {
+      // Prepare response options
+      const responseOptions = this.getResponseOptions(autoResponse);
+
+      // Queue the response instead of sending directly
+      const messageId = this.messageQueue.enqueue(
+        bot.id.value,
+        originalMessage.from,
+        autoResponse.response,
+        0, // Default priority
+        responseOptions
+      );
+
+      console.log(`📋 Auto-response queued for bot "${bot.name}": ${messageId}`);
+      return messageId;
+
+    } catch (error) {
+      console.error(`❌ Failed to queue auto-response for bot "${bot.name}":`, error);
+      throw error;
+    }
   }
 
   /**

@@ -2,6 +2,7 @@ import { Bot } from '../domain/entities/bot.entity';
 import { BotFactory } from '../infrastructure/bot-factory';
 import { ConfigLoaderService } from './config-loader.service';
 import { AutoResponseService } from './auto-response.service';
+import { MessageQueueService } from './message-queue.service';
 import { WhatsAppFactory } from '../infrastructure/whatsapp';
 import { WhatsAppMessage, IWhatsAppClient } from '../domain/interfaces/i-whatsapp-client.interface';
 
@@ -13,12 +14,14 @@ export class BotOrchestratorService {
   private bots: Map<string, Bot> = new Map();
   private configLoader: ConfigLoaderService;
   private autoResponseService: AutoResponseService;
+  private messageQueueService: MessageQueueService;
   private botFactory: BotFactory;
   private isRunning: boolean = false;
 
   constructor() {
     this.configLoader = new ConfigLoaderService();
-    this.autoResponseService = new AutoResponseService();
+    this.messageQueueService = new MessageQueueService();
+    this.autoResponseService = new AutoResponseService(this.messageQueueService);
     this.botFactory = new BotFactory();
   }
 
@@ -76,6 +79,9 @@ export class BotOrchestratorService {
     console.log('🛑 Stopping WhatsApp BotForge...');
 
     try {
+      // Shutdown message queues
+      await this.messageQueueService.shutdown();
+
       // Destroy all WhatsApp clients
       await WhatsAppFactory.destroyAllClients();
 
@@ -104,6 +110,9 @@ export class BotOrchestratorService {
       // Create WhatsApp client for this bot
       const whatsappClient = WhatsAppFactory.createClient(bot.id.value);
 
+      // Configure message queue for this bot
+      this.configureBotQueue(bot);
+
       // Set up event handlers
       this.setupBotEventHandlers(bot, whatsappClient);
 
@@ -116,6 +125,29 @@ export class BotOrchestratorService {
       console.error(`❌ Failed to initialize bot "${config.name}":`, error);
       throw error;
     }
+  }
+
+  /**
+   * Configure message queue for a specific bot
+   */
+  private configureBotQueue(bot: Bot): void {
+    const botId = bot.id.value;
+
+    // Set delay based on bot's typing delay setting (converted to milliseconds)
+    const delayMs = bot.settings.typingDelay;
+    this.messageQueueService.setBotDelay(botId, delayMs);
+
+    // Set send callback that uses WhatsApp client
+    this.messageQueueService.setBotSendCallback(botId, async (botId, phoneNumber, message, options) => {
+      const whatsappClient = WhatsAppFactory.getClient(botId);
+      if (!whatsappClient) {
+        throw new Error(`WhatsApp client not found for bot ${botId}`);
+      }
+
+      await whatsappClient.sendMessage(phoneNumber, message, options);
+    });
+
+    console.log(`📋 Configured message queue for bot "${bot.name}": delay=${delayMs}ms`);
   }
 
   /**
@@ -166,8 +198,8 @@ export class BotOrchestratorService {
       const autoResponse = this.autoResponseService.processMessage(bot, message);
 
       if (autoResponse) {
-        // Send the auto-response
-        await this.sendAutoResponse(bot, message, autoResponse);
+        // Queue the auto-response (will be sent with delay)
+        this.autoResponseService.sendAutoResponse(bot, message, autoResponse);
       }
 
       // Log the message processing
@@ -183,39 +215,6 @@ export class BotOrchestratorService {
     }
   }
 
-  /**
-   * Send an auto-response
-   */
-  private async sendAutoResponse(
-    bot: Bot,
-    originalMessage: WhatsAppMessage,
-    autoResponse: any
-  ): Promise<void> {
-    try {
-      // Get WhatsApp client for this bot
-      const whatsappClient = WhatsAppFactory.getClient(bot.id.value);
-
-      if (!whatsappClient) {
-        console.error(`❌ WhatsApp client not found for bot "${bot.name}"`);
-        return;
-      }
-
-      // Prepare response options
-      const responseOptions = this.autoResponseService.getResponseOptions(autoResponse);
-
-      // Send the response
-      const messageId = await whatsappClient.sendMessage(
-        originalMessage.from,
-        autoResponse.response,
-        responseOptions
-      );
-
-      console.log(`📤 Auto-response sent by "${bot.name}": ${messageId}`);
-
-    } catch (error) {
-      console.error(`❌ Failed to send auto-response for bot "${bot.name}":`, error);
-    }
-  }
 
   /**
    * Set up graceful shutdown handlers
@@ -252,6 +251,7 @@ export class BotOrchestratorService {
     const botStatuses = Array.from(this.bots.values()).map(bot => {
       const whatsappClient = WhatsAppFactory.getClient(bot.id.value);
       const session = whatsappClient?.getSession();
+      const queueStatus = this.messageQueueService.getBotQueueStatus(bot.id.value);
 
       return {
         id: bot.id.value,
@@ -259,14 +259,23 @@ export class BotOrchestratorService {
         status: session?.state || 'unknown',
         phoneNumber: session?.phoneNumber,
         autoResponsesCount: bot.autoResponses.length,
-        webhooksCount: bot.webhooks.length
+        webhooksCount: bot.webhooks.length,
+        queue: {
+          size: queueStatus.queueSize,
+          delayMs: queueStatus.delayMs,
+          isProcessing: queueStatus.isProcessing,
+          hasCallback: queueStatus.hasCallback
+        }
       };
     });
+
+    const queueStatus = this.messageQueueService.getAllQueuesStatus();
 
     return {
       isRunning: this.isRunning,
       bots: botStatuses,
-      totalBots: botStatuses.length
+      totalBots: botStatuses.length,
+      queues: queueStatus
     };
   }
 
