@@ -1,27 +1,27 @@
 import { Bot } from '../../domain/entities/bot.entity';
-import { IWhatsAppClient, WhatsAppMessage } from '../../domain/interfaces/i-whatsapp-client.interface';
+import { IChatClient, ChatMessage } from '../../domain/entities/chat.entity';
 
 /**
  * Callback type for handling processed messages
  */
-export type MessageHandlerCallback = (bot: Bot, message: WhatsAppMessage, response?: string) => void;
+export type MessageHandlerCallback = (bot: Bot, message: ChatMessage, response?: string) => void;
 
 /**
- * Handles incoming WhatsApp messages and routes them to the appropriate bot logic
- * This class bridges the gap between WhatsApp infrastructure and domain logic
+ * Handles incoming chat messages and routes them to the appropriate bot logic
+ * This class bridges the gap between chat infrastructure and domain logic
  */
-export class WhatsAppMessageHandler {
+export class ChatMessageHandler {
   private bots: Map<string, Bot> = new Map();
   private messageHandlers: Map<string, MessageHandlerCallback> = new Map();
 
   /**
-   * Register a bot with its WhatsApp client
+   * Register a bot with its chat client
    */
-  registerBot(bot: Bot, whatsappClient: IWhatsAppClient): void {
+  registerBot(bot: Bot, whatsappClient: IChatClient): void {
     this.bots.set(bot.id.value, bot);
     
     // Set up message listener for this bot
-    whatsappClient.onMessage((message: WhatsAppMessage) => {
+    whatsappClient.onMessage((message: ChatMessage) => {
       this.handleIncomingMessage(bot, message);
     });
 
@@ -47,9 +47,9 @@ export class WhatsAppMessageHandler {
   }
 
   /**
-   * Handle incoming message from WhatsApp
+   * Handle incoming message from chat
    */
-  private async handleIncomingMessage(bot: Bot, message: WhatsAppMessage): Promise<void> {
+  private async handleIncomingMessage(bot: Bot, message: ChatMessage): Promise<void> {
     // Skip messages from the bot itself
     if (message.fromMe) {
       return;
@@ -86,10 +86,10 @@ export class WhatsAppMessageHandler {
   /**
    * Handle auto-response logic
    */
-  private async handleAutoResponse(bot: Bot, message: WhatsAppMessage, autoResponse: any): Promise<void> {
+  private async handleAutoResponse(bot: Bot, message: ChatMessage, autoResponse: any): Promise<void> {
     console.log(`🤖 Auto-response triggered for bot "${bot.name}": ${autoResponse.pattern}`);
 
-    // Get the WhatsApp client for this bot
+    // Get the chat client for this bot
     const botId = bot.id.value;
     const customHandler = this.messageHandlers.get(botId);
     
@@ -98,7 +98,7 @@ export class WhatsAppMessageHandler {
       customHandler(bot, message, autoResponse.response);
     } else {
       // Default behavior: send the auto-response
-      // Note: In a real implementation, we would need access to the WhatsApp client
+      // Note: In a real implementation, we would need access to the chat client
       // This would be handled by the application layer
       console.log(`📤 Would send auto-response: "${autoResponse.response}"`);
     }
@@ -107,7 +107,7 @@ export class WhatsAppMessageHandler {
   /**
    * Handle webhook logic
    */
-  private async handleWebhook(bot: Bot, message: WhatsAppMessage, webhook: any): Promise<void> {
+  private async handleWebhook(bot: Bot, message: ChatMessage, webhook: any): Promise<void> {
     console.log(`🌐 Webhook triggered for bot "${bot.name}": ${webhook.name}`);
 
     // In a real implementation, this would make an HTTP request to the webhook URL
@@ -127,7 +127,7 @@ export class WhatsAppMessageHandler {
   }
 
   /**
-   * Send a message through a bot's WhatsApp client
+   * Send a message through a bot's chat client
    * This method would be called by the application layer
    */
   async sendMessage(botId: string, to: string, message: string, options?: any): Promise<string> {
@@ -136,7 +136,7 @@ export class WhatsAppMessageHandler {
       throw new Error(`Bot with ID "${botId}" not found`);
     }
 
-    // Note: In a complete implementation, we would have access to the WhatsApp client
+    // Note: In a complete implementation, we would have access to the chat client
     // This would be provided by the application layer that coordinates between
     // the message handler and the session manager
     console.log(`📤 Would send message from bot "${bot.name}" to ${to}: ${message}`);

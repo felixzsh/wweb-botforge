@@ -18,6 +18,7 @@ export interface AutoResponseData {
   responseOptions?: ResponseOptions;
 }
 
+// all send message options suported by whatsappweb-js
 export interface ResponseOptions {
   linkPreview?: boolean;
   sendAudioAsVoice?: boolean;

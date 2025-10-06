@@ -1,18 +1,18 @@
-import { 
-  IWhatsAppSessionManager, 
-  IWhatsAppClient, 
-  WhatsAppSession 
-} from '../../domain/interfaces/i-whatsapp-client.interface';
+import {
+  IChatSessionManager,
+  IChatClient,
+  ChatSession
+} from '../../domain/entities/chat.entity';
 import { WhatsAppClient } from './whatsapp-client';
 
 /**
- * Manages multiple WhatsApp client sessions
- * This class is responsible for creating, storing, and managing multiple WhatsApp clients
+ * Manages multiple chat client sessions
+ * This class is responsible for creating, storing, and managing multiple chat clients
  */
-export class WhatsAppSessionManager implements IWhatsAppSessionManager {
-  private clients: Map<string, IWhatsAppClient> = new Map();
+export class WhatsAppSessionManager implements IChatSessionManager {
+  private clients: Map<string, IChatClient> = new Map();
 
-  createClient(botId: string): IWhatsAppClient {
+  createClient(botId: string): IChatClient {
     if (this.clients.has(botId)) {
       throw new Error(`WhatsApp client for bot '${botId}' already exists`);
     }
@@ -23,11 +23,11 @@ export class WhatsAppSessionManager implements IWhatsAppSessionManager {
     return client;
   }
 
-  getClient(botId: string): IWhatsAppClient | undefined {
+  getClient(botId: string): IChatClient | undefined {
     return this.clients.get(botId);
   }
 
-  getAllClients(): Map<string, IWhatsAppClient> {
+  getAllClients(): Map<string, IChatClient> {
     return new Map(this.clients);
   }
 
@@ -46,14 +46,14 @@ export class WhatsAppSessionManager implements IWhatsAppSessionManager {
     await Promise.allSettled(destroyPromises);
   }
 
-  getSessions(): WhatsAppSession[] {
+  getSessions(): ChatSession[] {
     return Array.from(this.clients.values()).map(client => client.getSession());
   }
 
   /**
    * Get client by phone number
    */
-  getClientByPhoneNumber(phoneNumber: string): IWhatsAppClient | undefined {
+  getClientByPhoneNumber(phoneNumber: string): IChatClient | undefined {
     for (const client of this.clients.values()) {
       const session = client.getSession();
       if (session.phoneNumber === phoneNumber) {
@@ -80,7 +80,7 @@ export class WhatsAppSessionManager implements IWhatsAppSessionManager {
   /**
    * Get clients by state
    */
-  getClientsByState(state: WhatsAppSession['state']): IWhatsAppClient[] {
+  getClientsByState(state: ChatSession['state']): IChatClient[] {
     return Array.from(this.clients.values()).filter(
       client => client.getState() === state
     );

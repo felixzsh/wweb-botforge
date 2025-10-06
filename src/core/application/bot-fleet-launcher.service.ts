@@ -1,28 +1,31 @@
 import { Bot } from '../domain/entities/bot.entity';
-import { BotFactory } from '../infrastructure/bot-factory';
+import { IBotFactory } from '../domain/interfaces/bot-factory.interface';
 import { ConfigLoaderService } from './config-loader.service';
 import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
-import { WhatsAppFactory } from '../infrastructure/whatsapp';
-import { WhatsAppMessage, IWhatsAppClient } from '../domain/interfaces/i-whatsapp-client.interface';
+import { IChatFactory } from '../domain/interfaces/i-chat-factory.interface';
+import { ChatMessage, IChatClient } from '../domain/entities/chat.entity';
 
 /**
- * Main orchestrator service for WhatsApp BotForge
+ * Main fleet launcher service for chat BotForge
  * Coordinates all bot operations: loading config, initializing clients, and processing messages
  */
-export class BotOrchestratorService {
+export class BotFleetLauncher {
   private bots: Map<string, Bot> = new Map();
   private configLoader: ConfigLoaderService;
   private autoResponseService: AutoResponseService;
   private messageQueueService: MessageQueueService;
-  private botFactory: BotFactory;
+  private botFactory: IBotFactory;
+  private chatFactory: IChatFactory;
   private isRunning: boolean = false;
+  private processedMessages: Map<string, Set<string>> = new Map();
 
-  constructor() {
+  constructor(botFactory: IBotFactory, chatFactory: IChatFactory) {
+    this.botFactory = botFactory;
+    this.chatFactory = chatFactory;
     this.configLoader = new ConfigLoaderService();
     this.messageQueueService = new MessageQueueService();
     this.autoResponseService = new AutoResponseService(this.messageQueueService);
-    this.botFactory = new BotFactory();
   }
 
   /**
@@ -30,12 +33,12 @@ export class BotOrchestratorService {
    */
   async start(): Promise<void> {
     if (this.isRunning) {
-      console.log('🤖 Bot Orchestrator is already running');
+      console.log('🤖 Bot Fleet Launcher is already running');
       return;
     }
 
     try {
-      console.log('🚀 Starting WhatsApp BotForge...');
+      console.log('🚀 Starting chat BotForge...');
 
       // Load bot configurations
       const botConfigs = await this.configLoader.loadBotConfigurations();
@@ -56,14 +59,14 @@ export class BotOrchestratorService {
       }
 
       this.isRunning = true;
-      console.log(`🎉 WhatsApp BotForge started successfully with ${this.bots.size} bot(s)!`);
+      console.log(`🎉 chat BotForge started successfully with ${this.bots.size} bot(s)!`);
       console.log('💬 Bots are now listening for messages...');
 
       // Set up graceful shutdown
       this.setupGracefulShutdown();
 
     } catch (error) {
-      console.error('❌ Failed to start Bot Orchestrator:', error);
+      console.error('❌ Failed to start Bot Fleet Launcher:', error);
       throw error;
     }
   }
@@ -76,20 +79,23 @@ export class BotOrchestratorService {
       return;
     }
 
-    console.log('🛑 Stopping WhatsApp BotForge...');
+    console.log('🛑 Stopping chat BotForge...');
 
     try {
       // Shutdown message queues
       await this.messageQueueService.shutdown();
 
-      // Destroy all WhatsApp clients
-      await WhatsAppFactory.destroyAllClients();
+      // Destroy all chat clients
+      await this.chatFactory.destroyAllClients();
 
       // Clear bot instances
       this.bots.clear();
 
+      // Clear processed messages cache
+      this.processedMessages.clear();
+
       this.isRunning = false;
-      console.log('✅ WhatsApp BotForge stopped successfully');
+      console.log('✅ chat BotForge stopped successfully');
     } catch (error) {
       console.error('❌ Error stopping Bot Orchestrator:', error);
       throw error;
@@ -107,8 +113,8 @@ export class BotOrchestratorService {
       const bot = this.botFactory.createFromConfig(config);
       this.bots.set(bot.id.value, bot);
 
-      // Create WhatsApp client for this bot
-      const whatsappClient = WhatsAppFactory.createClient(bot.id.value);
+      // Create chat client for this bot
+      const whatsappClient = this.chatFactory.createClient(bot.id.value);
 
       // Configure message queue for this bot
       this.configureBotQueue(bot);
@@ -116,7 +122,7 @@ export class BotOrchestratorService {
       // Set up event handlers
       this.setupBotEventHandlers(bot, whatsappClient);
 
-      // Initialize WhatsApp client
+      // Initialize chat client
       await whatsappClient.initialize();
 
       console.log(`✅ Bot "${bot.name}" initialized and ready`);
@@ -137,11 +143,11 @@ export class BotOrchestratorService {
     const delayMs = bot.settings.typingDelay;
     this.messageQueueService.setBotDelay(botId, delayMs);
 
-    // Set send callback that uses WhatsApp client
+    // Set send callback that uses chat client
     this.messageQueueService.setBotSendCallback(botId, async (botId, phoneNumber, message, options) => {
-      const whatsappClient = WhatsAppFactory.getClient(botId);
+      const whatsappClient = this.chatFactory.getClient(botId);
       if (!whatsappClient) {
-        throw new Error(`WhatsApp client not found for bot ${botId}`);
+        throw new Error(`chat client not found for bot ${botId}`);
       }
 
       await whatsappClient.sendMessage(phoneNumber, message, options);
@@ -153,11 +159,11 @@ export class BotOrchestratorService {
   /**
    * Set up event handlers for a bot
    */
-  private setupBotEventHandlers(bot: Bot, whatsappClient: IWhatsAppClient): void {
+  private setupBotEventHandlers(bot: Bot, whatsappClient: IChatClient): void {
     // Handle QR codes for authentication
     whatsappClient.onQRCode((qrCode: string) => {
       console.log(`\n📱 QR Code for bot "${bot.name}":`);
-      console.log('Scan this QR code with WhatsApp on your phone:');
+      console.log('Scan this QR code with chat on your phone:');
       // In a real implementation, you might want to display this differently
       // For now, we'll just log it
       console.log(qrCode);
@@ -169,7 +175,7 @@ export class BotOrchestratorService {
     });
 
     // Handle incoming messages
-    whatsappClient.onMessage(async (message: WhatsAppMessage) => {
+    whatsappClient.onMessage(async (message: ChatMessage) => {
       await this.handleIncomingMessage(bot, message);
     });
 
@@ -187,7 +193,19 @@ export class BotOrchestratorService {
   /**
    * Handle incoming messages for a bot
    */
-  private async handleIncomingMessage(bot: Bot, message: WhatsAppMessage): Promise<void> {
+  private async handleIncomingMessage(bot: Bot, message: ChatMessage): Promise<void> {
+    // Deduplicate messages to prevent processing the same message multiple times
+    const botId = bot.id.value;
+    if (!this.processedMessages.has(botId)) {
+      this.processedMessages.set(botId, new Set());
+    }
+    const processedSet = this.processedMessages.get(botId)!;
+    if (processedSet.has(message.id)) {
+      console.log(`⚠️  Skipping duplicate message ${message.id} for bot "${bot.name}"`);
+      return;
+    }
+    processedSet.add(message.id);
+
     try {
       // Check if message should be processed
       if (!this.autoResponseService.shouldProcessMessage(bot, message)) {
@@ -249,7 +267,7 @@ export class BotOrchestratorService {
    */
   getStatus(): any {
     const botStatuses = Array.from(this.bots.values()).map(bot => {
-      const whatsappClient = WhatsAppFactory.getClient(bot.id.value);
+      const whatsappClient = this.chatFactory.getClient(bot.id.value);
       const session = whatsappClient?.getSession();
       const queueStatus = this.messageQueueService.getBotQueueStatus(bot.id.value);
 

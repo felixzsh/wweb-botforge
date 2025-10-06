@@ -7,7 +7,7 @@ export class PhoneNumber {
 
   private isValidPhoneNumber(phone: string): boolean {
     // Validación básica de número internacional
-    return /^\+\d{10,15}$/.test(phone);
+    return /^\d{10,15}$/.test(phone);
   }
 
   toString(): string {

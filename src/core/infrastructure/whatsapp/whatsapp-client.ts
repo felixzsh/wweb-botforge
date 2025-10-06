@@ -1,23 +1,23 @@
 import { Client, LocalAuth, Message as WWebJSMessage } from 'whatsapp-web.js';
-import { 
-  IWhatsAppClient, 
-  WhatsAppMessage, 
-  WhatsAppClientState, 
-  WhatsAppSession,
+import {
+  IChatClient,
+  ChatMessage,
+  ChatClientState,
+  ChatSession,
   QRCodeCallback,
   ReadyCallback,
   MessageCallback,
   AuthFailureCallback,
   DisconnectedCallback
-} from '../../domain/interfaces/i-whatsapp-client.interface';
+} from '../../domain/entities/chat.entity';
 
 /**
- * Concrete implementation of WhatsApp client using whatsapp-web.js
+ * Concrete implementation of chat client using whatsapp-web.js
  * This class adapts the external library to our domain interface
  */
-export class WhatsAppClient implements IWhatsAppClient {
+export class WhatsAppClient implements IChatClient {
   private client: Client;
-  private session: WhatsAppSession;
+  private session: ChatSession;
   private qrCodeListeners: QRCodeCallback[] = [];
   private readyListeners: ReadyCallback[] = [];
   private messageListeners: MessageCallback[] = [];
@@ -27,14 +27,14 @@ export class WhatsAppClient implements IWhatsAppClient {
   constructor(clientId: string) {
     this.session = {
       clientId,
-      state: WhatsAppClientState.DISCONNECTED,
+      state: ChatClientState.DISCONNECTED,
       lastActivity: new Date()
     };
 
     this.client = new Client({
       authStrategy: new LocalAuth({
         clientId: clientId,
-        dataPath: './sessions'
+        dataPath: '.wwebjs_auth'
       }),
       puppeteer: {
         executablePath: '/usr/bin/chromium',
@@ -55,25 +55,25 @@ export class WhatsAppClient implements IWhatsAppClient {
     this.setupEventListeners();
   }
 
-  getState(): WhatsAppClientState {
+  getState(): ChatClientState {
     return this.session.state;
   }
 
-  getSession(): WhatsAppSession {
+  getSession(): ChatSession {
     return { ...this.session };
   }
 
   async initialize(): Promise<void> {
-    if (this.session.state !== WhatsAppClientState.DISCONNECTED) {
+    if (this.session.state !== ChatClientState.DISCONNECTED) {
       throw new Error(`Client is already in state: ${this.session.state}`);
     }
 
-    this.session.state = WhatsAppClientState.CONNECTING;
+    this.session.state = ChatClientState.CONNECTING;
     await this.client.initialize();
   }
 
   async sendMessage(to: string, message: string, options?: any): Promise<string> {
-    if (this.session.state !== WhatsAppClientState.READY) {
+    if (this.session.state !== ChatClientState.READY) {
       throw new Error('WhatsApp client is not ready');
     }
 
@@ -99,7 +99,7 @@ export class WhatsAppClient implements IWhatsAppClient {
       await this.client.destroy();
     }
 
-    this.session.state = WhatsAppClientState.DISCONNECTED;
+    this.session.state = ChatClientState.DISCONNECTED;
   }
 
   // Event handling methods
@@ -147,13 +147,13 @@ export class WhatsAppClient implements IWhatsAppClient {
     // QR Code event
     this.client.on('qr', (qr: string) => {
       this.session.qrCode = qr;
-      this.session.state = WhatsAppClientState.AUTHENTICATING;
+      this.session.state = ChatClientState.AUTHENTICATING;
       this.qrCodeListeners.forEach(callback => callback(qr));
     });
 
     // Ready event
     this.client.on('ready', async () => {
-      this.session.state = WhatsAppClientState.READY;
+      this.session.state = ChatClientState.READY;
       
       // Get phone number from the client
       try {
@@ -169,7 +169,7 @@ export class WhatsAppClient implements IWhatsAppClient {
 
     // Message event
     this.client.on('message', (message: WWebJSMessage) => {
-      const whatsappMessage: WhatsAppMessage = {
+      const chatMessage: ChatMessage = {
         id: message.id._serialized,
         from: message.from,
         to: message.to,
@@ -181,19 +181,19 @@ export class WhatsAppClient implements IWhatsAppClient {
       };
 
       this.session.lastActivity = new Date();
-      this.messageListeners.forEach(callback => callback(whatsappMessage));
+      this.messageListeners.forEach(callback => callback(chatMessage));
     });
 
     // Authentication failure event
     this.client.on('auth_failure', (error: any) => {
-      this.session.state = WhatsAppClientState.FAILED;
+      this.session.state = ChatClientState.FAILED;
       const errorObj = error instanceof Error ? error : new Error(String(error));
       this.authFailureListeners.forEach(callback => callback(errorObj));
     });
 
     // Disconnected event
     this.client.on('disconnected', (reason: string) => {
-      this.session.state = WhatsAppClientState.DISCONNECTED;
+      this.session.state = ChatClientState.DISCONNECTED;
       this.disconnectedListeners.forEach(callback => callback(reason));
     });
   }

@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import * as yaml from 'js-yaml';
 import qrcode from 'qrcode-terminal';
-import { BotConfiguration } from '../../core/domain/entities/bot.entity';
+import { BotConfiguration } from '../../core/domain/entities/config.entity';
 import { WhatsAppFactory } from '../../core/infrastructure/whatsapp';
 
 export async function createBotCommand() {

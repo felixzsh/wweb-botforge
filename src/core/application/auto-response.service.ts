@@ -1,5 +1,5 @@
 import { Bot, AutoResponseData } from '../domain/entities/bot.entity';
-import { WhatsAppMessage } from '../domain/interfaces/i-whatsapp-client.interface';
+import { ChatMessage } from '../domain/entities/chat.entity';
 import { MessageQueueService } from './message-queue.service';
 
 /**
@@ -11,7 +11,7 @@ export class AutoResponseService {
   /**
    * Process an incoming message and find matching auto-responses
    */
-  processMessage(bot: Bot, message: WhatsAppMessage): AutoResponseData | null {
+  processMessage(bot: Bot, message: ChatMessage): AutoResponseData | null {
     // Skip messages from the bot itself
     if (message.fromMe) {
       return null;
@@ -46,7 +46,7 @@ export class AutoResponseService {
   /**
    * Check if message should be processed based on bot settings
    */
-  shouldProcessMessage(bot: Bot, message: WhatsAppMessage): boolean {
+  shouldProcessMessage(bot: Bot, message: ChatMessage): boolean {
     // Skip own messages
     if (message.fromMe) {
       return false;
@@ -107,7 +107,7 @@ export class AutoResponseService {
    */
   sendAutoResponse(
     bot: Bot,
-    originalMessage: WhatsAppMessage,
+    originalMessage: ChatMessage,
     autoResponse: any
   ): string {
     try {
@@ -135,7 +135,7 @@ export class AutoResponseService {
   /**
    * Log message processing for debugging
    */
-  logMessageProcessing(bot: Bot, message: WhatsAppMessage, matched: boolean, response?: string) {
+  logMessageProcessing(bot: Bot, message: ChatMessage, matched: boolean, response?: string) {
     const logData = {
       bot: bot.name,
       from: message.from,

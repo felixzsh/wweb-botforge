@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/wa-botforge.svg)](https://badge.fury.io/js/wa-botforge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Create powerful WhatsApp bots with YAML configuration**
+**Create powerful WhatsApp bots with YAML configuration!**
 
 ## 🎯 Why WWeb BotForge?
 

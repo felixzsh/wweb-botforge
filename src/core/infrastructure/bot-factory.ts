@@ -1,4 +1,5 @@
-import { Bot, BotConfiguration, BotSettingsData, AutoResponseData, WebhookData } from '../domain/entities/bot.entity';
+import { Bot, BotSettingsData, AutoResponseData, WebhookData } from '../domain/entities/bot.entity';
+import { BotConfiguration } from '../domain/entities/config.entity';
 import { BotId } from '../domain/value-objects/bot-id.vo';
 import { PhoneNumber } from '../domain/value-objects/phone-number.vo';
 import { IBotFactory } from '../domain/interfaces/bot-factory.interface';

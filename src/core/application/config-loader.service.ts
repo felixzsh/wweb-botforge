@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { BotConfiguration } from '../domain/entities/bot.entity';
+import { BotConfiguration } from '../domain/entities/config.entity';
 
 /**
  * Service for loading bot configurations from YAML files

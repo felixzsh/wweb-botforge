@@ -1,107 +1,140 @@
-import { IWhatsAppClient, IWhatsAppSessionManager } from '../../domain/interfaces/i-whatsapp-client.interface';
+import { IChatClient, IChatSessionManager } from '../../domain/entities/chat.entity';
+import { IChatFactory } from '../../domain/interfaces/i-chat-factory.interface';
 import { WhatsAppClient } from './whatsapp-client';
 import { WhatsAppSessionManager } from './whatsapp-session-manager';
-import { WhatsAppMessageHandler } from './whatsapp-message-handler';
+import { ChatMessageHandler } from './whatsapp-message-handler';
 
 /**
  * Factory class for creating and managing WhatsApp infrastructure components
  * This provides a centralized way to create and coordinate all WhatsApp-related services
  */
-export class WhatsAppFactory {
-  private static sessionManager: IWhatsAppSessionManager;
-  private static messageHandler: WhatsAppMessageHandler;
+export class WhatsAppFactory implements IChatFactory {
+  private static instance: WhatsAppFactory;
+  private sessionManager: IChatSessionManager;
+  private messageHandler: ChatMessageHandler;
+
+  private constructor() {
+    this.sessionManager = new WhatsAppSessionManager();
+    this.messageHandler = new ChatMessageHandler();
+  }
+
+  static getInstance(): WhatsAppFactory {
+    if (!this.instance) {
+      this.instance = new WhatsAppFactory();
+    }
+    return this.instance;
+  }
+
+  /**
+   * Create a new WhatsApp client for a bot
+   */
+  createClient(botId: string): IChatClient {
+    return this.sessionManager.createClient(botId);
+  }
+
+  /**
+   * Get an existing WhatsApp client for a bot
+   */
+  getClient(botId: string): IChatClient | undefined {
+    return this.sessionManager.getClient(botId);
+  }
+
+  /**
+   * Destroy all WhatsApp clients and clean up resources
+   */
+  async destroyAllClients(): Promise<void> {
+    await this.sessionManager.destroyAllClients();
+  }
 
   /**
    * Get or create the session manager singleton
    */
-  static getSessionManager(): IWhatsAppSessionManager {
-    if (!this.sessionManager) {
-      this.sessionManager = new WhatsAppSessionManager();
-    }
+  getSessionManager(): IChatSessionManager {
     return this.sessionManager;
   }
 
   /**
    * Get or create the message handler singleton
    */
-  static getMessageHandler(): WhatsAppMessageHandler {
-    if (!this.messageHandler) {
-      this.messageHandler = new WhatsAppMessageHandler();
-    }
+  getMessageHandler(): ChatMessageHandler {
     return this.messageHandler;
-  }
-
-  /**
-   * Create a new WhatsApp client for a bot
-   */
-  static createClient(botId: string): IWhatsAppClient {
-    const sessionManager = this.getSessionManager();
-    return sessionManager.createClient(botId);
-  }
-
-  /**
-   * Get an existing WhatsApp client for a bot
-   */
-  static getClient(botId: string): IWhatsAppClient | undefined {
-    const sessionManager = this.getSessionManager();
-    return sessionManager.getClient(botId);
   }
 
   /**
    * Initialize all WhatsApp clients
    */
-  static async initializeAllClients(): Promise<void> {
-    const sessionManager = this.getSessionManager();
-    await sessionManager.initializeAllClients();
-  }
-
-  /**
-   * Destroy all WhatsApp clients and clean up resources
-   */
-  static async destroyAllClients(): Promise<void> {
-    const sessionManager = this.getSessionManager();
-    await sessionManager.destroyAllClients();
-    
-    // Clear the singletons
-    this.sessionManager = undefined as any;
-    this.messageHandler = undefined as any;
+  async initializeAllClients(): Promise<void> {
+    await this.sessionManager.initializeAllClients();
   }
 
   /**
    * Get all active sessions
    */
-  static getSessions() {
-    const sessionManager = this.getSessionManager();
-    return sessionManager.getSessions();
+  getSessions() {
+    return this.sessionManager.getSessions();
   }
 
   /**
    * Get the number of active clients
    */
-  static getClientCount(): number {
-    const sessionManager = this.getSessionManager();
-    return sessionManager.getClientCount();
+  getClientCount(): number {
+    return this.sessionManager.getClientCount();
   }
 
   /**
    * Get clients by state
    */
-  static getClientsByState(state: any) {
-    const sessionManager = this.getSessionManager();
-    return sessionManager.getClientsByState(state);
+  getClientsByState(state: any) {
+    return this.sessionManager.getClientsByState(state);
   }
 
   /**
    * Gracefully shutdown all WhatsApp services
    */
-  static async shutdown(): Promise<void> {
-    const sessionManager = this.getSessionManager();
-    if (sessionManager) {
-      await sessionManager.shutdown();
+  async shutdown(): Promise<void> {
+    if (this.sessionManager) {
+      await this.sessionManager.shutdown();
     }
-    
-    // Clear the singletons
-    this.sessionManager = undefined as any;
-    this.messageHandler = undefined as any;
+  }
+
+  // Static methods for backward compatibility
+  static createClient(botId: string): IChatClient {
+    return this.getInstance().createClient(botId);
+  }
+
+  static getClient(botId: string): IChatClient | undefined {
+    return this.getInstance().getClient(botId);
+  }
+
+  static async destroyAllClients(): Promise<void> {
+    await this.getInstance().destroyAllClients();
+  }
+
+  static getSessionManager(): IChatSessionManager {
+    return this.getInstance().getSessionManager();
+  }
+
+  static getMessageHandler(): ChatMessageHandler {
+    return this.getInstance().getMessageHandler();
+  }
+
+  static async initializeAllClients(): Promise<void> {
+    await this.getInstance().initializeAllClients();
+  }
+
+  static getSessions() {
+    return this.getInstance().getSessions();
+  }
+
+  static getClientCount(): number {
+    return this.getInstance().getClientCount();
+  }
+
+  static getClientsByState(state: any) {
+    return this.getInstance().getClientsByState(state);
+  }
+
+  static async shutdown(): Promise<void> {
+    await this.getInstance().shutdown();
   }
 }

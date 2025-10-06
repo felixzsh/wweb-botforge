@@ -2,7 +2,10 @@
 
 import { Command } from 'commander';
 import { createBotCommand } from './commands/create-bot';
-import { BotOrchestratorService } from '../core/application/bot-orchestrator.service';
+import { BotFleetLauncher } from '../core/application/bot-fleet-launcher.service';
+import { BotFactory } from '../core/infrastructure/bot-factory';
+import { WhatsAppFactory } from '../core/infrastructure/whatsapp';
+import { IChatFactory } from '../core/domain/interfaces/i-chat-factory.interface';
 
 const program = new Command();
 
@@ -20,9 +23,11 @@ program
 if (process.argv.length === 2) {
   console.log('🤖 WhatsApp BotForge - Starting bots...\n');
 
-  const orchestrator = new BotOrchestratorService();
+  const botFactory = new BotFactory();
+  const whatsappFactory = WhatsAppFactory.getInstance();
+  const fleetLauncher = new BotFleetLauncher(botFactory, whatsappFactory);
 
-  orchestrator.start().catch((error) => {
+  fleetLauncher.start().catch((error) => {
     console.error('❌ Failed to start bots:', error);
     process.exit(1);
   });
