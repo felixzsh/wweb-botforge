@@ -1,8 +1,8 @@
 import inquirer from 'inquirer';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import * as yaml from 'js-yaml';
+import { createHash } from 'crypto';
+import { existsSync as existsPathSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { join as joinPaths } from 'path';
+import { load as loadYaml, dump as dumpYaml } from 'js-yaml';
 import qrcode from 'qrcode-terminal';
 import { BotConfiguration } from '../../core/domain/entities/config.entity';
 import { WhatsAppFactory } from '../../core/infrastructure/whatsapp';
@@ -113,27 +113,27 @@ export async function createBotCommand() {
 
 function generateBotId(name: string): string {
   // Create a simple hash-based ID from the name
-  const hash = crypto.createHash('md5').update(name.toLowerCase()).digest('hex');
+  const hash = createHash('md5').update(name.toLowerCase()).digest('hex');
   // Take first 8 characters and add a prefix for readability
   return `bot-${hash.substring(0, 8)}`;
 }
 
 async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
-  const configDir = path.join(process.cwd(), 'config');
-  const configFile = path.join(configDir, 'main.yml');
+  const configDir = joinPaths(process.cwd(), 'config');
+  const configFile = joinPaths(configDir, 'main.yml');
 
   // Create config directory if it doesn't exist
-  if (!fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir, { recursive: true });
+  if (!existsPathSync(configDir)) {
+    mkdirSync(configDir, { recursive: true });
   }
 
   let existingConfig: { bots: BotConfiguration[] } = { bots: [] };
 
   // Read existing config if it exists
-  if (fs.existsSync(configFile)) {
+  if (existsPathSync(configFile)) {
     try {
-      const content = fs.readFileSync(configFile, 'utf8');
-      existingConfig = yaml.load(content) as { bots: BotConfiguration[] };
+      const content = readFileSync(configFile, 'utf8');
+      existingConfig = loadYaml(content) as { bots: BotConfiguration[] };
 
       // Ensure bots array exists
       if (!existingConfig.bots) {
@@ -158,10 +158,10 @@ async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
   }
 
   // Write updated config
-  const yamlContent = yaml.dump(existingConfig, {
+  const yamlContent = dumpYaml(existingConfig, {
     indent: 2,
     lineWidth: -1,
     noRefs: true
   });
-  fs.writeFileSync(configFile, yamlContent, 'utf8');
+  writeFileSync(configFile, yamlContent, 'utf8');
 }
