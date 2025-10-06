@@ -2,7 +2,7 @@ import { IChatClient, IChatSessionManager } from '../../domain/entities/chat.ent
 import { IChatFactory } from '../../domain/interfaces/chat-factory.interface';
 import { WhatsAppClient } from './whatsapp-client';
 import { WhatsAppSessionManager } from './whatsapp-session-manager';
-import { ChatMessageHandler } from './whatsapp-message-handler';
+import { MessageHandlerService } from '../../application/message-handler.service';
 
 /**
  * Factory class for creating and managing WhatsApp infrastructure components
@@ -11,11 +11,11 @@ import { ChatMessageHandler } from './whatsapp-message-handler';
 export class WhatsAppFactory implements IChatFactory {
   private static instance: WhatsAppFactory;
   private sessionManager: IChatSessionManager;
-  private messageHandler: ChatMessageHandler;
+  private messageHandler: MessageHandlerService;
 
   private constructor() {
     this.sessionManager = new WhatsAppSessionManager();
-    this.messageHandler = new ChatMessageHandler();
+    this.messageHandler = new MessageHandlerService();
   }
 
   static getInstance(): WhatsAppFactory {
@@ -56,7 +56,7 @@ export class WhatsAppFactory implements IChatFactory {
   /**
    * Get or create the message handler singleton
    */
-  getMessageHandler(): ChatMessageHandler {
+  getMessageHandler(): MessageHandlerService {
     return this.messageHandler;
   }
 
@@ -114,7 +114,7 @@ export class WhatsAppFactory implements IChatFactory {
     return this.getInstance().getSessionManager();
   }
 
-  static getMessageHandler(): ChatMessageHandler {
+  static getMessageHandler(): MessageHandlerService {
     return this.getInstance().getMessageHandler();
   }
 

@@ -1,5 +1,5 @@
-import { Bot } from '../../domain/entities/bot.entity';
-import { IChatClient, ChatMessage } from '../../domain/entities/chat.entity';
+import { Bot } from '../domain/entities/bot.entity';
+import { IChatClient, ChatMessage } from '../domain/entities/chat.entity';
 
 /**
  * Callback type for handling processed messages
@@ -10,23 +10,23 @@ export type MessageHandlerCallback = (bot: Bot, message: ChatMessage, response?:
  * Handles incoming chat messages and routes them to the appropriate bot logic
  * This class bridges the gap between chat infrastructure and domain logic
  */
-export class ChatMessageHandler {
+export class MessageHandlerService {
   private bots: Map<string, Bot> = new Map();
   private messageHandlers: Map<string, MessageHandlerCallback> = new Map();
 
   /**
    * Register a bot with its chat client
    */
-  registerBot(bot: Bot, whatsappClient: IChatClient): void {
+  registerBot(bot: Bot, chatClient: IChatClient): void {
     this.bots.set(bot.id.value, bot);
-    
+
     // Set up message listener for this bot
-    whatsappClient.onMessage((message: ChatMessage) => {
+    chatClient.onMessage((message: ChatMessage) => {
       this.handleIncomingMessage(bot, message);
     });
 
     // Set up ready listener to log when bot is ready
-    whatsappClient.onReady(() => {
+    chatClient.onReady(() => {
       console.log(`🤖 Bot "${bot.name}" (${bot.id.value}) is ready and listening for messages`);
     });
   }
@@ -92,7 +92,7 @@ export class ChatMessageHandler {
     // Get the chat client for this bot
     const botId = bot.id.value;
     const customHandler = this.messageHandlers.get(botId);
-    
+
     if (customHandler) {
       // Let the custom handler process the auto-response
       customHandler(bot, message, autoResponse.response);
@@ -140,7 +140,7 @@ export class ChatMessageHandler {
     // This would be provided by the application layer that coordinates between
     // the message handler and the session manager
     console.log(`📤 Would send message from bot "${bot.name}" to ${to}: ${message}`);
-    
+
     // Return a mock message ID for now
     return `mock-${Date.now()}`;
   }
