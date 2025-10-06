@@ -7,4 +7,5 @@
 
 export { ConfigLoaderService } from './config-loader.service';
 export { AutoResponseService } from './auto-response.service';
-export { BotFleetLauncher } from './bot-fleet-launcher.service';
+export { BotFleetService } from './bot-fleet.service';
+export { MessageHandlerService } from './message-handler.service';

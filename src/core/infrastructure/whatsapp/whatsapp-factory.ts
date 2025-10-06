@@ -1,5 +1,5 @@
 import { IChatClient, IChatSessionManager } from '../../domain/entities/chat.entity';
-import { IChatFactory } from '../../domain/interfaces/i-chat-factory.interface';
+import { IChatFactory } from '../../domain/interfaces/chat-factory.interface';
 import { WhatsAppClient } from './whatsapp-client';
 import { WhatsAppSessionManager } from './whatsapp-session-manager';
 import { ChatMessageHandler } from './whatsapp-message-handler';

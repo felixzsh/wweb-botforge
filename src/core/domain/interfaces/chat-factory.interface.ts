@@ -1,4 +1,4 @@
-import { IChatClient } from './i-chat-client.interface';
+import { IChatClient } from './chat-client.interface';
 
 export interface IChatFactory {
   createClient(botId: string): IChatClient;

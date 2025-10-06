@@ -3,14 +3,14 @@ import { IBotFactory } from '../domain/interfaces/bot-factory.interface';
 import { ConfigLoaderService } from './config-loader.service';
 import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
-import { IChatFactory } from '../domain/interfaces/i-chat-factory.interface';
+import { IChatFactory } from '../domain/interfaces/chat-factory.interface';
 import { ChatMessage, IChatClient } from '../domain/entities/chat.entity';
 
 /**
- * Main fleet launcher service for chat BotForge
- * Coordinates all bot operations: loading config, initializing clients, and processing messages
+ * Main bot fleet service for BotForge
+ * Coordinates all bot operations: loading config, initializing chat clients, and processing messages
  */
-export class BotFleetLauncher {
+export class BotFleetService {
   private bots: Map<string, Bot> = new Map();
   private configLoader: ConfigLoaderService;
   private autoResponseService: AutoResponseService;
@@ -145,12 +145,12 @@ export class BotFleetLauncher {
 
     // Set send callback that uses chat client
     this.messageQueueService.setBotSendCallback(botId, async (botId, phoneNumber, message, options) => {
-      const whatsappClient = this.chatFactory.getClient(botId);
-      if (!whatsappClient) {
+      const chatClient = this.chatFactory.getClient(botId);
+      if (!chatClient) {
         throw new Error(`chat client not found for bot ${botId}`);
       }
 
-      await whatsappClient.sendMessage(phoneNumber, message, options);
+      await chatClient.sendMessage(phoneNumber, message, options);
     });
 
     console.log(`📋 Configured message queue for bot "${bot.name}": delay=${delayMs}ms`);
@@ -159,9 +159,9 @@ export class BotFleetLauncher {
   /**
    * Set up event handlers for a bot
    */
-  private setupBotEventHandlers(bot: Bot, whatsappClient: IChatClient): void {
+  private setupBotEventHandlers(bot: Bot, chatClient: IChatClient): void {
     // Handle QR codes for authentication
-    whatsappClient.onQRCode((qrCode: string) => {
+    chatClient.onQRCode((qrCode: string) => {
       console.log(`\n📱 QR Code for bot "${bot.name}":`);
       console.log('Scan this QR code with chat on your phone:');
       // In a real implementation, you might want to display this differently
@@ -170,22 +170,22 @@ export class BotFleetLauncher {
     });
 
     // Handle successful authentication
-    whatsappClient.onReady(() => {
+    chatClient.onReady(() => {
       console.log(`✅ Bot "${bot.name}" is authenticated and ready!`);
     });
 
     // Handle incoming messages
-    whatsappClient.onMessage(async (message: ChatMessage) => {
+    chatClient.onMessage(async (message: ChatMessage) => {
       await this.handleIncomingMessage(bot, message);
     });
 
     // Handle authentication failures
-    whatsappClient.onAuthFailure((error: Error) => {
+    chatClient.onAuthFailure((error: Error) => {
       console.error(`❌ Authentication failed for bot "${bot.name}":`, error.message);
     });
 
     // Handle disconnections
-    whatsappClient.onDisconnected((reason: string) => {
+    chatClient.onDisconnected((reason: string) => {
       console.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason);
     });
   }
