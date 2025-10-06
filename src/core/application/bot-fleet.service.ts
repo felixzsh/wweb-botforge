@@ -194,6 +194,11 @@ export class BotFleetService {
    * Handle incoming messages for a bot
    */
   private async handleIncomingMessage(bot: Bot, message: ChatMessage): Promise<void> {
+    // **NEW: Skip messages from ignored senders**
+    if (bot.settings.ignoredSenders.includes(message.from)) {
+      return; // Silently ignore messages from blacklisted senders
+    }
+
     // Deduplicate messages to prevent processing the same message multiple times
     const botId = bot.id.value;
     if (!this.processedMessages.has(botId)) {

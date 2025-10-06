@@ -6,6 +6,7 @@ export interface BotSettingsData {
   typingDelay: number;
   readReceipts: boolean;
   ignoreGroups: boolean;
+  ignoredSenders: string[];
   adminNumbers: PhoneNumber[];
   logLevel: 'info' | 'debug' | 'warn' | 'error';
 }

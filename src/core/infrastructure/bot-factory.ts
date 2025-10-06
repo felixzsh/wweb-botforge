@@ -17,6 +17,7 @@ export class BotFactory implements IBotFactory {
       typingDelay: config.settings?.typing_delay ?? config.settings?.typingDelay ?? 1000,
       readReceipts: config.settings?.read_receipts ?? config.settings?.readReceipts ?? true,
       ignoreGroups: config.settings?.ignore_groups ?? config.settings?.ignoreGroups ?? true,
+      ignoredSenders: config.settings?.ignored_senders ?? config.settings?.ignoredSenders ?? [],
       adminNumbers: (config.settings?.admin_numbers ?? config.settings?.adminNumbers)?.map((num: string) => new PhoneNumber(num)) ?? [],
       logLevel: config.settings?.log_level ?? config.settings?.logLevel ?? 'info'
     };
