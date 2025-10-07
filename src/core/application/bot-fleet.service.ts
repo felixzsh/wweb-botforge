@@ -125,17 +125,20 @@ export class BotFleetService {
       // Create message channel for this bot
       const channel = this.channelManager.createChannel(bot.id.value);
 
+      // Register channel with bot
+      bot.registerChannel(channel);
+
       // Configure message queue for this bot
-      this.configureBotQueue(bot, channel);
+      this.configureBotQueue(bot);
 
       // Register bot with message handler service
-      this.messageHandlerService.registerBot(bot, channel);
+      this.messageHandlerService.registerBot(bot);
 
       // Set up event handlers
-      this.setupBotEventHandlers(bot, channel);
+      this.setupBotEventHandlers(bot);
 
       // Initialize channel
-      await channel.connect();
+      await bot.channel!.connect();
 
       console.log(`✅ Bot "${bot.name}" initialized and ready`);
 
@@ -146,52 +149,60 @@ export class BotFleetService {
   }
 
   /**
-   * Configure message queue for a specific bot
-   */
-  private configureBotQueue(bot: Bot, channel: MessageChannel): void {
-    const botId = bot.id.value;
+    * Configure message queue for a specific bot
+    */
+   private configureBotQueue(bot: Bot): void {
+     if (!bot.channel) {
+       throw new Error(`Bot "${bot.name}" does not have a registered channel`);
+     }
 
-    // Set delay based on bot's typing delay setting
-    const delayMs = bot.settings.typingDelay;
-    this.messageQueueService.setBotDelay(botId, delayMs);
+     const botId = bot.id.value;
 
-    // Set send callback that uses message channel
-    this.messageQueueService.setBotSendCallback(botId, async (botId: string, message: OutgoingMessage) => {
-      await channel.send(message);
-    });
+     // Set delay based on bot's typing delay setting
+     const delayMs = bot.settings.typingDelay;
+     this.messageQueueService.setBotDelay(botId, delayMs);
 
-    console.log(`📋 Configured message queue for bot "${bot.name}": delay=${delayMs}ms`);
-  }
+     // Set send callback that uses message channel
+     this.messageQueueService.setBotSendCallback(botId, async (botId: string, message: OutgoingMessage) => {
+       await bot.channel!.send(message);
+     });
+
+     console.log(`📋 Configured message queue for bot "${bot.name}": delay=${delayMs}ms`);
+   }
 
   /**
-   * Set up event handlers for a bot
-   */
-  private setupBotEventHandlers(bot: Bot, channel: MessageChannel): void {
-    // Handle ready event
-    channel.onReady(() => {
-      console.log(`✅ Bot "${bot.name}" is ready!`);
-    });
+    * Set up event handlers for a bot
+    */
+   private setupBotEventHandlers(bot: Bot): void {
+     if (!bot.channel) {
+       throw new Error(`Bot "${bot.name}" does not have a registered channel`);
+     }
 
-    // Handle disconnections
-    channel.onDisconnected((reason: string) => {
-      console.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason);
-    });
+     // Handle ready event
+     bot.channel.onReady(() => {
+       console.log(`✅ Bot "${bot.name}" is ready!`);
+     });
 
-    // Handle auth failures
-    channel.onAuthFailure((error: Error) => {
-      console.error(`❌ Bot "${bot.name}" authentication failed:`, error.message);
-    });
+     // Handle disconnections
+     bot.channel.onDisconnected((reason: string) => {
+       console.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason);
+     });
 
-    // Handle connection errors
-    channel.onConnectionError((error: Error) => {
-      console.error(`❌ Bot "${bot.name}" connection error:`, error.message);
-    });
+     // Handle auth failures
+     bot.channel.onAuthFailure((error: Error) => {
+       console.error(`❌ Bot "${bot.name}" authentication failed:`, error.message);
+     });
 
-    // Handle state changes
-    channel.onStateChange((state: string) => {
-      console.log(`ℹ️  Bot "${bot.name}" state changed to:`, state);
-    });
-  }
+     // Handle connection errors
+     bot.channel.onConnectionError((error: Error) => {
+       console.error(`❌ Bot "${bot.name}" connection error:`, error.message);
+     });
+
+     // Handle state changes
+     bot.channel.onStateChange((state: string) => {
+       console.log(`ℹ️  Bot "${bot.name}" state changed to:`, state);
+     });
+   }
 
 
   /**

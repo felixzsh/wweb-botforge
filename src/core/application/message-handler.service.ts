@@ -21,21 +21,25 @@ export class MessageHandlerService {
   }
 
   /**
-   * Register a bot with its message channel
-   */
-  registerBot(bot: Bot, channel: MessageChannel): void {
-    this.bots.set(bot.id.value, bot);
+    * Register a bot with its message channel
+    */
+   registerBot(bot: Bot): void {
+     if (!bot.channel) {
+       throw new Error(`Bot "${bot.name}" does not have a registered channel`);
+     }
 
-    // Set up message listener for this bot
-    channel.onMessage((message: IncomingMessage) => {
-      this.handleIncomingMessage(bot, message);
-    });
+     this.bots.set(bot.id.value, bot);
 
-    // Set up ready listener to log when bot is ready
-    channel.onReady(() => {
-      console.log(`🤖 Bot "${bot.name}" (${bot.id.value}) is ready and listening for messages`);
-    });
-  }
+     // Set up message listener for this bot
+     bot.channel.onMessage((message: IncomingMessage) => {
+       this.handleIncomingMessage(bot, message);
+     });
+
+     // Set up ready listener to log when bot is ready
+     bot.channel.onReady(() => {
+       console.log(`🤖 Bot "${bot.name}" (${bot.id.value}) is ready and listening for messages`);
+     });
+   }
 
   /**
    * Unregister a bot
