@@ -10,6 +10,7 @@ build/
 sessions/
 .wwebjs_auth/
 *.wwebjs_auth_session
+.wwebjs_cache
 
 # Environment variables
 .env
@@ -60,3 +61,6 @@ playwright/.cache/
 *.tar.gz
 
 drafts
+main.yml
+oldreadme.md
+whatsapp-implementation.md
