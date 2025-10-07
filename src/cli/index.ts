@@ -5,6 +5,7 @@ import { createBotCommand } from './commands/create-bot';
 import { BotFleetService } from '../core/application/bot-fleet.service';
 import { BotFactory } from '../core/application/bot-factory';
 import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp-session-manager';
+import { YamlLoader } from '../core/infrastructure/yaml-loader';
 
 const program = new Command();
 
@@ -22,12 +23,18 @@ program
 if (process.argv.length === 2) {
   console.log('🤖 WhatsApp BotForge - Starting bots...\n');
 
-  // Composition root - wire up dependencies
-  const botFactory = new BotFactory();
-  const channelManager = WhatsAppSessionManager.getInstance();
-  const fleetLauncher = new BotFleetService(botFactory, channelManager);
+  (async () => {
+    // Composition root - wire up dependencies
+    const botFactory = new BotFactory();
+    const channelManager = WhatsAppSessionManager.getInstance();
+    const fleetLauncher = new BotFleetService(botFactory, channelManager);
 
-  fleetLauncher.start().catch((error) => {
+    // Load bot configurations from YAML
+    const yamlLoader = new YamlLoader();
+    const botConfigs = await yamlLoader.loadMainConfig();
+
+    await fleetLauncher.start(botConfigs);
+  })().catch((error) => {
     console.error('❌ Failed to start bots:', error);
     process.exit(1);
   });

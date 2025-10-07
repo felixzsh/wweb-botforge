@@ -1,11 +1,11 @@
 import { Bot } from '../domain/entities/bot.entity';
 import { BotFactory } from './bot-factory';
-import { ConfigLoaderService } from './config-loader.service';
 import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
 import { MessageChannel, IncomingMessage, OutgoingMessage } from '../domain/entities/channel.entity';
 import { IChannelManager } from '../domain/interfaces/channel-manager.interface';
+import { BotConfiguration } from '../domain/entities/config.entity';
 
 /**
  * Main bot fleet service for BotForge
@@ -13,7 +13,6 @@ import { IChannelManager } from '../domain/interfaces/channel-manager.interface'
  */
 export class BotFleetService {
   private bots: Map<string, Bot> = new Map();
-  private configLoader: ConfigLoaderService;
   private autoResponseService: AutoResponseService;
   private messageQueueService: MessageQueueService;
   private messageHandlerService: MessageHandlerService;
@@ -27,7 +26,6 @@ export class BotFleetService {
   ) {
     this.botFactory = botFactory;
     this.channelManager = channelManager;
-    this.configLoader = new ConfigLoaderService();
     this.messageQueueService = new MessageQueueService();
     this.autoResponseService = new AutoResponseService(this.messageQueueService);
     this.messageHandlerService = new MessageHandlerService(this.autoResponseService);
@@ -36,7 +34,7 @@ export class BotFleetService {
   /**
    * Start all bots from configuration
    */
-  async start(): Promise<void> {
+  async start(botConfigurations: BotConfiguration[]): Promise<void> {
     if (this.isRunning) {
       console.log('🤖 Bot Fleet Launcher is already running');
       return;
@@ -45,25 +43,17 @@ export class BotFleetService {
     try {
       console.log('🚀 Starting chat BotForge...');
 
-      // Load bot configurations
-      const botConfigs = await this.configLoader.loadBotConfigurations();
-
-      if (botConfigs.length === 0) {
+      if (botConfigurations.length === 0) {
         console.log('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.');
         return;
       }
 
       // Create and initialize bots with delays to avoid conflicts
-      for (const config of botConfigs) {
-        if (!this.configLoader.validateBotConfig(config)) {
-          console.error(`❌ Invalid configuration for bot: ${config.name}`);
-          continue;
-        }
-
+      for (const config of botConfigurations) {
         await this.initializeBot(config);
 
         // Add delay between bot initializations to prevent resource conflicts
-        if (botConfigs.length > 1) {
+        if (botConfigurations.length > 1) {
           console.log('⏳ Waiting 3 seconds before initializing next bot...');
           await this.delay(3000);
         }
