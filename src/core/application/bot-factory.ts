@@ -2,9 +2,8 @@ import { Bot, BotSettingsData, AutoResponseData, WebhookData } from '../domain/e
 import { BotConfiguration } from '../domain/entities/config.entity';
 import { BotId } from '../domain/value-objects/bot-id.vo';
 import { PhoneNumber } from '../domain/value-objects/phone-number.vo';
-import { IBotFactory } from '../domain/interfaces/bot-factory.interface';
 
-export class BotFactory implements IBotFactory {
+export class BotFactory {
   createFromConfig(config: BotConfiguration): Bot {
     // Validate and create value objects
     const id = new BotId(config.id);
@@ -67,7 +66,4 @@ export class BotFactory implements IBotFactory {
     return new Bot(id, name, settings, phone, autoResponses, webhooks);
   }
 
-  createBots(configs: BotConfiguration[]): Bot[] {
-    return configs.map(config => this.createFromConfig(config));
-  }
 }

@@ -1,4 +1,4 @@
-import { BotFactory } from '../../../src/core/infrastructure/bot-factory';
+import { BotFactory } from '../../../src/core/application/bot-factory';
 
 describe('BotFactory', () => {
   let factory: BotFactory;
@@ -195,7 +195,7 @@ describe('BotFactory', () => {
         ]
       };
 
-      const bots = factory.createBots(rawConfig.bots);
+      const bots = rawConfig.bots.map(config => factory.createFromConfig(config));
 
       expect(bots).toHaveLength(2);
       expect(bots[0].id.value).toBe('bot1');

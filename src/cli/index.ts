@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import { createBotCommand } from './commands/create-bot';
 import { BotFleetService } from '../core/application/bot-fleet.service';
-import { BotFactory } from '../core/infrastructure/bot-factory';
+import { BotFactory } from '../core/application/bot-factory';
 import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp-session-manager';
 
 const program = new Command();

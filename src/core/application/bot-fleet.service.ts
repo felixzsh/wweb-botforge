@@ -1,5 +1,5 @@
 import { Bot } from '../domain/entities/bot.entity';
-import { IBotFactory } from '../domain/interfaces/bot-factory.interface';
+import { BotFactory } from './bot-factory';
 import { ConfigLoaderService } from './config-loader.service';
 import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
@@ -17,12 +17,12 @@ export class BotFleetService {
   private autoResponseService: AutoResponseService;
   private messageQueueService: MessageQueueService;
   private messageHandlerService: MessageHandlerService;
-  private botFactory: IBotFactory;
+  private botFactory: BotFactory;
   private channelManager: IChannelManager;
   private isRunning: boolean = false;
 
   constructor(
-    botFactory: IBotFactory,
+    botFactory: BotFactory,
     channelManager: IChannelManager
   ) {
     this.botFactory = botFactory;

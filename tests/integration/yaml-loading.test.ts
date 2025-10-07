@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { YamlLoader } from '../../src/core/infrastructure/yaml-loader';
-import { BotFactory } from '../../src/core/infrastructure/bot-factory';
+import { BotFactory } from '../../src/core/application/bot-factory';
 
 describe('YAML Loading Integration', () => {
   let factory: BotFactory;
@@ -16,7 +16,7 @@ describe('YAML Loading Integration', () => {
 
       expect(rawConfig).toHaveLength(2);
 
-      const bots = factory.createBots(rawConfig);
+      const bots = rawConfig.map(config => factory.createFromConfig(config));
       expect(bots).toHaveLength(2);
 
       // Check first bot
@@ -44,7 +44,7 @@ describe('YAML Loading Integration', () => {
 
       expect(rawConfig).toHaveLength(2);
 
-      const bots = factory.createBots(rawConfig);
+      const bots = rawConfig.map(config => factory.createFromConfig(config));
       expect(bots).toHaveLength(2);
 
       // Check first bot
@@ -128,13 +128,13 @@ describe('YAML Loading Integration', () => {
     it('should throw error for invalid bot id during bot creation', async () => {
       const loader = new YamlLoader(path.join(__dirname, '../fixtures/invalid-bot-id.yml'));
       const rawConfig = await loader.loadMainConfig();
-      expect(() => factory.createBots(rawConfig)).toThrow('Bot ID must be at least 3 characters long');
+      expect(() => rawConfig.map(config => factory.createFromConfig(config))).toThrow('Bot ID must be at least 3 characters long');
     });
 
     it('should throw error for invalid phone number during bot creation', async () => {
       const loader = new YamlLoader(path.join(__dirname, '../fixtures/invalid-phone.yml'));
       const rawConfig = await loader.loadMainConfig();
-      expect(() => factory.createBots(rawConfig)).toThrow('Invalid phone number format');
+      expect(() => rawConfig.map(config => factory.createFromConfig(config))).toThrow('Invalid phone number format');
     });
 
   });
@@ -146,7 +146,7 @@ describe('YAML Loading Integration', () => {
 
       expect(rawConfig).toHaveLength(1);
 
-      const bots = factory.createBots(rawConfig);
+      const bots = rawConfig.map(config => factory.createFromConfig(config));
       expect(bots).toHaveLength(1);
 
       const bot = bots[0];
@@ -168,7 +168,7 @@ describe('YAML Loading Integration', () => {
       const loader = new YamlLoader(path.join(__dirname, '../fixtures/camel-case-settings.yml'));
       const rawConfig = await loader.loadMainConfig();
 
-      const bots = factory.createBots(rawConfig);
+      const bots = rawConfig.map(config => factory.createFromConfig(config));
       const bot = bots[0];
 
       expect(bot.settings.simulateTyping).toBe(false);
@@ -184,7 +184,7 @@ describe('YAML Loading Integration', () => {
       const loader = new YamlLoader(path.join(__dirname, '../fixtures/extra-fields.yml'));
       const rawConfig = await loader.loadMainConfig();
 
-      const bots = factory.createBots(rawConfig);
+      const bots = rawConfig.map(config => factory.createFromConfig(config));
       expect(bots).toHaveLength(1);
 
       const bot = bots[0];
@@ -199,7 +199,7 @@ describe('YAML Loading Integration', () => {
       const loader = new YamlLoader(path.join(__dirname, '../fixtures/response-options.yml'));
       const rawConfig = await loader.loadMainConfig();
 
-      const bots = factory.createBots(rawConfig);
+      const bots = rawConfig.map(config => factory.createFromConfig(config));
       const bot = bots[0];
 
       expect(bot.autoResponses).toHaveLength(1);
