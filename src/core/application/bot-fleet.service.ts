@@ -3,29 +3,34 @@ import { IBotFactory } from '../domain/interfaces/bot-factory.interface';
 import { ConfigLoaderService } from './config-loader.service';
 import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
-import { IChatFactory } from '../domain/interfaces/chat-factory.interface';
-import { ChatMessage, IChatClient } from '../domain/entities/chat.entity';
+import { MessageHandlerService } from './message-handler.service';
+import { MessageChannel, IncomingMessage, OutgoingMessage } from '../domain/entities/channel.entity';
+import { IChannelManager } from '../domain/interfaces/channel-manager.interface';
 
 /**
  * Main bot fleet service for BotForge
- * Coordinates all bot operations: loading config, initializing chat clients, and processing messages
+ * Coordinates all bot operations: loading config, initializing channels, and processing messages
  */
 export class BotFleetService {
   private bots: Map<string, Bot> = new Map();
   private configLoader: ConfigLoaderService;
   private autoResponseService: AutoResponseService;
   private messageQueueService: MessageQueueService;
+  private messageHandlerService: MessageHandlerService;
   private botFactory: IBotFactory;
-  private chatFactory: IChatFactory;
+  private channelManager: IChannelManager;
   private isRunning: boolean = false;
-  private processedMessages: Map<string, Set<string>> = new Map();
 
-  constructor(botFactory: IBotFactory, chatFactory: IChatFactory) {
+  constructor(
+    botFactory: IBotFactory,
+    channelManager: IChannelManager
+  ) {
     this.botFactory = botFactory;
-    this.chatFactory = chatFactory;
+    this.channelManager = channelManager;
     this.configLoader = new ConfigLoaderService();
     this.messageQueueService = new MessageQueueService();
     this.autoResponseService = new AutoResponseService(this.messageQueueService);
+    this.messageHandlerService = new MessageHandlerService(this.autoResponseService);
   }
 
   /**
@@ -48,7 +53,7 @@ export class BotFleetService {
         return;
       }
 
-      // Create and initialize bots
+      // Create and initialize bots with delays to avoid conflicts
       for (const config of botConfigs) {
         if (!this.configLoader.validateBotConfig(config)) {
           console.error(`❌ Invalid configuration for bot: ${config.name}`);
@@ -56,6 +61,12 @@ export class BotFleetService {
         }
 
         await this.initializeBot(config);
+
+        // Add delay between bot initializations to prevent resource conflicts
+        if (botConfigs.length > 1) {
+          console.log('⏳ Waiting 3 seconds before initializing next bot...');
+          await this.delay(3000);
+        }
       }
 
       this.isRunning = true;
@@ -85,19 +96,17 @@ export class BotFleetService {
       // Shutdown message queues
       await this.messageQueueService.shutdown();
 
-      // Destroy all chat clients
-      await this.chatFactory.destroyAllClients();
+      // Destroy all channels
+      await this.channelManager.removeAllChannels();
 
       // Clear bot instances
       this.bots.clear();
 
-      // Clear processed messages cache
-      this.processedMessages.clear();
 
       this.isRunning = false;
       console.log('✅ chat BotForge stopped successfully');
     } catch (error) {
-      console.error('❌ Error stopping Bot Orchestrator:', error);
+      console.error('❌ Error stopping Bot Fleet:', error);
       throw error;
     }
   }
@@ -113,17 +122,20 @@ export class BotFleetService {
       const bot = this.botFactory.createFromConfig(config);
       this.bots.set(bot.id.value, bot);
 
-      // Create chat client for this bot
-      const whatsappClient = this.chatFactory.createClient(bot.id.value);
+      // Create message channel for this bot
+      const channel = this.channelManager.createChannel(bot.id.value);
 
       // Configure message queue for this bot
-      this.configureBotQueue(bot);
+      this.configureBotQueue(bot, channel);
+
+      // Register bot with message handler service
+      this.messageHandlerService.registerBot(bot, channel);
 
       // Set up event handlers
-      this.setupBotEventHandlers(bot, whatsappClient);
+      this.setupBotEventHandlers(bot, channel);
 
-      // Initialize chat client
-      await whatsappClient.initialize();
+      // Initialize channel
+      await channel.connect();
 
       console.log(`✅ Bot "${bot.name}" initialized and ready`);
 
@@ -136,21 +148,16 @@ export class BotFleetService {
   /**
    * Configure message queue for a specific bot
    */
-  private configureBotQueue(bot: Bot): void {
+  private configureBotQueue(bot: Bot, channel: MessageChannel): void {
     const botId = bot.id.value;
 
-    // Set delay based on bot's typing delay setting (converted to milliseconds)
+    // Set delay based on bot's typing delay setting
     const delayMs = bot.settings.typingDelay;
     this.messageQueueService.setBotDelay(botId, delayMs);
 
-    // Set send callback that uses chat client
-    this.messageQueueService.setBotSendCallback(botId, async (botId, phoneNumber, message, options) => {
-      const chatClient = this.chatFactory.getClient(botId);
-      if (!chatClient) {
-        throw new Error(`chat client not found for bot ${botId}`);
-      }
-
-      await chatClient.sendMessage(phoneNumber, message, options);
+    // Set send callback that uses message channel
+    this.messageQueueService.setBotSendCallback(botId, async (botId: string, message: OutgoingMessage) => {
+      await channel.send(message);
     });
 
     console.log(`📋 Configured message queue for bot "${bot.name}": delay=${delayMs}ms`);
@@ -159,83 +166,31 @@ export class BotFleetService {
   /**
    * Set up event handlers for a bot
    */
-  private setupBotEventHandlers(bot: Bot, chatClient: IChatClient): void {
-    // Handle QR codes for authentication
-    chatClient.onQRCode((qrCode: string) => {
-      console.log(`\n📱 QR Code for bot "${bot.name}":`);
-      console.log('Scan this QR code with chat on your phone:');
-      // In a real implementation, you might want to display this differently
-      // For now, we'll just log it
-      console.log(qrCode);
-    });
-
-    // Handle successful authentication
-    chatClient.onReady(() => {
-      console.log(`✅ Bot "${bot.name}" is authenticated and ready!`);
-    });
-
-    // Handle incoming messages
-    chatClient.onMessage(async (message: ChatMessage) => {
-      await this.handleIncomingMessage(bot, message);
-    });
-
-    // Handle authentication failures
-    chatClient.onAuthFailure((error: Error) => {
-      console.error(`❌ Authentication failed for bot "${bot.name}":`, error.message);
+  private setupBotEventHandlers(bot: Bot, channel: MessageChannel): void {
+    // Handle ready event
+    channel.onReady(() => {
+      console.log(`✅ Bot "${bot.name}" is ready!`);
     });
 
     // Handle disconnections
-    chatClient.onDisconnected((reason: string) => {
+    channel.onDisconnected((reason: string) => {
       console.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason);
     });
-  }
 
-  /**
-   * Handle incoming messages for a bot
-   */
-  private async handleIncomingMessage(bot: Bot, message: ChatMessage): Promise<void> {
-    // **NEW: Skip messages from ignored senders**
-    if (bot.settings.ignoredSenders.includes(message.from)) {
-      return; // Silently ignore messages from blacklisted senders
-    }
+    // Handle auth failures
+    channel.onAuthFailure((error: Error) => {
+      console.error(`❌ Bot "${bot.name}" authentication failed:`, error.message);
+    });
 
-    // Deduplicate messages to prevent processing the same message multiple times
-    const botId = bot.id.value;
-    if (!this.processedMessages.has(botId)) {
-      this.processedMessages.set(botId, new Set());
-    }
-    const processedSet = this.processedMessages.get(botId)!;
-    if (processedSet.has(message.id)) {
-      console.log(`⚠️  Skipping duplicate message ${message.id} for bot "${bot.name}"`);
-      return;
-    }
-    processedSet.add(message.id);
+    // Handle connection errors
+    channel.onConnectionError((error: Error) => {
+      console.error(`❌ Bot "${bot.name}" connection error:`, error.message);
+    });
 
-    try {
-      // Check if message should be processed
-      if (!this.autoResponseService.shouldProcessMessage(bot, message)) {
-        return;
-      }
-
-      // Process auto-response
-      const autoResponse = this.autoResponseService.processMessage(bot, message);
-
-      if (autoResponse) {
-        // Queue the auto-response (will be sent with delay)
-        this.autoResponseService.sendAutoResponse(bot, message, autoResponse);
-      }
-
-      // Log the message processing
-      this.autoResponseService.logMessageProcessing(
-        bot,
-        message,
-        !!autoResponse,
-        autoResponse?.response
-      );
-
-    } catch (error) {
-      console.error(`❌ Error processing message for bot "${bot.name}":`, error);
-    }
+    // Handle state changes
+    channel.onStateChange((state: string) => {
+      console.log(`ℹ️  Bot "${bot.name}" state changed to:`, state);
+    });
   }
 
 
@@ -272,15 +227,11 @@ export class BotFleetService {
    */
   getStatus(): any {
     const botStatuses = Array.from(this.bots.values()).map(bot => {
-      const whatsappClient = this.chatFactory.getClient(bot.id.value);
-      const session = whatsappClient?.getSession();
       const queueStatus = this.messageQueueService.getBotQueueStatus(bot.id.value);
 
       return {
         id: bot.id.value,
         name: bot.name,
-        status: session?.state || 'unknown',
-        phoneNumber: session?.phoneNumber,
         autoResponsesCount: bot.autoResponses.length,
         webhooksCount: bot.webhooks.length,
         queue: {
@@ -303,9 +254,16 @@ export class BotFleetService {
   }
 
   /**
-   * Check if orchestrator is running
+   * Check if fleet is running
    */
   isRunningStatus(): boolean {
     return this.isRunning;
+  }
+
+  /**
+   * Utility method for delays
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

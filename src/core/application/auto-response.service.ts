@@ -1,5 +1,5 @@
 import { Bot, AutoResponseData } from '../domain/entities/bot.entity';
-import { ChatMessage } from '../domain/entities/chat.entity';
+import { IncomingMessage, OutgoingMessage } from '../domain/entities/channel.entity';
 import { MessageQueueService } from './message-queue.service';
 
 /**
@@ -11,20 +11,20 @@ export class AutoResponseService {
   /**
    * Process an incoming message and find matching auto-responses
    */
-  processMessage(bot: Bot, message: ChatMessage): AutoResponseData | null {
+  processMessage(bot: Bot, message: IncomingMessage): AutoResponseData | null {
     // Skip messages from the bot itself
-    if (message.fromMe) {
+    if (message.metadata?.fromMe) {
       return null;
     }
 
     // Skip messages from groups if configured
-    if (bot.settings.ignoreGroups && message.from.includes('@g.us')) {
+    if (bot.settings.ignoreGroups && this.isGroupMessage(message.from)) {
       console.log(`🚫 Ignoring group message for bot "${bot.name}"`);
       return null;
     }
 
     // Find matching auto-response
-    const matchingResponse = bot.findMatchingAutoResponse(message.body);
+    const matchingResponse = bot.findMatchingAutoResponse(message.content);
 
     if (matchingResponse) {
       console.log(`🤖 Auto-response triggered for bot "${bot.name}": "${matchingResponse.pattern}" → "${matchingResponse.response}"`);
@@ -46,14 +46,14 @@ export class AutoResponseService {
   /**
    * Check if message should be processed based on bot settings
    */
-  shouldProcessMessage(bot: Bot, message: ChatMessage): boolean {
+  shouldProcessMessage(bot: Bot, message: IncomingMessage): boolean {
     // Skip own messages
-    if (message.fromMe) {
+    if (message.metadata?.fromMe) {
       return false;
     }
 
     // Check group settings
-    if (bot.settings.ignoreGroups && message.from.includes('@g.us')) {
+    if (bot.settings.ignoreGroups && this.isGroupMessage(message.from)) {
       return false;
     }
 
@@ -66,33 +66,23 @@ export class AutoResponseService {
   /**
    * Get response options for sending the message
    */
-  getResponseOptions(autoResponse: AutoResponseData) {
+  private getResponseMetadata(autoResponse: AutoResponseData): Record<string, any> {
     if (!autoResponse.responseOptions) {
       return {};
     }
 
+    // Convert response options to metadata
     return {
-      linkPreview: autoResponse.responseOptions.linkPreview,
-      sendAudioAsVoice: autoResponse.responseOptions.sendAudioAsVoice,
-      sendVideoAsGif: autoResponse.responseOptions.sendVideoAsGif,
-      sendMediaAsSticker: autoResponse.responseOptions.sendMediaAsSticker,
-      sendMediaAsDocument: autoResponse.responseOptions.sendMediaAsDocument,
-      sendMediaAsHd: autoResponse.responseOptions.sendMediaAsHd,
-      isViewOnce: autoResponse.responseOptions.isViewOnce,
-      parseVCards: autoResponse.responseOptions.parseVCards,
-      caption: autoResponse.responseOptions.caption,
-      quotedMessageId: autoResponse.responseOptions.quotedMessageId,
-      groupMentions: autoResponse.responseOptions.groupMentions,
-      mentions: autoResponse.responseOptions.mentions,
-      sendSeen: autoResponse.responseOptions.sendSeen,
-      invokedBotWid: autoResponse.responseOptions.invokedBotWid,
-      stickerAuthor: autoResponse.responseOptions.stickerAuthor,
-      stickerName: autoResponse.responseOptions.stickerName,
-      stickerCategories: autoResponse.responseOptions.stickerCategories,
-      ignoreQuoteErrors: autoResponse.responseOptions.ignoreQuoteErrors,
-      waitUntilMsgSent: autoResponse.responseOptions.waitUntilMsgSent,
-      media: autoResponse.responseOptions.media
+      ...autoResponse.responseOptions,
+      // Add any additional metadata needed for the specific channel
     };
+  }
+
+  /**
+   * Check if a message is from a group
+   */
+  private isGroupMessage(from: string): boolean {
+    return from.includes('g.us');
   }
 
   /**
@@ -107,20 +97,24 @@ export class AutoResponseService {
    */
   sendAutoResponse(
     bot: Bot,
-    originalMessage: ChatMessage,
-    autoResponse: any
+    originalMessage: IncomingMessage,
+    autoResponse: AutoResponseData
   ): string {
     try {
-      // Prepare response options
-      const responseOptions = this.getResponseOptions(autoResponse);
+      // Create outgoing message
+      const outgoingMessage: OutgoingMessage = {
+        to: originalMessage.from,
+        content: autoResponse.response,
+        metadata: this.getResponseMetadata(autoResponse)
+      };
 
-      // Queue the response instead of sending directly
+      // Queue the response
       const messageId = this.messageQueue.enqueue(
         bot.id.value,
-        originalMessage.from,
-        autoResponse.response,
+        outgoingMessage.to,
+        outgoingMessage.content,
         0, // Default priority
-        responseOptions
+        outgoingMessage.metadata
       );
 
       console.log(`📋 Auto-response queued for bot "${bot.name}": ${messageId}`);
@@ -135,11 +129,11 @@ export class AutoResponseService {
   /**
    * Log message processing for debugging
    */
-  logMessageProcessing(bot: Bot, message: ChatMessage, matched: boolean, response?: string) {
+  logMessageProcessing(bot: Bot, message: IncomingMessage, matched: boolean, response?: string) {
     const logData = {
       bot: bot.name,
       from: message.from,
-      message: message.body.substring(0, 50) + (message.body.length > 50 ? '...' : ''),
+      message: message.content.substring(0, 50) + (message.content.length > 50 ? '...' : ''),
       matched,
       response: response ? response.substring(0, 50) + (response.length > 50 ? '...' : '') : undefined,
       timestamp: new Date().toISOString()

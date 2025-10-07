@@ -1,10 +1,11 @@
 import { Bot } from '../domain/entities/bot.entity';
-import { IChatClient, ChatMessage } from '../domain/entities/chat.entity';
+import { MessageChannel, IncomingMessage, OutgoingMessage } from '../domain/entities/channel.entity';
+import { AutoResponseService } from './auto-response.service';
 
 /**
  * Callback type for handling processed messages
  */
-export type MessageHandlerCallback = (bot: Bot, message: ChatMessage, response?: string) => void;
+export type MessageHandlerCallback = (bot: Bot, message: IncomingMessage, response?: string) => void;
 
 /**
  * Handles incoming chat messages and routes them to the appropriate bot logic
@@ -13,20 +14,25 @@ export type MessageHandlerCallback = (bot: Bot, message: ChatMessage, response?:
 export class MessageHandlerService {
   private bots: Map<string, Bot> = new Map();
   private messageHandlers: Map<string, MessageHandlerCallback> = new Map();
+  private autoResponseService: AutoResponseService;
+
+  constructor(autoResponseService: AutoResponseService) {
+    this.autoResponseService = autoResponseService;
+  }
 
   /**
-   * Register a bot with its chat client
+   * Register a bot with its message channel
    */
-  registerBot(bot: Bot, chatClient: IChatClient): void {
+  registerBot(bot: Bot, channel: MessageChannel): void {
     this.bots.set(bot.id.value, bot);
 
     // Set up message listener for this bot
-    chatClient.onMessage((message: ChatMessage) => {
+    channel.onMessage((message: IncomingMessage) => {
       this.handleIncomingMessage(bot, message);
     });
 
     // Set up ready listener to log when bot is ready
-    chatClient.onReady(() => {
+    channel.onReady(() => {
       console.log(`🤖 Bot "${bot.name}" (${bot.id.value}) is ready and listening for messages`);
     });
   }
@@ -49,33 +55,35 @@ export class MessageHandlerService {
   /**
    * Handle incoming message from chat
    */
-  private async handleIncomingMessage(bot: Bot, message: ChatMessage): Promise<void> {
-    // Skip messages from the bot itself
-    if (message.fromMe) {
-      return;
-    }
-
-    console.log(`📨 Message received for bot "${bot.name}": ${message.body.substring(0, 50)}...`);
+  private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
+    console.log(`📨 Message received for bot "${bot.name}": ${message.content.substring(0, 50)}...`);
 
     try {
-      // First, check for auto-responses
-      const autoResponse = bot.findMatchingAutoResponse(message.body);
+      // Check if message should be processed
+      if (!this.autoResponseService.shouldProcessMessage(bot, message)) {
+        return;
+      }
+
+      // Process auto-response
+      const autoResponse = this.autoResponseService.processMessage(bot, message);
+
       if (autoResponse) {
-        await this.handleAutoResponse(bot, message, autoResponse);
-        return;
+        // Send auto-response
+        this.autoResponseService.sendAutoResponse(bot, message, autoResponse);
       }
 
-      // Then, check for webhooks
-      const webhook = bot.findMatchingWebhook(message.body);
-      if (webhook) {
-        await this.handleWebhook(bot, message, webhook);
-        return;
-      }
+      // Log the message processing
+      this.autoResponseService.logMessageProcessing(
+        bot,
+        message,
+        !!autoResponse,
+        autoResponse?.response
+      );
 
-      // If no auto-response or webhook matches, call custom handler if registered
+      // Call custom handler if registered
       const customHandler = this.messageHandlers.get(bot.id.value);
       if (customHandler) {
-        customHandler(bot, message);
+        customHandler(bot, message, autoResponse?.response);
       }
 
     } catch (error) {
@@ -83,67 +91,6 @@ export class MessageHandlerService {
     }
   }
 
-  /**
-   * Handle auto-response logic
-   */
-  private async handleAutoResponse(bot: Bot, message: ChatMessage, autoResponse: any): Promise<void> {
-    console.log(`🤖 Auto-response triggered for bot "${bot.name}": ${autoResponse.pattern}`);
-
-    // Get the chat client for this bot
-    const botId = bot.id.value;
-    const customHandler = this.messageHandlers.get(botId);
-
-    if (customHandler) {
-      // Let the custom handler process the auto-response
-      customHandler(bot, message, autoResponse.response);
-    } else {
-      // Default behavior: send the auto-response
-      // Note: In a real implementation, we would need access to the chat client
-      // This would be handled by the application layer
-      console.log(`📤 Would send auto-response: "${autoResponse.response}"`);
-    }
-  }
-
-  /**
-   * Handle webhook logic
-   */
-  private async handleWebhook(bot: Bot, message: ChatMessage, webhook: any): Promise<void> {
-    console.log(`🌐 Webhook triggered for bot "${bot.name}": ${webhook.name}`);
-
-    // In a real implementation, this would make an HTTP request to the webhook URL
-    // For now, just log the webhook details
-    console.log(`📡 Webhook details:`, {
-      name: webhook.name,
-      url: webhook.url,
-      method: webhook.method,
-      pattern: webhook.pattern
-    });
-
-    // Call custom handler if registered
-    const customHandler = this.messageHandlers.get(bot.id.value);
-    if (customHandler) {
-      customHandler(bot, message);
-    }
-  }
-
-  /**
-   * Send a message through a bot's chat client
-   * This method would be called by the application layer
-   */
-  async sendMessage(botId: string, to: string, message: string, options?: any): Promise<string> {
-    const bot = this.bots.get(botId);
-    if (!bot) {
-      throw new Error(`Bot with ID "${botId}" not found`);
-    }
-
-    // Note: In a complete implementation, we would have access to the chat client
-    // This would be provided by the application layer that coordinates between
-    // the message handler and the session manager
-    console.log(`📤 Would send message from bot "${bot.name}" to ${to}: ${message}`);
-
-    // Return a mock message ID for now
-    return `mock-${Date.now()}`;
-  }
 
   /**
    * Get all registered bots

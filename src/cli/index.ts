@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import { createBotCommand } from './commands/create-bot';
 import { BotFleetService } from '../core/application/bot-fleet.service';
 import { BotFactory } from '../core/infrastructure/bot-factory';
-import { WhatsAppFactory } from '../core/infrastructure/whatsapp';
+import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp-session-manager';
 
 const program = new Command();
 
@@ -22,10 +22,10 @@ program
 if (process.argv.length === 2) {
   console.log('🤖 WhatsApp BotForge - Starting bots...\n');
 
-  // NOTE: ensure to apply composition root
+  // Composition root - wire up dependencies
   const botFactory = new BotFactory();
-  const whatsappFactory = WhatsAppFactory.getInstance();
-  const fleetLauncher = new BotFleetService(botFactory, whatsappFactory);
+  const channelManager = WhatsAppSessionManager.getInstance();
+  const fleetLauncher = new BotFleetService(botFactory, channelManager);
 
   fleetLauncher.start().catch((error) => {
     console.error('❌ Failed to start bots:', error);

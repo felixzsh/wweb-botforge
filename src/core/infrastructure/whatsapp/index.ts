@@ -5,8 +5,28 @@
  * following Clean Architecture principles.
  */
 
-export { IChatClient as IWhatsAppClient, IChatSessionManager as IWhatsAppSessionManager, ChatClientState as WhatsAppClientState, ChatMessage as WhatsAppMessage, ChatSession as WhatsAppSession } from '../../domain/entities/chat.entity';
-export { WhatsAppClient } from './whatsapp-client';
+// Export domain interfaces that this infrastructure implements
+export { MessageChannel, IncomingMessage, OutgoingMessage } from '../../domain/entities/channel.entity';
+
+// Export WhatsApp infrastructure components
+export { WhatsAppChannel } from './whatsapp-channel';
+export { WhatsAppInitializer } from './whatsapp-initializer';
 export { WhatsAppSessionManager } from './whatsapp-session-manager';
-export { WhatsAppFactory } from './whatsapp-factory';
-export { WhatsAppUtils, WhatsAppMessageType, WhatsAppConnectionState, WhatsAppMessageOptions } from './whatsapp-types';
+export { WhatsAppMessageAdapter } from './whatsapp-message-adapter';
+
+// Export WhatsApp-specific types and utilities
+export { 
+  WhatsAppUtils, 
+  WhatsAppMessageType, 
+  WhatsAppMessageOptions,
+  WhatsAppMediaInfo,
+  WhatsAppContact,
+  WhatsAppGroup
+} from './whatsapp-types';
+
+// Export types for initialization and authentication
+export { 
+  QRCodeHandler, 
+  AuthSuccessHandler, 
+  AuthFailureHandler 
+} from './whatsapp-initializer';

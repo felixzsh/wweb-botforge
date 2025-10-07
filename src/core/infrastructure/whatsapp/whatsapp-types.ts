@@ -107,20 +107,11 @@ export interface WhatsAppGroup {
  */
 export class WhatsAppUtils {
   /**
-   * Normalize phone number to WhatsApp format
+   * Normalize phone number to WhatsApp format (digits only)
    */
   static normalizePhoneNumber(phoneNumber: string): string {
-    // Remove all non-digit characters except +
-    let normalized = phoneNumber.replace(/[^\d+]/g, '');
-    
-    // If it doesn't start with +, assume it's a local number and add country code
-    if (!normalized.startsWith('+')) {
-      // Default to Mexico country code if no country code provided
-      // In a real implementation, this should be configurable
-      normalized = '+52' + normalized;
-    }
-    
-    return normalized;
+    // Remove all non-digit characters
+    return phoneNumber.replace(/\D/g, '');
   }
 
   /**
@@ -154,9 +145,7 @@ export class WhatsAppUtils {
    */
   static phoneNumberToWid(phoneNumber: string): string {
     const normalized = this.normalizePhoneNumber(phoneNumber);
-    // Remove + for WhatsApp ID
-    const numberOnly = normalized.replace('+', '');
-    return `${numberOnly}@c.us`;
+    return `${normalized}@c.us`;
   }
 
   /**

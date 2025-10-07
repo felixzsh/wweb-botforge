@@ -1,108 +1,86 @@
-import {
-  IChatSessionManager,
-  IChatClient,
-  ChatSession
-} from '../../domain/entities/chat.entity';
-import { WhatsAppClient } from './whatsapp-client';
+import { MessageChannel } from '../../domain/entities/channel.entity';
+import { IChannelManager } from '../../domain/interfaces/channel-manager.interface';
+import { WhatsAppChannel } from './whatsapp-channel';
 
 /**
- * Manages multiple chat client sessions
- * This class is responsible for creating, storing, and managing multiple chat clients
+ * Manages WhatsApp channel sessions
+ * Implements the domain's IChannelManager interface
  */
-export class WhatsAppSessionManager implements IChatSessionManager {
-  private clients: Map<string, IChatClient> = new Map();
+export class WhatsAppSessionManager implements IChannelManager {
+  private static instance: WhatsAppSessionManager;
+  private channels: Map<string, WhatsAppChannel>;
 
-  createClient(botId: string): IChatClient {
-    if (this.clients.has(botId)) {
-      throw new Error(`WhatsApp client for bot '${botId}' already exists`);
+  private constructor() {
+    this.channels = new Map();
+  }
+
+  static getInstance(): WhatsAppSessionManager {
+    if (!this.instance) {
+      this.instance = new WhatsAppSessionManager();
+    }
+    return this.instance;
+  }
+
+  /**
+   * Create a new WhatsApp channel
+   */
+  createChannel(id: string): MessageChannel {
+    if (this.channels.has(id)) {
+      throw new Error(`Channel already exists for ID ${id}`);
     }
 
-    const client = new WhatsAppClient(botId);
-    this.clients.set(botId, client);
-    
-    return client;
+    const channel = new WhatsAppChannel(id);
+    this.channels.set(id, channel);
+    return channel;
   }
 
-  getClient(botId: string): IChatClient | undefined {
-    return this.clients.get(botId);
+  /**
+   * Get an existing WhatsApp channel
+   */
+  getChannel(id: string): MessageChannel | undefined {
+    return this.channels.get(id);
   }
 
-  getAllClients(): Map<string, IChatClient> {
-    return new Map(this.clients);
+  /**
+   * Get all active channels
+   */
+  getAllChannels(): Map<string, MessageChannel> {
+    return new Map(this.channels);
   }
 
-  async destroyClient(botId: string): Promise<void> {
-    const client = this.clients.get(botId);
-    if (client) {
-      await client.destroy();
-      this.clients.delete(botId);
+  /**
+   * Remove a channel
+   */
+  async removeChannel(id: string): Promise<void> {
+    const channel = this.channels.get(id);
+    if (channel) {
+      await channel.disconnect();
+      this.channels.delete(id);
     }
   }
 
-  async destroyAllClients(): Promise<void> {
-    const destroyPromises = Array.from(this.clients.keys()).map(botId => 
-      this.destroyClient(botId)
+  /**
+   * Remove all channels
+   */
+  async removeAllChannels(): Promise<void> {
+    const disconnectPromises = Array.from(this.channels.values()).map(
+      channel => channel.disconnect()
     );
-    await Promise.allSettled(destroyPromises);
-  }
-
-  getSessions(): ChatSession[] {
-    return Array.from(this.clients.values()).map(client => client.getSession());
+    await Promise.all(disconnectPromises);
+    this.channels.clear();
   }
 
   /**
-   * Get client by phone number
+   * Get the number of active channels
    */
-  getClientByPhoneNumber(phoneNumber: string): IChatClient | undefined {
-    for (const client of this.clients.values()) {
-      const session = client.getSession();
-      if (session.phoneNumber === phoneNumber) {
-        return client;
-      }
-    }
-    return undefined;
+  getChannelCount(): number {
+    return this.channels.size;
   }
 
   /**
-   * Check if a client exists for the given bot ID
+   * Check if a channel exists
    */
-  hasClient(botId: string): boolean {
-    return this.clients.has(botId);
-  }
-
-  /**
-   * Get the number of active clients
-   */
-  getClientCount(): number {
-    return this.clients.size;
-  }
-
-  /**
-   * Get clients by state
-   */
-  getClientsByState(state: ChatSession['state']): IChatClient[] {
-    return Array.from(this.clients.values()).filter(
-      client => client.getState() === state
-    );
-  }
-
-  /**
-   * Initialize all clients
-   */
-  async initializeAllClients(): Promise<void> {
-    const initializePromises = Array.from(this.clients.values()).map(client => 
-      client.initialize().catch(error => {
-        console.error(`Failed to initialize client: ${error.message}`);
-        return Promise.resolve(); // Don't throw, just log and continue
-      })
-    );
-    await Promise.all(initializePromises);
-  }
-
-  /**
-   * Gracefully shutdown all clients
-   */
-  async shutdown(): Promise<void> {
-    await this.destroyAllClients();
+  hasChannel(id: string): boolean {
+    return this.channels.has(id);
   }
 }

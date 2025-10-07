@@ -1,18 +1,20 @@
+import { OutgoingMessage } from '../domain/entities/channel.entity';
+
 /**
- * Message queue for bot responses with configurable delays
- * Prevents bots from responding instantly, making them appear more human-like
+ * Represents a message in the queue
  */
 export interface QueuedMessage {
   id: string;
   botId: string;
-  phoneNumber: string;
-  message: any;
+  message: OutgoingMessage;
   priority: number;
   timestamp: number;
-  options?: any;
 }
 
-export type SendMessageCallback = (botId: string, phoneNumber: string, message: any, options?: any) => Promise<void>;
+/**
+ * Callback type for sending messages
+ */
+export type SendMessageCallback = (botId: string, message: OutgoingMessage) => Promise<void>;
 
 /**
  * Message queue service that manages delayed responses for multiple bots
@@ -42,17 +44,27 @@ export class MessageQueueService {
   /**
    * Add message to queue for a specific bot
    */
-  enqueue(botId: string, phoneNumber: string, message: any, priority: number = 0, options?: any): string {
+  enqueue(
+    botId: string, 
+    to: string, 
+    content: string, 
+    priority: number = 0, 
+    metadata?: Record<string, any>
+  ): string {
     const messageId = `${botId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const outgoingMessage: OutgoingMessage = {
+      to,
+      content,
+      metadata
+    };
 
     const queuedMessage: QueuedMessage = {
       id: messageId,
       botId,
-      phoneNumber,
-      message,
+      message: outgoingMessage,
       priority,
-      timestamp: Date.now(),
-      options
+      timestamp: Date.now()
     };
 
     // Get or create queue for this bot
@@ -111,7 +123,7 @@ export class MessageQueueService {
         // Send message using callback
         const callback = this.sendCallbacks.get(botId);
         if (callback) {
-          await callback(botId, messageData.phoneNumber, messageData.message, messageData.options);
+          await callback(botId, messageData.message);
           console.log(`✅ Queued message sent successfully: ${messageData.id}`);
         } else {
           console.error(`❌ No send callback configured for bot "${botId}"`);
@@ -143,7 +155,7 @@ export class MessageQueueService {
       hasCallback: this.sendCallbacks.has(botId),
       nextMessage: queue.length > 0 ? {
         id: queue[0].id,
-        phoneNumber: queue[0].phoneNumber,
+        to: queue[0].message.to,
         priority: queue[0].priority,
         age: Date.now() - queue[0].timestamp
       } : null

@@ -5,7 +5,7 @@ import { join as joinPaths } from 'path';
 import { load as loadYaml, dump as dumpYaml } from 'js-yaml';
 import qrcode from 'qrcode-terminal';
 import { BotConfiguration } from '../../core/domain/entities/config.entity';
-import { WhatsAppFactory } from '../../core/infrastructure/whatsapp';
+import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
 
 export async function createBotCommand() {
   console.log('🤖 Welcome to WhatsApp BotForge!');
@@ -28,83 +28,75 @@ export async function createBotCommand() {
     ]);
 
     const botName = answers.botName.trim();
-    
-    // Generate bot ID from name
     const botId = generateBotId(botName);
     
     console.log(`\n✅ Generated bot ID: ${botId}`);
     console.log(`📝 Bot name: ${botName}`);
 
-    // Create WhatsApp client using the abstraction layer
-    const client = WhatsAppFactory.createClient(botId);
+    // Create WhatsApp initializer for authentication
+    const initializer = new WhatsAppInitializer(botId);
+    let phoneNumber: string | undefined;
 
-    console.log('\n🔗 Initializing WhatsApp Web client...');
-
-    // Generate and display QR code
-    client.onQRCode((qr: string) => {
+    // Handle QR code generation
+    initializer.onQRCode((qr: string) => {
       console.log('\n📱 Scan this QR code with WhatsApp to link your account:');
       qrcode.generate(qr, { small: true });
     });
 
-    // Handle authentication
-    client.onReady(() => {
+    // Handle successful authentication
+    initializer.onAuthSuccess((phone: string) => {
       console.log('\n✅ WhatsApp account linked successfully!');
-    });
-
-    // Handle ready event
-    client.onReady(async () => {
-      console.log('\n✅ WhatsApp client is ready!');
-
-      // Get the phone number from the authenticated session
-      const session = client.getSession();
-      if (session.phoneNumber) {
-        console.log(`📱 Connected to WhatsApp with phone: ${session.phoneNumber}`);
-      }
-
-      // Create bot configuration
-      const botConfig: BotConfiguration = {
-        id: botId,
-        name: botName,
-        phone: session.phoneNumber,
-        auto_responses: [],
-        webhooks: [],
-        settings: {
-          simulate_typing: true,
-          typing_delay: 1000,
-          read_receipts: true,
-          ignore_groups: true,
-          ignored_senders: ['status@broadcast'],
-          admin_numbers: [],
-          log_level: 'info'
-        }
-      };
-
-      // Save configuration to file
-      await saveBotConfig(botConfig);
-      
-      console.log(`\n📁 Bot configuration saved to config/main.yml`);
-      console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
-      console.log('\nTo start using your bot, run: npm start');
-      
-      // Gracefully close the client
-      await client.destroy();
-      process.exit(0);
+      console.log(`📱 Connected to WhatsApp with phone: ${phone}`);
+      phoneNumber = phone;
     });
 
     // Handle authentication failure
-    client.onAuthFailure((error: Error) => {
+    initializer.onAuthFailure((error: Error) => {
       console.error('\n❌ Authentication failed:', error.message);
       process.exit(1);
     });
 
-    // Handle disconnection
-    client.onDisconnected((reason: string) => {
-      console.log('\n⚠️  WhatsApp client disconnected:', reason);
-      process.exit(1);
+    console.log('\n🔗 Initializing WhatsApp Web client...');
+    await initializer.initialize();
+
+    // Wait for authentication to complete
+    await new Promise<void>((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (phoneNumber) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 1000);
     });
 
-    // Initialize the client
-    await client.initialize();
+    // Create bot configuration
+    const botConfig: BotConfiguration = {
+      id: botId,
+      name: botName,
+      phone: phoneNumber,
+      auto_responses: [],
+      webhooks: [],
+      settings: {
+        simulate_typing: true,
+        typing_delay: 1000,
+        read_receipts: true,
+        ignore_groups: true,
+        ignored_senders: ['status@broadcast'],
+        admin_numbers: [],
+        log_level: 'info'
+      }
+    };
+
+    // Save configuration to file
+    await saveBotConfig(botConfig);
+    
+    console.log(`\n📁 Bot configuration saved to config/main.yml`);
+    console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
+    console.log('\nTo start using your bot, run: npm start');
+    
+    // Clean up resources
+    await initializer.destroy();
+    process.exit(0);
 
   } catch (error) {
     console.error('\n❌ Error creating bot:', error);
