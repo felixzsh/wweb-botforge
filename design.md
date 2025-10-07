@@ -20,7 +20,7 @@ botforge/
 │   └── api/                 # 🌐 REST API (futuro)
 ├── config/
 │   └── main.yml            # 📄 Configuración principal
-├── sessions/               # 💾 Sesiones de WhatsApp
+├── .wwebjs_auth/           # 💾 Sesiones de WhatsApp
 └── tests/
 ```
 
@@ -30,7 +30,7 @@ botforge/
 - `cli/`: Command-line interface tools
 - `api/`: REST API endpoints (future)
 - `config/`: Configuration files
-- `sessions/`: WhatsApp session storage
+- `.wwebjs_auth/`: WhatsApp session storage
 
 ## Infrastructure Proposals
 
