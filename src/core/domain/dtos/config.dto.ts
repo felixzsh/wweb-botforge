@@ -62,16 +62,18 @@ export interface WebhookData {
   retry: number;
   priority: number;
 }
+// Global configuration for the entire BotForge system
+export interface GlobalConfig {
+  chromiumPath?: string;
+  logLevel?: 'info' | 'debug' | 'warn' | 'error';
+  // Add more global settings as needed
+}
 
-
-// TODO: configfile dto that will serve to represent
-// what a whole config file shoould have, for now yaml config will
-// be implemented ininfrastructure, but here this interface 
-// will contain only domain related representation
-// this interface will have as list of botconfigs,
-// and some main properties related to the
-// whole botforge, for example the path of chromium bin
-
+// ConfigFile DTO that represents the whole config file
+export interface ConfigFile {
+  global?: GlobalConfig;
+  bots: BotConfiguration[];
+}
 
 
 

@@ -1,13 +1,25 @@
+import { GlobalConfig } from '../../domain/dtos/config.dto';
+
 /**
  * Common WhatsApp Web.js configuration
  */
 export class WhatsAppConfig {
+  private static globalConfig: GlobalConfig | undefined;
+
+  /**
+   * Set global configuration for WhatsApp
+   */
+  static setGlobalConfig(config: GlobalConfig): void {
+    this.globalConfig = config;
+  }
+
   /**
    * Get Puppeteer launch options (always headless)
    */
   static getPuppeteerOptions(): any {
+    const chromiumPath = this.globalConfig?.chromiumPath || '/usr/bin/chromium';
     return {
-      executablePath: '/usr/bin/chromium',
+      executablePath: chromiumPath,
       headless: true,
       args: [
         '--no-sandbox',

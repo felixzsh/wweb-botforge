@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { BotConfiguration } from '../domain/dtos/config.dto';
+import { BotConfiguration, ConfigFile } from '../domain/dtos/config.dto';
 
 interface IncludeReference {
   '!include': string;
@@ -14,18 +14,18 @@ export class YamlLoader {
     this.configPath = configPath;
   }
 
-  async loadMainConfig(): Promise<BotConfiguration[]> {
+  async loadMainConfig(): Promise<ConfigFile> {
     const content = fs.readFileSync(this.configPath, 'utf8');
     const processedContent = this.processIncludes(content, path.dirname(this.configPath));
-    const mainConfig = yaml.load(processedContent) as { bots: BotConfiguration[] };
+    const mainConfig = yaml.load(processedContent) as ConfigFile;
 
     // Validate configuration
     this.validateConfig(mainConfig);
 
-    return mainConfig.bots;
+    return mainConfig;
   }
 
-  private validateConfig(config: { bots: any[] }): void {
+  private validateConfig(config: ConfigFile): void {
     if (!config.bots || !Array.isArray(config.bots)) {
       throw new Error('Configuration must contain a "bots" array');
     }
@@ -67,3 +67,4 @@ export class YamlLoader {
     return processedLines.join('\n');
   }
 }
+

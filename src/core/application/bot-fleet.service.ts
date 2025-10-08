@@ -4,7 +4,7 @@ import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
 import { IChannelManager } from '../domain/entities/channel-manager';
-import { BotConfiguration } from '../domain/dtos/config.dto';
+import { BotConfiguration, ConfigFile } from '../domain/dtos/config.dto';
 
 /**
  * Main bot fleet service for BotForge
@@ -33,7 +33,7 @@ export class BotFleetService {
   /**
    * Start all bots from configuration
    */
-  async start(botConfigurations: BotConfiguration[]): Promise<void> {
+  async start(configFile: ConfigFile): Promise<void> {
     if (this.isRunning) {
       console.log('🤖 Bot Fleet Launcher is already running');
       return;
@@ -42,17 +42,17 @@ export class BotFleetService {
     try {
       console.log('🚀 Starting chat BotForge...');
 
-      if (botConfigurations.length === 0) {
+      if (configFile.bots.length === 0) {
         console.log('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.');
         return;
       }
 
       // Create and initialize bots with delays to avoid conflicts
-      for (const config of botConfigurations) {
+      for (const config of configFile.bots) {
         await this.initializeBot(config);
 
         // Add delay between bot initializations to prevent resource conflicts
-        if (botConfigurations.length > 1) {
+        if (configFile.bots.length > 1) {
           console.log('⏳ Waiting 3 seconds before initializing next bot...');
           await this.delay(3000);
         }

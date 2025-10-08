@@ -4,7 +4,7 @@ import { existsSync as existsPathSync, mkdirSync, readFileSync, writeFileSync } 
 import { join as joinPaths } from 'path';
 import { load as loadYaml, dump as dumpYaml } from 'js-yaml';
 import qrcode from 'qrcode-terminal';
-import { BotConfiguration } from '../../core/domain/dtos/config.dto';
+import { BotConfiguration, ConfigFile } from '../../core/domain/dtos/config.dto';
 import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
 
 export async function createBotCommand() {
@@ -120,13 +120,13 @@ async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
     mkdirSync(configDir, { recursive: true });
   }
 
-  let existingConfig: { bots: BotConfiguration[] } = { bots: [] };
+  let existingConfig: ConfigFile = { bots: [] };
 
   // Read existing config if it exists
   if (existsPathSync(configFile)) {
     try {
       const content = readFileSync(configFile, 'utf8');
-      existingConfig = loadYaml(content) as { bots: BotConfiguration[] };
+      existingConfig = loadYaml(content) as ConfigFile;
 
       // Ensure bots array exists
       if (!existingConfig.bots) {

@@ -5,6 +5,7 @@ import { createBotCommand } from './commands/create-bot';
 import { BotFleetService } from '../core/application/bot-fleet.service';
 import { BotFactory } from '../core/application/bot-factory';
 import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp-session-manager';
+import { WhatsAppConfig } from '../core/infrastructure/whatsapp/whatsapp-config';
 import { YamlLoader } from '../core/infrastructure/yaml-loader';
 
 const program = new Command();
@@ -31,9 +32,14 @@ if (process.argv.length === 2) {
 
     // Load bot configurations from YAML
     const yamlLoader = new YamlLoader();
-    const botConfigs = await yamlLoader.loadMainConfig();
+    const configFile = await yamlLoader.loadMainConfig();
 
-    await fleetLauncher.start(botConfigs);
+    // Set global configuration for infrastructure
+    if (configFile.global) {
+      WhatsAppConfig.setGlobalConfig(configFile.global);
+    }
+
+    await fleetLauncher.start(configFile);
   })().catch((error) => {
     console.error('❌ Failed to start bots:', error);
     process.exit(1);
