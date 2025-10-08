@@ -1,5 +1,5 @@
 import { MessageChannel } from '../../domain/entities/channel.entity';
-import { IChannelManager } from '../../domain/interfaces/channel-manager.interface';
+import { IChannelManager } from '../../domain/entities/channel-manager';
 import { WhatsAppChannel } from './whatsapp-channel';
 
 /**

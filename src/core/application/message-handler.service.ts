@@ -1,5 +1,5 @@
 import { Bot } from '../domain/entities/bot.entity';
-import { MessageChannel, IncomingMessage, OutgoingMessage } from '../domain/entities/channel.entity';
+import { IncomingMessage, OutgoingMessage } from '../domain/dtos/message.dto';
 import { AutoResponseService } from './auto-response.service';
 
 /**

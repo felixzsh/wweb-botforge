@@ -1,4 +1,4 @@
-import { MessageChannel } from '../entities/channel.entity';
+import { MessageChannel } from './channel.entity';
 
 /**
  * Interface for managing multiple message channels

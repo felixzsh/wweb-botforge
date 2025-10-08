@@ -1,5 +1,5 @@
-import { Bot, BotSettingsData, AutoResponseData, WebhookData } from '../domain/entities/bot.entity';
-import { BotConfiguration } from '../domain/entities/config.entity';
+import { Bot } from '../domain/entities/bot.entity';
+import { BotSettingsData, AutoResponseData, WebhookData, BotConfiguration } from '../domain/dtos/config.dto';
 import { BotId } from '../domain/value-objects/bot-id.vo';
 import { PhoneNumber } from '../domain/value-objects/phone-number.vo';
 

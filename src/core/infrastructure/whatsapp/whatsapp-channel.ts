@@ -1,8 +1,6 @@
 import { Client } from 'whatsapp-web.js';
 import {
   MessageChannel,
-  IncomingMessage,
-  OutgoingMessage,
   MessageHandler,
   ReadyHandler,
   DisconnectedHandler,
@@ -10,6 +8,7 @@ import {
   ConnectionErrorHandler,
   StateChangeHandler
 } from '../../domain/entities/channel.entity';
+import { IncomingMessage, OutgoingMessage } from '../../domain/dtos/message.dto';
 import { WhatsAppMessageAdapter } from './whatsapp-message-adapter';
 import { WhatsAppConnectionState } from './whatsapp-types';
 import { WhatsAppConfig } from './whatsapp-config';

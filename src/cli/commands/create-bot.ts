@@ -4,7 +4,7 @@ import { existsSync as existsPathSync, mkdirSync, readFileSync, writeFileSync } 
 import { join as joinPaths } from 'path';
 import { load as loadYaml, dump as dumpYaml } from 'js-yaml';
 import qrcode from 'qrcode-terminal';
-import { BotConfiguration } from '../../core/domain/entities/config.entity';
+import { BotConfiguration } from '../../core/domain/dtos/config.dto';
 import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
 
 export async function createBotCommand() {

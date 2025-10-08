@@ -6,7 +6,8 @@
  */
 
 // Export domain interfaces that this infrastructure implements
-export { MessageChannel, IncomingMessage, OutgoingMessage } from '../../domain/entities/channel.entity';
+export { MessageChannel } from '../../domain/entities/channel.entity';
+export { IncomingMessage, OutgoingMessage } from '../../domain/dtos/message.dto';
 
 // Export WhatsApp infrastructure components
 export { WhatsAppChannel } from './whatsapp-channel';

@@ -3,8 +3,7 @@ import { BotFactory } from './bot-factory';
 import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
-import { MessageChannel, IncomingMessage, OutgoingMessage } from '../domain/entities/channel.entity';
-import { IChannelManager } from '../domain/interfaces/channel-manager.interface';
+import { IChannelManager } from '../domain/entities/channel-manager';
 import { BotConfiguration } from '../domain/entities/config.entity';
 
 /**

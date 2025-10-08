@@ -1,5 +1,6 @@
-import { Bot, AutoResponseData } from '../domain/entities/bot.entity';
-import { IncomingMessage, OutgoingMessage } from '../domain/entities/channel.entity';
+import { Bot } from '../domain/entities/bot.entity';
+import { AutoResponseData } from '../domain/dtos/config.dto';
+import { IncomingMessage, OutgoingMessage } from '../domain/dtos/message.dto';
 import { MessageQueueService } from './message-queue.service';
 
 /**

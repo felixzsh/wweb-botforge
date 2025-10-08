@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { BotConfiguration } from '../domain/entities/config.entity';
+import { BotConfiguration } from '../domain/dtos/config.dto';
 
 interface IncludeReference {
   '!include': string;

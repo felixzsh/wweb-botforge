@@ -1,5 +1,5 @@
 import { Message as WWebJSMessage } from 'whatsapp-web.js';
-import { IncomingMessage, OutgoingMessage } from '../../domain/entities/channel.entity';
+import { IncomingMessage, OutgoingMessage } from '../../domain/dtos/message.dto';
 import { WhatsAppUtils } from './whatsapp-types';
 
 /**
