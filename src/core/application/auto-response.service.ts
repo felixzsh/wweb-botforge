@@ -114,7 +114,6 @@ export class AutoResponseService {
         bot.id.value,
         outgoingMessage.to,
         outgoingMessage.content,
-        0, // Default priority
         outgoingMessage.metadata
       );
 

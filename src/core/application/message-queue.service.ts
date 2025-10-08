@@ -8,7 +8,6 @@ export interface QueuedMessage {
   id: string;
   botId: string;
   message: OutgoingMessage;
-  priority: number;
   timestamp: number;
 }
 
@@ -64,55 +63,48 @@ export class MessageQueueService {
    }
 
   /**
-   * Add message to queue for a specific bot
-   */
-  enqueue(
-    botId: string, 
-    to: string, 
-    content: string, 
-    priority: number = 0, 
-    metadata?: Record<string, any>
-  ): string {
-    const messageId = `${botId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    * Add message to queue for a specific bot
+    */
+   enqueue(
+     botId: string,
+     to: string,
+     content: string,
+     metadata?: Record<string, any>
+   ): string {
+     const messageId = `${botId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    const outgoingMessage: OutgoingMessage = {
-      to,
-      content,
-      metadata
-    };
+     const outgoingMessage: OutgoingMessage = {
+       to,
+       content,
+       metadata
+     };
 
-    const queuedMessage: QueuedMessage = {
-      id: messageId,
-      botId,
-      message: outgoingMessage,
-      priority,
-      timestamp: Date.now()
-    };
+     const queuedMessage: QueuedMessage = {
+       id: messageId,
+       botId,
+       message: outgoingMessage,
+       timestamp: Date.now()
+     };
 
-    // Get or create queue for this bot
-    if (!this.queues.has(botId)) {
-      this.queues.set(botId, []);
-    }
+     // Get or create queue for this bot
+     if (!this.queues.has(botId)) {
+       this.queues.set(botId, []);
+     }
 
-    const botQueue = this.queues.get(botId)!;
+     const botQueue = this.queues.get(botId)!;
 
-    // Insert according to priority (higher priority = lower index)
-    const insertIndex = botQueue.findIndex(item => item.priority < priority);
-    if (insertIndex === -1) {
-      botQueue.push(queuedMessage);
-    } else {
-      botQueue.splice(insertIndex, 0, queuedMessage);
-    }
+     // Add to end of queue (FIFO)
+     botQueue.push(queuedMessage);
 
-    console.log(`📨 Message queued for bot "${botId}": ${messageId} (queue size: ${botQueue.length})`);
+     console.log(`📨 Message queued for bot "${botId}": ${messageId} (queue size: ${botQueue.length})`);
 
-    // Start processing if not already running
-    if (!this.processing.get(botId)) {
-      this.startProcessing(botId);
-    }
+     // Start processing if not already running
+     if (!this.processing.get(botId)) {
+       this.startProcessing(botId);
+     }
 
-    return messageId;
-  }
+     return messageId;
+   }
 
   /**
    * Start processing queue for a specific bot
@@ -178,7 +170,6 @@ export class MessageQueueService {
       nextMessage: queue.length > 0 ? {
         id: queue[0].id,
         to: queue[0].message.to,
-        priority: queue[0].priority,
         age: Date.now() - queue[0].timestamp
       } : null
     };
