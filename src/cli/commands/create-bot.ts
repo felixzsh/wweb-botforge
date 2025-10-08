@@ -8,7 +8,7 @@ import { BotConfiguration, ConfigFile } from '../../core/domain/dtos/config.dto'
 import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
 
 export async function createBotCommand() {
-  console.log('🤖 Welcome to WhatsApp BotForge!');
+  console.log('🤖 Welcome to WWeb BotForge!');
   console.log('Let\'s create a new WhatsApp bot...\n');
 
   try {

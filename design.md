@@ -1,7 +1,7 @@
-# WhatsApp BotForge - Domain and Infrastructure Design
+# WWeb BotForge - Domain and Infrastructure Design
 
 ## Overview
-This document outlines the initial domain model and infrastructure design for WhatsApp BotForge, focusing on representing bots as objects deserialized from YAML configurations. The design supports two loading approaches: a single `main.yml` file or a `main.yml` that includes other YAML files.
+This document outlines the initial domain model and infrastructure design for WWeb BotForge, focusing on representing bots as objects deserialized from YAML configurations. The design supports two loading approaches: a single `main.yml` file or a `main.yml` that includes other YAML files.
 
 ## Folder Structure
 A scalable and maintainable structure following Domain-Driven Design (DDD) principles:

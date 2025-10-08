@@ -7,7 +7,7 @@ import { IChannelManager } from '../domain/entities/channel-manager';
 import { BotConfiguration, ConfigFile } from '../domain/dtos/config.dto';
 
 /**
- * Main bot fleet service for BotForge
+ * Main bot fleet service for WWeb BotForge
  * Coordinates all bot operations: loading config, initializing channels, and processing messages
  */
 export class BotFleetService {
@@ -40,7 +40,7 @@ export class BotFleetService {
     }
 
     try {
-      console.log('🚀 Starting chat BotForge...');
+      console.log('🚀 Starting WWeb BotForge...');
 
       if (configFile.bots.length === 0) {
         console.log('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.');
@@ -59,7 +59,7 @@ export class BotFleetService {
       }
 
       this.isRunning = true;
-      console.log(`🎉 chat BotForge started successfully with ${this.bots.size} bot(s)!`);
+      console.log(`🎉 WWeb BotForge started successfully with ${this.bots.size} bot(s)!`);
       console.log('💬 Bots are now listening for messages...');
 
       // Set up graceful shutdown
@@ -79,7 +79,7 @@ export class BotFleetService {
       return;
     }
 
-    console.log('🛑 Stopping chat BotForge...');
+    console.log('🛑 Stopping WWeb BotForge...');
 
     try {
       // Shutdown message queues
@@ -93,7 +93,7 @@ export class BotFleetService {
 
 
       this.isRunning = false;
-      console.log('✅ chat BotForge stopped successfully');
+      console.log('✅ WWeb BotForge stopped successfully');
     } catch (error) {
       console.error('❌ Error stopping Bot Fleet:', error);
       throw error;
@@ -246,3 +246,4 @@ export class BotFleetService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+

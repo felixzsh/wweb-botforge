@@ -22,7 +22,7 @@ program
 
 // If no command is provided, start the bots automatically
 if (process.argv.length === 2) {
-  console.log('🤖 WhatsApp BotForge - Starting bots...\n');
+  console.log('🤖 WWeb BotForge - Starting bots...\n');
 
   (async () => {
     // Composition root - wire up dependencies
@@ -47,3 +47,4 @@ if (process.argv.length === 2) {
 } else {
   program.parse();
 }
+

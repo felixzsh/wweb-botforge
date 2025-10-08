@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { BotConfiguration } from '../../src/core/domain/entities/bot.entity';
+import { BotConfiguration } from '../../src/core/domain/dtos/config.dto';
 
 describe('CLI Bot Creation Integration Test', () => {
   const testConfigPath = path.join(__dirname, '..', 'fixtures', 'test-config.yml');
@@ -189,7 +189,7 @@ function saveBotConfig(botConfig: BotConfiguration, configPath: string): void {
 }
 
 function generateYamlConfig(bots: BotConfiguration[]): string {
-  let yaml = `# WhatsApp BotForge Configuration\n`;
+  let yaml = `# WWeb BotForge Configuration\n`;
   yaml += `# Generated automatically - do not edit manually unless you know what you're doing\n\n`;
   yaml += `bots:\n`;
   
