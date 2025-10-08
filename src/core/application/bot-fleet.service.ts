@@ -4,7 +4,7 @@ import { AutoResponseService } from './auto-response.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
 import { IChannelManager } from '../domain/entities/channel-manager';
-import { BotConfiguration } from '../domain/entities/config.entity';
+import { BotConfiguration } from '../domain/dtos/config.dto';
 
 /**
  * Main bot fleet service for BotForge
@@ -118,7 +118,7 @@ export class BotFleetService {
       bot.registerChannel(channel);
 
       // Configure message queue for this bot
-      this.configureBotQueue(bot);
+      this.messageQueueService.setupBotQueue(bot);
 
       // Register bot with message handler service
       this.messageHandlerService.registerBot(bot);
@@ -137,27 +137,6 @@ export class BotFleetService {
     }
   }
 
-  /**
-    * Configure message queue for a specific bot
-    */
-   private configureBotQueue(bot: Bot): void {
-     if (!bot.channel) {
-       throw new Error(`Bot "${bot.name}" does not have a registered channel`);
-     }
-
-     const botId = bot.id.value;
-
-     // Set delay based on bot's typing delay setting
-     const delayMs = bot.settings.typingDelay;
-     this.messageQueueService.setBotDelay(botId, delayMs);
-
-     // Set send callback that uses message channel
-     this.messageQueueService.setBotSendCallback(botId, async (botId: string, message: OutgoingMessage) => {
-       await bot.channel!.send(message);
-     });
-
-     console.log(`📋 Configured message queue for bot "${bot.name}": delay=${delayMs}ms`);
-   }
 
   /**
     * Set up event handlers for a bot

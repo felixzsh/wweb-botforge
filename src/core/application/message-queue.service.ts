@@ -1,4 +1,5 @@
-import { OutgoingMessage } from '../domain/entities/channel.entity';
+import { Bot } from '../domain/entities/bot.entity';
+import { OutgoingMessage } from '../domain/dtos/message.dto';
 
 /**
  * Represents a message in the queue
@@ -35,11 +36,32 @@ export class MessageQueueService {
   }
 
   /**
-   * Set send callback for a specific bot
-   */
-  setBotSendCallback(botId: string, callback: SendMessageCallback): void {
-    this.sendCallbacks.set(botId, callback);
-  }
+    * Set send callback for a specific bot
+    */
+   setBotSendCallback(botId: string, callback: SendMessageCallback): void {
+     this.sendCallbacks.set(botId, callback);
+   }
+
+  /**
+    * Setup message queue for a specific bot
+    */
+   setupBotQueue(bot: Bot): void {
+     if (!bot.channel) {
+       throw new Error(`Bot "${bot.name}" does not have a registered channel`);
+     }
+
+     const botId = bot.id.value;
+
+     // Set delay based on bot's typing delay setting
+     this.setBotDelay(botId, bot.settings.typingDelay);
+
+     // Set send callback that uses message channel
+     this.setBotSendCallback(botId, async (botId: string, message: OutgoingMessage) => {
+       await bot.channel!.send(message);
+     });
+
+     console.log(`📋 Configured message queue for bot "${bot.name}": delay=${bot.settings.typingDelay}ms`);
+   }
 
   /**
    * Add message to queue for a specific bot
