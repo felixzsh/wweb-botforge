@@ -164,6 +164,59 @@ auto_responses:
     cooldown: 300  # 5 minutes cooldown
 ```
 
+### Webhooks
+
+Webhooks allow your bot to send HTTP requests to external services when messages match specific patterns. This enables integration with APIs, notification systems, and other services.
+
+**Features:**
+- **Outbound HTTP requests**: Bot makes POST/PUT/GET requests to configured URLs
+- **Cooldown support**: Same cooldown system as auto-responses
+- **Retry logic**: Automatic retries with exponential backoff
+- **Custom headers**: Authentication and custom headers
+- **Timeout control**: Configurable request timeouts
+- **Multiple webhooks**: Multiple webhooks can trigger for the same message
+
+**Configuration:**
+
+```yaml
+webhooks:
+  - name: "order-webhook"
+    pattern: "nuevo pedido|new order"
+    url: "https://api.example.com/orders"
+    method: "POST"
+    headers:
+      Authorization: "Bearer your-token"
+      Content-Type: "application/json"
+    timeout: 5000      # 5 seconds
+    retry: 3          # Retry up to 3 times
+    priority: 1       # Higher priority = checked first
+    cooldown: 60      # 60 seconds cooldown per sender
+```
+
+**Webhook Payload:**
+
+When triggered, the webhook sends a JSON payload:
+
+```json
+{
+  "sender": "521234567890",
+  "message": "Tengo un nuevo pedido",
+  "timestamp": "2025-01-09T01:45:00Z",
+  "botId": "bot-1",
+  "botName": "My Bot",
+  "webhookName": "order-webhook",
+  "webhookPattern": "nuevo pedido|new order",
+  "metadata": {}
+}
+```
+
+**Use Cases:**
+- **Order processing**: Forward customer orders to your e-commerce API
+- **Lead capture**: Send inquiries to your CRM system
+- **Notifications**: Alert your team about urgent messages
+- **Analytics**: Track message patterns and user behavior
+- **Integration**: Connect with chat platforms, helpdesk systems, etc.
+
 ### Settings
 
 ```yaml
@@ -184,9 +237,9 @@ settings:
 - Basic auto-responses with regex patterns
 - Message queues with configurable delays (in validation)
 - Cooldown protection for auto-responses to prevent spam
+- Outbound webhooks with retry logic and cooldowns
 
 ### 🔄 **Coming Soon**
-- Webhooks for advanced integrations
 - REST API for external message sending
 - Distribution as ready-to-use service
 - Web management interface

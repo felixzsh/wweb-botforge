@@ -2,6 +2,7 @@ import { Bot } from '../domain/entities/bot.entity';
 import { BotFactory } from './bot-factory';
 import { AutoResponseService } from './auto-response.service';
 import { CooldownService } from './cooldown.service';
+import { WebhookService } from './webhook.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
 import { IChannelManager } from '../domain/entities/channel-manager';
@@ -15,6 +16,7 @@ export class BotFleetService {
   private bots: Map<string, Bot> = new Map();
   private autoResponseService: AutoResponseService;
   private cooldownService: CooldownService;
+  private webhookService: WebhookService;
   private messageQueueService: MessageQueueService;
   private messageHandlerService: MessageHandlerService;
   private botFactory: BotFactory;
@@ -30,7 +32,8 @@ export class BotFleetService {
     this.cooldownService = new CooldownService();
     this.messageQueueService = new MessageQueueService();
     this.autoResponseService = new AutoResponseService(this.messageQueueService, this.cooldownService);
-    this.messageHandlerService = new MessageHandlerService(this.autoResponseService);
+    this.webhookService = new WebhookService(this.cooldownService);
+    this.messageHandlerService = new MessageHandlerService(this.autoResponseService, this.webhookService);
   }
 
   /**

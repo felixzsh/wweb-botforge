@@ -45,5 +45,15 @@ export class Bot {
         return regex.test(message);
       }) || null;
   }
+
+  findMatchingWebhooks(message: string): WebhookData[] {
+    // Sort by priority descending (highest first) and find all matches
+    return [...this.webhooks]
+      .sort((a, b) => b.priority - a.priority)
+      .filter(webhook => {
+        const regex = new RegExp(webhook.pattern, 'i');
+        return regex.test(message);
+      });
+  }
 }
 

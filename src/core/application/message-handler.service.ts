@@ -1,6 +1,7 @@
 import { Bot } from '../domain/entities/bot.entity';
 import { IncomingMessage, OutgoingMessage } from '../domain/dtos/message.dto';
 import { AutoResponseService } from './auto-response.service';
+import { WebhookService } from './webhook.service';
 
 /**
  * Callback type for handling processed messages
@@ -15,9 +16,11 @@ export class MessageHandlerService {
   private bots: Map<string, Bot> = new Map();
   private messageHandlers: Map<string, MessageHandlerCallback> = new Map();
   private autoResponseService: AutoResponseService;
+  private webhookService: WebhookService;
 
-  constructor(autoResponseService: AutoResponseService) {
+  constructor(autoResponseService: AutoResponseService, webhookService: WebhookService) {
     this.autoResponseService = autoResponseService;
+    this.webhookService = webhookService;
   }
 
   /**
@@ -75,6 +78,11 @@ export class MessageHandlerService {
         // Send auto-response
         this.autoResponseService.sendAutoResponse(bot, message, autoResponse);
       }
+
+      // Process webhooks (async, don't wait)
+      this.webhookService.processWebhooks(bot, message).catch(error => {
+        console.error(`❌ Error processing webhooks for bot "${bot.name}":`, error);
+      });
 
       // Log the message processing
       this.autoResponseService.logMessageProcessing(
