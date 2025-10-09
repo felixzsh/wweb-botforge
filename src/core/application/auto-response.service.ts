@@ -2,17 +2,24 @@ import { Bot } from '../domain/entities/bot.entity';
 import { AutoResponseData } from '../domain/dtos/config.dto';
 import { IncomingMessage, OutgoingMessage } from '../domain/dtos/message.dto';
 import { MessageQueueService } from './message-queue.service';
+import { CooldownService } from './cooldown.service';
 
 /**
  * Service for handling automatic responses based on message patterns
  */
 export class AutoResponseService {
-  constructor(private messageQueue: MessageQueueService) {}
+  constructor(
+    private messageQueue: MessageQueueService,
+    private cooldownService: CooldownService
+  ) {}
 
   /**
    * Process an incoming message and find matching auto-responses
    */
   processMessage(bot: Bot, message: IncomingMessage): AutoResponseData | null {
+    // Periodic cleanup of expired cooldowns
+    this.cooldownService.cleanupExpiredCooldowns();
+
     // Skip messages from the bot itself
     if (message.metadata?.fromMe) {
       return null;
@@ -28,6 +35,16 @@ export class AutoResponseService {
     const matchingResponse = bot.findMatchingAutoResponse(message.content);
 
     if (matchingResponse) {
+      // Check cooldown (convert seconds to milliseconds)
+      const cooldownMs = (matchingResponse.cooldown || 0) * 1000;
+      if (this.cooldownService.isOnCooldown(message.from, matchingResponse.pattern, cooldownMs)) {
+        console.log(`⏳ Cooldown active for sender "${message.from}" on pattern "${matchingResponse.pattern}" in bot "${bot.name}"`);
+        return null;
+      }
+
+      // Set cooldown timestamp
+      this.cooldownService.setCooldown(message.from, matchingResponse.pattern);
+
       console.log(`🤖 Auto-response triggered for bot "${bot.name}": "${matchingResponse.pattern}" → "${matchingResponse.response}"`);
       return matchingResponse;
     }
@@ -92,6 +109,7 @@ export class AutoResponseService {
   private normalizePhoneNumber(phone: string): string {
     return phone.replace(/\D/g, '');
   }
+
 
   /**
    * Send an auto-response using the message queue

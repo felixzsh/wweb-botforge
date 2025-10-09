@@ -26,6 +26,7 @@ export interface AutoResponseData {
   caseInsensitive: boolean;
   priority: number;
   responseOptions?: ResponseOptions;
+  cooldown?: number;
 }
 
 // all send message options suported by whatsappweb-js
@@ -61,6 +62,7 @@ export interface WebhookData {
   timeout: number;
   retry: number;
   priority: number;
+  cooldown?: number;
 }
 // Global configuration for the entire BotForge system
 export interface GlobalConfig {

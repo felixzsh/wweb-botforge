@@ -51,7 +51,8 @@ describe('BotFactory', () => {
             pattern: 'hello',
             response: 'Hi there!',
             case_insensitive: true,
-            priority: 5
+            priority: 5,
+            cooldown: 30
           }
         ],
         webhooks: []
@@ -64,6 +65,7 @@ describe('BotFactory', () => {
       expect(bot.autoResponses[0].response).toBe('Hi there!');
       expect(bot.autoResponses[0].caseInsensitive).toBe(true);
       expect(bot.autoResponses[0].priority).toBe(5);
+      expect(bot.autoResponses[0].cooldown).toBe(30);
     });
 
     it('should create a Bot with webhooks', () => {
@@ -203,3 +205,4 @@ describe('BotFactory', () => {
     });
   });
 });
+

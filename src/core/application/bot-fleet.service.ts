@@ -1,6 +1,7 @@
 import { Bot } from '../domain/entities/bot.entity';
 import { BotFactory } from './bot-factory';
 import { AutoResponseService } from './auto-response.service';
+import { CooldownService } from './cooldown.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
 import { IChannelManager } from '../domain/entities/channel-manager';
@@ -13,6 +14,7 @@ import { BotConfiguration, ConfigFile } from '../domain/dtos/config.dto';
 export class BotFleetService {
   private bots: Map<string, Bot> = new Map();
   private autoResponseService: AutoResponseService;
+  private cooldownService: CooldownService;
   private messageQueueService: MessageQueueService;
   private messageHandlerService: MessageHandlerService;
   private botFactory: BotFactory;
@@ -25,8 +27,9 @@ export class BotFleetService {
   ) {
     this.botFactory = botFactory;
     this.channelManager = channelManager;
+    this.cooldownService = new CooldownService();
     this.messageQueueService = new MessageQueueService();
-    this.autoResponseService = new AutoResponseService(this.messageQueueService);
+    this.autoResponseService = new AutoResponseService(this.messageQueueService, this.cooldownService);
     this.messageHandlerService = new MessageHandlerService(this.autoResponseService);
   }
 

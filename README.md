@@ -127,6 +127,7 @@ auto_responses:
     response: "Your reply message"
     case_insensitive: true  # optional
     priority: 1            # optional, lower = higher priority
+    cooldown: 30           # optional, cooldown in seconds per sender-pattern
 ```
 
 For advanced usage, you can include `response_options` to access WhatsApp Web's [Message Send Options](https://docs.wwebjs.dev/global.html#MessageSendOptions) like link previews, media handling, and more (all optional).
@@ -140,6 +141,27 @@ auto_responses:
     response_options:
       media: "https://example.com/image.jpg"
       caption: "Check this out!"
+```
+
+### Cooldown Protection
+
+To prevent spam attacks, you can set a `cooldown` (in seconds) for each auto-response pattern. This creates a cooldown period per sender-pattern combination, preventing the same sender from triggering the same pattern repeatedly within the specified time.
+
+- **Per sender-pattern**: Different senders can trigger the same pattern simultaneously
+- **Independent patterns**: A sender can trigger different patterns without waiting
+- **Automatic cleanup**: Expired cooldowns are cleaned up automatically to prevent memory leaks
+
+Example:
+
+```yaml
+auto_responses:
+  - pattern: "help|support"
+    response: "How can I help you?"
+    cooldown: 60  # 1 minute cooldown per sender for this pattern
+
+  - pattern: "price|cost"
+    response: "Check our pricing at example.com/pricing"
+    cooldown: 300  # 5 minutes cooldown
 ```
 
 ### Settings
@@ -161,6 +183,7 @@ settings:
 - YAML configuration loading
 - Basic auto-responses with regex patterns
 - Message queues with configurable delays (in validation)
+- Cooldown protection for auto-responses to prevent spam
 
 ### 🔄 **Coming Soon**
 - Webhooks for advanced integrations
@@ -200,6 +223,7 @@ MIT License - see [LICENSE](LICENSE) file.
 This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WA BotForge wouldn't be possible without this foundational work.
 
 **Made with ❤️ for the bot automation community**
+
 
 
 

@@ -27,6 +27,7 @@ export class BotFactory {
       response: ar.response,
       caseInsensitive: ar.case_insensitive ?? ar.caseInsensitive ?? false,
       priority: ar.priority ?? 1,
+      cooldown: ar.cooldown,
       responseOptions: ar.response_options ? {
         linkPreview: ar.response_options.link_preview ?? ar.response_options.linkPreview,
         sendAudioAsVoice: ar.response_options.send_audio_as_voice ?? ar.response_options.sendAudioAsVoice,
@@ -60,7 +61,8 @@ export class BotFactory {
       headers: wh.headers ?? {},
       timeout: wh.timeout ?? 5000,
       retry: wh.retry ?? 3,
-      priority: wh.priority ?? 1
+      priority: wh.priority ?? 1,
+      cooldown: wh.cooldown
     })) ?? [];
 
     return new Bot(id, name, settings, phone, autoResponses, webhooks);

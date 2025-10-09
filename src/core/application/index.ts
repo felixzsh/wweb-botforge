@@ -7,4 +7,5 @@
 
 export { AutoResponseService } from './auto-response.service';
 export { BotFleetService } from './bot-fleet.service';
+export { CooldownService } from './cooldown.service';
 export { MessageHandlerService } from './message-handler.service';
