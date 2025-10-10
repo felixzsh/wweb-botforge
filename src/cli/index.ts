@@ -4,9 +4,11 @@ import { Command } from 'commander';
 import { createBotCommand } from './commands/create-bot';
 import { BotFleetService } from '../core/application/bot-fleet.service';
 import { BotFactory } from '../core/application/bot-factory';
+import { MessageQueueService } from '../core/application/message-queue.service';
 import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp-session-manager';
 import { WhatsAppConfig } from '../core/infrastructure/whatsapp/whatsapp-config';
 import { YamlLoader } from '../core/infrastructure/yaml-loader';
+import { ApiServer } from '../core/infrastructure/api/server';
 
 const program = new Command();
 
@@ -26,9 +28,10 @@ if (process.argv.length === 2) {
 
   (async () => {
     // Composition root - wire up dependencies
+    const messageQueueService = new MessageQueueService();
     const botFactory = new BotFactory();
     const channelManager = WhatsAppSessionManager.getInstance();
-    const fleetLauncher = new BotFleetService(botFactory, channelManager);
+    const fleetLauncher = new BotFleetService(botFactory, channelManager, messageQueueService);
 
     // Load bot configurations from YAML
     const yamlLoader = new YamlLoader();
@@ -39,7 +42,15 @@ if (process.argv.length === 2) {
       WhatsAppConfig.setGlobalConfig(configFile.global);
     }
 
-    await fleetLauncher.start(configFile);
+    // Start bots and get the bot instances
+    const bots = await fleetLauncher.start(configFile);
+
+    // Start API server if enabled
+    if (configFile.global?.apiEnabled) {
+      const apiPort = configFile.global.apiPort || 3000;
+      const apiServer = new ApiServer(messageQueueService, bots, apiPort);
+      await apiServer.start();
+    }
   })().catch((error) => {
     console.error('❌ Failed to start bots:', error);
     process.exit(1);

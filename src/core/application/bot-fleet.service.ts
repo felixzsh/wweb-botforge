@@ -25,24 +25,25 @@ export class BotFleetService {
 
   constructor(
     botFactory: BotFactory,
-    channelManager: IChannelManager
+    channelManager: IChannelManager,
+    messageQueueService: MessageQueueService
   ) {
     this.botFactory = botFactory;
     this.channelManager = channelManager;
+    this.messageQueueService = messageQueueService;
     this.cooldownService = new CooldownService();
-    this.messageQueueService = new MessageQueueService();
     this.autoResponseService = new AutoResponseService(this.messageQueueService, this.cooldownService);
     this.webhookService = new WebhookService(this.cooldownService);
     this.messageHandlerService = new MessageHandlerService(this.autoResponseService, this.webhookService);
   }
 
   /**
-   * Start all bots from configuration
-   */
-  async start(configFile: ConfigFile): Promise<void> {
+    * Start all bots from configuration
+    */
+   async start(configFile: ConfigFile): Promise<Map<string, Bot>> {
     if (this.isRunning) {
       console.log('🤖 Bot Fleet Launcher is already running');
-      return;
+      return this.bots;
     }
 
     try {
@@ -50,7 +51,7 @@ export class BotFleetService {
 
       if (configFile.bots.length === 0) {
         console.log('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.');
-        return;
+        return this.bots;
       }
 
       // Create and initialize bots with delays to avoid conflicts
@@ -70,6 +71,8 @@ export class BotFleetService {
 
       // Set up graceful shutdown
       this.setupGracefulShutdown();
+
+      return this.bots;
 
     } catch (error) {
       console.error('❌ Failed to start Bot Fleet Launcher:', error);

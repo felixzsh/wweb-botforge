@@ -68,6 +68,8 @@ export interface WebhookData {
 export interface GlobalConfig {
   chromiumPath?: string;
   logLevel?: 'info' | 'debug' | 'warn' | 'error';
+  apiPort?: number;
+  apiEnabled?: boolean;
   // Add more global settings as needed
 }
 
