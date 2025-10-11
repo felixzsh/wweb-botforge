@@ -1,0 +1,28 @@
+# Source files
+src/
+tests/
+*.test.ts
+*.spec.ts
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+
+# Build files
+tsconfig.json
+tsconfig.*.json
+jest.config.js
+
+# Docs
+docs/
+examples/
+
+# Others
+.DS_Store
+.env
+.env.*
+*.tmp

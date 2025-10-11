@@ -1,14 +1,17 @@
 {
   "name": "wweb-botforge",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
+  "description": "A background service for managing WhatsApp bots via YAML configuration, designed to run as a systemd service on Linux systems.",
+  "main": "dist/cli/index.js",
+ "scripts": {
     "build": "tsc",
     "dev": "ts-node src/cli/index.ts",
+    "start": "node ./dist/cli/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "postinstall": "node scripts/postinstall.js",
+    "uninstall": "node scripts/uninstall.js"
   },
   "jest": {
     "preset": "ts-jest",
@@ -26,9 +29,17 @@
       "!src/**/*.d.ts"
     ]
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["whatsapp", "bot", "systemd", "service"],
+  "author": {
+    "name": "Félix Sánchez (@felixzsh)",
+    "email": "felix.sanchez.dev@gmail.com",
+    "url": "https://github.com/felixzsh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felixzsh/wweb-botforge.git"
+  },
+  "license": "MIT",
   "packageManager": "pnpm@10.17.1",
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
@@ -52,5 +63,13 @@
   },
   "bin": {
     "botforge": "./dist/cli/index.js"
-  }
+  },
+  "files": [
+    "dist",
+    "scripts",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "os": ["linux"]
 }

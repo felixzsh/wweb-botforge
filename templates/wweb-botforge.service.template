@@ -1,0 +1,26 @@
+[Unit]
+Description=WWeb BotForge - WhatsApp Bot Service
+After=network.target
+Documentation=https://github.com/felixzsh/wweb-botforge
+
+[Service]
+Type=simple
+User={{USER}}
+WorkingDirectory={{INSTALL_DIR}}
+ExecStart={{NODE_PATH}} {{INSTALL_DIR}}/dist/cli/index.js start --daemon
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wweb-botforge
+
+# Variables de entorno
+Environment="NODE_ENV=production"
+Environment="CONFIG_DIR={{CONFIG_DIR}}"
+
+# Límites de seguridad
+LimitNOFILE=65536
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
