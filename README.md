@@ -27,6 +27,10 @@ This project enables direct management of WhatsApp bots through YAML configurati
 
 ## 🚀 Quick Start (5 minutes!)
 
+### Prerequisites
+
+**For Linux systemd service mode**, you must install `xvfb` (X Virtual Framebuffer) on your system. This provides a virtual display required for headless browser operation. Install it using your system's package manager (e.g., `apt`, `dnf`, `pacman`, etc.).
+
 ### 1. Install
 
 ```bash

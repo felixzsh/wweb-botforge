@@ -10,8 +10,10 @@ interface IncludeReference {
 export class YamlLoader {
   private configPath: string;
 
-  constructor(configPath: string = 'config/main.yml') {
-    this.configPath = configPath;
+  constructor(configPath?: string) {
+    this.configPath = configPath || (process.env.CONFIG_DIR
+      ? path.join(process.env.CONFIG_DIR, 'config.yml')
+      : 'config/main.yml');
   }
 
   async loadMainConfig(): Promise<ConfigFile> {

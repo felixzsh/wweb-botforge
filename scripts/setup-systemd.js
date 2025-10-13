@@ -9,7 +9,6 @@ function setupSystemd() {
   try {
     if (os.platform() !== 'linux') {
       console.log('⚠️  Systemd setup is only available on Linux');
-      console.log('ℹ️  You can still run: botforge start');
       return;
     }
 
@@ -18,10 +17,24 @@ function setupSystemd() {
     const configDir = path.join(homeDir, '.config', 'wweb-botforge');
     const systemdUserDir = path.join(homeDir, '.config', 'systemd', 'user');
     
-    const npmRoot = execSync('npm root -g', { encoding: 'utf8' }).trim();
-    const installDir = path.join(npmRoot, 'wweb-botforge');
-    
+    const globalNpmRoot = execSync('npm root -g', { encoding: 'utf8' }).trim();
+    const scriptDir = path.dirname(__filename);
+    const projectRoot = path.resolve(scriptDir, '..');
+
+    // Detect mode: If project root is within global npm root, it's production
+    const isProduction = projectRoot.startsWith(globalNpmRoot);
+    const installDir = isProduction
+      ? path.join(globalNpmRoot, 'wweb-botforge')
+      : projectRoot;
+
+    // For Node path, use 'which node' in both cases, but log a warning for dev
     const nodePath = execSync('which node', { encoding: 'utf8' }).trim();
+    if (!isProduction) {
+      console.log('🔧 Development mode detected: Using local paths for testing');
+      console.log(`   Install dir: ${installDir}`);
+      console.log(`   Node path: ${nodePath}`);
+      console.log('   Note: Ensure dist/cli/index.js exists (run build first)');
+    }
 
     console.log('🔧 Setting up WWeb BotForge systemd service...');
     
@@ -49,22 +62,11 @@ function setupSystemd() {
     console.log(`✅ Created service file: ${servicePath}`);
 
     execSync('systemctl --user daemon-reload', { stdio: 'inherit' });
-    console.log('✅ Reloaded systemd user daemon');
-
-    console.log('\n✨ Setup complete!\n');
-    console.log('📋 Available commands:');
-    console.log('  • Start service:    systemctl --user start wweb-botforge');
-    console.log('  • Stop service:     systemctl --user stop wweb-botforge');
-    console.log('  • Restart service:  systemctl --user restart wweb-botforge');
-    console.log('  • Check status:     systemctl --user status wweb-botforge');
-    console.log('  • View logs:        journalctl --user -u wweb-botforge -f');
-    console.log('  • Enable on boot:   systemctl --user enable wweb-botforge');
-    console.log('  • Disable on boot:  systemctl --user disable wweb-botforge\n');
+    console.log('✅ Reloaded systemd daemon\n');
 
   } catch (error) {
     console.error('❌ Error setting up systemd service:', error.message);
-    console.log('\nℹ️  You can still run the bot manually with: botforge start');
-    process.exit(0);
+    throw error;
   }
 }
 

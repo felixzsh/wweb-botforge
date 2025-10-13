@@ -5,9 +5,8 @@ Documentation=https://github.com/felixzsh/wweb-botforge
 
 [Service]
 Type=simple
-User={{USER}}
 WorkingDirectory={{INSTALL_DIR}}
-ExecStart={{NODE_PATH}} {{INSTALL_DIR}}/dist/cli/index.js start --daemon
+ExecStart=xvfb-run -a {{NODE_PATH}} {{INSTALL_DIR}}/dist/cli/index.js
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

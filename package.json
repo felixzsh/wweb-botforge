@@ -1,7 +1,7 @@
 {
   "name": "wweb-botforge",
   "version": "1.0.0",
-  "description": "A background service for managing WhatsApp bots via YAML configuration, designed to run as a systemd service on Linux systems.",
+  "description": "Create powerful WhatsApp bots with YAML configuration",
   "main": "dist/cli/index.js",
  "scripts": {
     "build": "tsc",
@@ -11,7 +11,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "postinstall": "node scripts/postinstall.js",
-    "uninstall": "node scripts/uninstall.js"
+    "uninstall": "node scripts/uninstall.js",
+    "prepack": "pnpm run build"
   },
   "jest": {
     "preset": "ts-jest",
@@ -29,7 +30,15 @@
       "!src/**/*.d.ts"
     ]
   },
-  "keywords": ["whatsapp", "bot", "systemd", "service"],
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "automation",
+    "service",
+    "yaml",
+    "systemd",
+    "chatbot"
+  ],
   "author": {
     "name": "Félix Sánchez (@felixzsh)",
     "email": "felix.sanchez.dev@gmail.com",
