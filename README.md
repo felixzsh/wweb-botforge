@@ -1,46 +1,41 @@
 # WWeb BotForge
 
-[![npm version](https://badge.fury.io/js/wa-botforge.svg)](https://badge.fury.io/js/wa-botforge)
+[![npm version](https://badge.fury.io/js/wweb-botforge.svg)](https://badge.fury.io/js/wweb-botforge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Create powerful WhatsApp bots with YAML configuration!**
+**Create multiple WhatsApp bots without writing code** - Just configure in YAML!
 
-## 🎯 Why WWeb BotForge?
-
-WWeb BotForge is built on top of the amazing [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides granular control over WhatsApp Web automation. While WhatsApp Web JS is a powerful API for automating WhatsApp Web clients, WWeb BotForge specifically abstracts the creation of bots that:
-
-- **Capture incoming messages** and automatically respond
-- **Delegate message handling** to external software
-- **Simplify bot creation** through YAML configuration
-
-This project enables direct management of WhatsApp bots through YAML configuration, focusing on automated responses and message processing, without being limited to a single programming language.
-
-**Current Focus**: Auto-responses with regex patterns and message queues  
-**Coming Soon**: Webhooks and REST API for advanced integrations
+WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) for reliable WhatsApp Web automation.
 
 ## ✨ What Can You Do?
 
 - 🤖 **Multiple Bots**: Run several WhatsApp bots from one server
 - 📝 **YAML Configuration**: Define bot behavior in simple YAML files
+- 🔗 **Webhooks**: Connect to your existing apps (Python, C++, Node.js, etc.)
 - 📱 **Auto-Responses**: Set up instant replies to common messages
-- 🚀 **Quick Setup**: Get your first bot running in minutes
+- 🌐 **REST API**: Send messages programmatically (optional)
+- 🚀 **Systemd Service**: Run as a proper system service with auto-restart
 
-## 🚀 Quick Start (5 minutes!)
+## 🚀 Quick Start
 
 ### Prerequisites
 
-**For Linux systemd service mode**, you must install `xvfb` (X Virtual Framebuffer) on your system. This provides a virtual display required for headless browser operation. Install it using your system's package manager (e.g., `apt`, `dnf`, `pacman`, etc.).
+**System Requirements:**
+- **Node.js** 16+ and **npm**
+- **Chromium browser** installed on your system
+- **For Linux systemd service mode**: `xvfb` (X Virtual Framebuffer) for headless operation
+
 
 ### 1. Install
 
 ```bash
-npm install -g wa-botforge
+npm install -g wweb-botforge
 ```
 
 ### 2. Create Your First Bot
 
 ```bash
-npx wa-botforge create-bot
+botforge create-bot
 ```
 
 Answer the questions:
@@ -50,78 +45,68 @@ The command will:
 - Generate a unique bot ID automatically
 - Show a QR code for WhatsApp authentication
 - Create the bot configuration with your phone number
-- Save everything to `config/main.yml`
+- Save everything to `~/.config/wweb-botforge/config.yml`
 
-### 3. Configure Auto-Responses (Optional)
+### 3. Configure Your Bot
 
-Edit `config/main.yml` to add more auto-responses:
+The `create-bot` command creates a bot entry with default settings but no defined behavior. Your bot won't respond to messages until you configure auto-responses, webhooks, and other settings by editing `~/.config/wweb-botforge/config.yml`. See the Configuration Guide below for detailed instructions on how to add auto-responses, webhooks, and customize your bot's behavior.
 
-```yaml
-bots:
-  - id: bot-abc123  # Auto-generated
-    name: "My Awesome Bot"
-    phone: "+1234567890"  # Auto-filled
-    auto_responses:
-      - pattern: "\\b(hello|hi|hey)\\b"
-        response: "Hello! How can I help you today?"
-        case_insensitive: true
-
-      - pattern: "\\b(bye|goodbye)\\b"
-        response: "Goodbye! Have a great day! 👋"
-```
-
-### 4. Start Your Bot
+### 4. Setup & Start as System Service
 
 ```bash
-wa-botforge start
+# Start the service
+systemctl --user start wweb-botforge
+
+# Enable auto-start on boot
+systemctl --user enable wweb-botforge
 ```
 
-Your bot is now running with auto-responses! Send messages to test it.
+Your bot is now running as a system service! Send messages to test it.
 
-## 📖 Examples
+### Alternative: Docker Deployment
 
-### Simple FAQ Bot
+For containerized deployments (no `xvfb` needed):
 
-```yaml
-bots:
-  - id: support-bot
-    name: "Support Bot"
-    auto_responses:
-      - pattern: "hours|time"
-        response: "We're open Mon-Fri 9am-6pm, Sat 10am-2pm"
-
-      - pattern: "price|cost"
-        response: "Check our pricing at website.com/pricing"
+```dockerfile
+# Dockerfile
+FROM node:18
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npx", "botforge", "start"]
 ```
 
-### Multi-Bot Setup
-
-```yaml
-bots:
-  - id: sales-bot
-    name: "Sales Assistant"
-    # ... sales config
-
-  - id: support-bot
-    name: "Customer Support"
-    # ... support config
-
-  - id: notifications-bot
-    name: "Alert Bot"
-    # ... notification config
+```bash
+docker build -t wweb-botforge .
+docker run -d wweb-botforge
 ```
 
 ## 🔧 Configuration Guide
 
+### Global Configuration
+
+Configure system-wide settings in the `global` section:
+
+```yaml
+global:
+  chromiumPath: "/usr/bin/chromium"  # Path to Chromium/Chrome browser
+  apiPort: 3000                     # REST API port (optional)
+  apiEnabled: true                  # Enable REST API (optional)
+  logLevel: "info"                  # Global log level
+```
+
 ### Bot Structure
 
-Each bot in your `main.yml` can have:
+Each bot in your `config.yml` can have:
 
-- **`id`**: Unique identifier (auto-generated from bot name)
+- **`id`**: Unique identifier (auto-generated)
 - **`name`**: Display name
 - **`phone`**: Phone number (auto-filled after WhatsApp authentication)
 - **`auto_responses`**: Instant replies based on message patterns
-- **`settings`**: Bot behavior options (delays, filters, etc.)
+- **`webhooks`**: HTTP requests to external services
+- **`settings`**: Bot behavior options
 
 ### Auto-Responses
 
@@ -145,27 +130,6 @@ auto_responses:
     response_options:
       media: "https://example.com/image.jpg"
       caption: "Check this out!"
-```
-
-### Cooldown Protection
-
-To prevent spam attacks, you can set a `cooldown` (in seconds) for each auto-response pattern. This creates a cooldown period per sender-pattern combination, preventing the same sender from triggering the same pattern repeatedly within the specified time.
-
-- **Per sender-pattern**: Different senders can trigger the same pattern simultaneously
-- **Independent patterns**: A sender can trigger different patterns without waiting
-- **Automatic cleanup**: Expired cooldowns are cleaned up automatically to prevent memory leaks
-
-Example:
-
-```yaml
-auto_responses:
-  - pattern: "help|support"
-    response: "How can I help you?"
-    cooldown: 60  # 1 minute cooldown per sender for this pattern
-
-  - pattern: "price|cost"
-    response: "Check our pricing at example.com/pricing"
-    cooldown: 300  # 5 minutes cooldown
 ```
 
 ### Webhooks
@@ -214,14 +178,40 @@ When triggered, the webhook sends a JSON payload:
 }
 ```
 
-**Use Cases:**
-- **Order processing**: Forward customer orders to your e-commerce API
-- **Lead capture**: Send inquiries to your CRM system
-- **Notifications**: Alert your team about urgent messages
-- **Analytics**: Track message patterns and user behavior
-- **Integration**: Connect with chat platforms, helpdesk systems, etc.
+### Cooldown Protection
 
-### Settings
+To prevent spam attacks, you can set a `cooldown` (in seconds) for each auto-response or webhook pattern. This creates a cooldown period per sender-pattern combination, preventing the same sender from triggering the same pattern repeatedly within the specified time.
+
+- **Applies to both auto-responses and webhooks**: Works the same way for message replies and HTTP requests
+- **Per sender-pattern**: Different senders can trigger the same pattern simultaneously
+- **Independent patterns**: A sender can trigger different patterns without waiting
+- **Automatic cleanup**: Expired cooldowns are cleaned up automatically to prevent memory leaks
+
+Example with auto-responses:
+
+```yaml
+auto_responses:
+  - pattern: "help|support"
+    response: "How can I help you?"
+    cooldown: 60  # 1 minute cooldown per sender for this pattern
+
+  - pattern: "price|cost"
+    response: "Check our pricing at example.com/pricing"
+    cooldown: 300  # 5 minutes cooldown
+```
+
+Example with webhooks:
+
+```yaml
+webhooks:
+  - name: "order-webhook"
+    pattern: "nuevo pedido|new order"
+    url: "https://api.example.com/orders"
+    method: "POST"
+    cooldown: 120  # 2 minutes cooldown per sender for this webhook
+```
+
+### Bot Settings
 
 ```yaml
 settings:
@@ -234,32 +224,61 @@ settings:
   log_level: "info"
 ```
 
-## 🚀 Roadmap
+## 🛠️ Service Management
 
-### ✅ **Already Implemented**
-- YAML configuration loading
-- Basic auto-responses with regex patterns
-- Message queues with configurable delays (in validation)
-- Cooldown protection for auto-responses to prevent spam
-- Outbound webhooks with retry logic and cooldowns
+Once installed and configured, manage your bot service:
 
-### 🔄 **Coming Soon**
-- REST API for external message sending
-- Distribution as ready-to-use service
-- Web management interface
+```bash
+# Check service status
+systemctl --user status wweb-botforge
 
-## 🤝 Use Cases
+# View logs in real-time
+journalctl --user -u wweb-botforge -f
 
-### Using Includes
+# Restart service
+systemctl --user restart wweb-botforge
 
-Organize large configs:
+# Stop service
+systemctl --user stop wweb-botforge
+
+# Disable auto-start
+systemctl --user disable wweb-botforge
+```
+
+## 📖 Examples
+
+### Simple FAQ Bot
 
 ```yaml
-# main.yml
 bots:
-  - !include bots/support.yml
-  - !include bots/sales.yml
+  - id: support-bot
+    name: "Support Bot"
+    auto_responses:
+      - pattern: "hours|time"
+        response: "We're open Mon-Fri 9am-6pm, Sat 10am-2pm"
+
+      - pattern: "price|cost"
+        response: "Check our pricing at website.com/pricing"
 ```
+
+### Multi-Bot Setup
+
+```yaml
+bots:
+  - id: sales-bot
+    name: "Sales Assistant"
+    # ... sales config
+
+  - id: support-bot
+    name: "Customer Support"
+    # ... support config
+
+  - id: notifications-bot
+    name: "Alert Bot"
+    # ... notification config
+```
+
+## 🤝 Use Cases
 
 - **Customer Support**: Auto-respond to common questions
 - **E-commerce**: Handle product inquiries and basic orders
@@ -267,7 +286,40 @@ bots:
 - **Lead Generation**: Capture and route inquiries
 - **Internal Tools**: Team communication bots
 - **Business Automation**: Streamline repetitive tasks
+- **AI Integration**: Connect to ChatGPT, Claude, etc.
 
+### Using Includes
+
+Organize large configs:
+
+```yaml
+# config.yml
+bots:
+  - !include bots/support.yml
+  - !include bots/sales.yml
+```
+
+
+## ❓ Troubleshooting
+
+**Service not starting?**
+- Check if `xvfb` is installed: `which xvfb`
+- Verify config file: `cat ~/.config/wweb-botforge/config.yml`
+- Check service logs: `journalctl --user -u wweb-botforge -n 50`
+
+**QR code not showing?**
+- Ensure no other WhatsApp sessions are active
+- Restart the service: `systemctl --user restart wweb-botforge`
+
+**Messages not responding?**
+- Check bot status in logs
+- Verify regex patterns in config
+- Test with simple messages first
+
+**Webhook not working?**
+- Test your endpoint with tools like Postman
+- Check logs for timeout/connection errors
+- Verify webhook URL and headers
 
 ## 📄 License
 
@@ -277,9 +329,9 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ## 🙏 Acknowledgments
 
-This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WA BotForge wouldn't be possible without this foundational work.
+This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WWeb BotForge wouldn't be possible without this foundational work.
 
-**Made with ❤️ for the bot automation community**
+**Made with ❤️ for the no-code bot community**
 
 
 
