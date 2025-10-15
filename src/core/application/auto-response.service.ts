@@ -3,6 +3,7 @@ import { AutoResponseData } from '../domain/dtos/config.dto';
 import { IncomingMessage, OutgoingMessage } from '../domain/dtos/message.dto';
 import { MessageQueueService } from './message-queue.service';
 import { CooldownService } from './cooldown.service';
+import { getLogger } from '../infrastructure/logger';
 
 /**
  * Service for handling automatic responses based on message patterns
@@ -12,6 +13,10 @@ export class AutoResponseService {
     private messageQueue: MessageQueueService,
     private cooldownService: CooldownService
   ) {}
+
+  private get logger() {
+    return getLogger();
+  }
 
   /**
    * Process an incoming message and find matching auto-responses
@@ -27,7 +32,7 @@ export class AutoResponseService {
 
     // Skip messages from groups if configured
     if (bot.settings.ignoreGroups && this.isGroupMessage(message.from)) {
-      console.log(`🚫 Ignoring group message for bot "${bot.name}"`);
+      this.logger.debug(`🚫 Ignoring group message for bot "${bot.name}"`);
       return null;
     }
 
@@ -38,14 +43,14 @@ export class AutoResponseService {
       // Check cooldown (convert seconds to milliseconds)
       const cooldownMs = (matchingResponse.cooldown || 0) * 1000;
       if (this.cooldownService.isOnCooldown(message.from, matchingResponse.pattern, cooldownMs)) {
-        console.log(`⏳ Cooldown active for sender "${message.from}" on pattern "${matchingResponse.pattern}" in bot "${bot.name}"`);
+        this.logger.debug(`⏳ Cooldown active for sender "${message.from}" on pattern "${matchingResponse.pattern}" in bot "${bot.name}"`);
         return null;
       }
 
       // Set cooldown timestamp
       this.cooldownService.setCooldown(message.from, matchingResponse.pattern);
 
-      console.log(`🤖 Auto-response triggered for bot "${bot.name}": "${matchingResponse.pattern}" → "${matchingResponse.response}"`);
+      this.logger.info(`🤖 Auto-response triggered for bot "${bot.name}": "${matchingResponse.pattern}" → "${matchingResponse.response}"`);
       return matchingResponse;
     }
 
@@ -135,11 +140,11 @@ export class AutoResponseService {
         outgoingMessage.metadata
       );
 
-      console.log(`📋 Auto-response queued for bot "${bot.name}": ${messageId}`);
+      this.logger.info(`📋 Auto-response queued for bot "${bot.name}": ${messageId}`);
       return messageId;
 
     } catch (error) {
-      console.error(`❌ Failed to queue auto-response for bot "${bot.name}":`, error);
+      this.logger.error(`❌ Failed to queue auto-response for bot "${bot.name}":`, error);
       throw error;
     }
   }
@@ -158,9 +163,9 @@ export class AutoResponseService {
     };
 
     if (matched) {
-      console.log(`✅ Auto-response: ${JSON.stringify(logData)}`);
+      this.logger.debug(`✅ Auto-response: ${JSON.stringify(logData)}`);
     } else {
-      console.log(`ℹ️  Message processed: ${JSON.stringify(logData)}`);
+      this.logger.debug(`ℹ️  Message processed: ${JSON.stringify(logData)}`);
     }
   }
 }

@@ -2,6 +2,7 @@ import { Bot } from '../domain/entities/bot.entity';
 import { IncomingMessage, OutgoingMessage } from '../domain/dtos/message.dto';
 import { AutoResponseService } from './auto-response.service';
 import { WebhookService } from './webhook.service';
+import { getLogger } from '../infrastructure/logger';
 
 /**
  * Callback type for handling processed messages
@@ -23,6 +24,10 @@ export class MessageHandlerService {
     this.webhookService = webhookService;
   }
 
+  private get logger() {
+    return getLogger();
+  }
+
   /**
     * Register a bot with its message channel
     */
@@ -40,7 +45,7 @@ export class MessageHandlerService {
 
      // Set up ready listener to log when bot is ready
      bot.channel.onReady(() => {
-       console.log(`🤖 Bot "${bot.name}" (${bot.id.value}) is ready and listening for messages`);
+       this.logger.info(`🤖 Bot "${bot.name}" (${bot.id.value}) is ready and listening for messages`);
      });
    }
 
@@ -63,7 +68,7 @@ export class MessageHandlerService {
    * Handle incoming message from chat
    */
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
-    console.log(`📨 Message received for bot "${bot.name}": ${message.content.substring(0, 50)}...`);
+    this.logger.info(`📨 Message received for bot "${bot.name}": ${message.content.substring(0, 50)}...`);
 
     try {
       // Check if message should be processed
@@ -81,7 +86,7 @@ export class MessageHandlerService {
 
       // Process webhooks (async, don't wait)
       this.webhookService.processWebhooks(bot, message).catch(error => {
-        console.error(`❌ Error processing webhooks for bot "${bot.name}":`, error);
+        this.logger.error(`❌ Error processing webhooks for bot "${bot.name}":`, error);
       });
 
       // Log the message processing
@@ -99,7 +104,7 @@ export class MessageHandlerService {
       }
 
     } catch (error) {
-      console.error(`❌ Error handling message for bot "${bot.name}":`, error);
+      this.logger.error(`❌ Error handling message for bot "${bot.name}":`, error);
     }
   }
 

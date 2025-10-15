@@ -2,6 +2,7 @@ import express from 'express';
 import { MessageQueueService } from '../../application/message-queue.service';
 import { Bot } from '../../domain/entities/bot.entity';
 import { createApiRoutes } from './routes';
+import { getLogger } from '../logger';
 
 export class ApiServer {
   private app: express.Application;
@@ -17,6 +18,10 @@ export class ApiServer {
 
     this.setupMiddleware();
     this.setupRoutes();
+  }
+
+  private get logger() {
+    return getLogger();
   }
 
   private setupMiddleware(): void {
@@ -75,8 +80,8 @@ export class ApiServer {
   async start(): Promise<void> {
     return new Promise((resolve) => {
       this.server = this.app.listen(this.port, () => {
-        console.log(`🚀 API Server started on port ${this.port}`);
-        console.log(`📖 API Documentation: http://localhost:${this.port}`);
+        this.logger.info(`🚀 API Server started on port ${this.port}`);
+        this.logger.info(`📖 API Documentation: http://localhost:${this.port}`);
         resolve();
       });
     });
@@ -86,11 +91,11 @@ export class ApiServer {
     return new Promise((resolve) => {
       if (this.server) {
         this.server.close(() => {
-          console.log('🛑 API Server stopped');
+          this.logger.info('🛑 API Server stopped');
           resolve();
         });
       } else {
-        console.log('🛑 API Server stopped');
+        this.logger.info('🛑 API Server stopped');
         resolve();
       }
     });

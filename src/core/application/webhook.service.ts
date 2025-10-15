@@ -2,12 +2,17 @@ import { Bot } from '../domain/entities/bot.entity';
 import { WebhookData } from '../domain/dtos/config.dto';
 import { IncomingMessage } from '../domain/dtos/message.dto';
 import { CooldownService } from './cooldown.service';
+import { getLogger } from '../infrastructure/logger';
 
 /**
  * Service for handling outbound webhooks triggered by message patterns
  */
 export class WebhookService {
   constructor(private cooldownService: CooldownService) {}
+
+  private get logger() {
+    return getLogger();
+  }
 
   /**
    * Process webhooks for a message that matches patterns
@@ -30,7 +35,7 @@ export class WebhookService {
       try {
         await this.triggerWebhook(bot, message, webhook);
       } catch (error) {
-        console.error(`❌ Failed to trigger webhook "${webhook.name}" for bot "${bot.name}":`, error);
+        this.logger.error(`❌ Failed to trigger webhook "${webhook.name}" for bot "${bot.name}":`, error);
       }
     }
   }
@@ -46,14 +51,14 @@ export class WebhookService {
     // Check cooldown (convert seconds to milliseconds)
     const cooldownMs = (webhook.cooldown || 0) * 1000;
     if (this.cooldownService.isOnCooldown(message.from, webhook.name, cooldownMs)) {
-      console.log(`⏳ Webhook cooldown active for sender "${message.from}" on webhook "${webhook.name}" in bot "${bot.name}"`);
+      this.logger.debug(`⏳ Webhook cooldown active for sender "${message.from}" on webhook "${webhook.name}" in bot "${bot.name}"`);
       return;
     }
 
     // Set cooldown timestamp
     this.cooldownService.setCooldown(message.from, webhook.name);
 
-    console.log(`🔗 Triggering webhook "${webhook.name}" for bot "${bot.name}": ${webhook.method} ${webhook.url}`);
+    this.logger.info(`🔗 Triggering webhook "${webhook.name}" for bot "${bot.name}": ${webhook.method} ${webhook.url}`);
 
     // Prepare webhook payload
     const payload = this.buildWebhookPayload(bot, message, webhook);
@@ -113,11 +118,11 @@ export class WebhookService {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        console.log(`✅ Webhook "${webhook.name}" triggered successfully (attempt ${attempt}/${maxRetries})`);
+        this.logger.info(`✅ Webhook "${webhook.name}" triggered successfully (attempt ${attempt}/${maxRetries})`);
         return;
 
       } catch (error) {
-        console.warn(`⚠️ Webhook "${webhook.name}" attempt ${attempt}/${maxRetries} failed:`, error);
+        this.logger.warn(`⚠️ Webhook "${webhook.name}" attempt ${attempt}/${maxRetries} failed:`, error);
 
         if (attempt === maxRetries) {
           throw new Error(`Webhook "${webhook.name}" failed after ${maxRetries} attempts: ${error}`);

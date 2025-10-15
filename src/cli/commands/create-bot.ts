@@ -6,10 +6,12 @@ import { load as loadYaml, dump as dumpYaml } from 'js-yaml';
 import qrcode from 'qrcode-terminal';
 import { BotConfiguration, ConfigFile } from '../../core/domain/dtos/config.dto';
 import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
+import { getLogger } from '../../core/infrastructure/logger';
 
 export async function createBotCommand() {
-  console.log('🤖 Welcome to WWeb BotForge!');
-  console.log('Let\'s create a new WhatsApp bot...\n');
+  const logger = getLogger();
+  logger.info('🤖 Welcome to WWeb BotForge!');
+  logger.info('Let\'s create a new WhatsApp bot...\n');
 
   try {
     // Ask for bot name
@@ -29,9 +31,9 @@ export async function createBotCommand() {
 
     const botName = answers.botName.trim();
     const botId = generateBotId(botName);
-    
-    console.log(`\n✅ Generated bot ID: ${botId}`);
-    console.log(`📝 Bot name: ${botName}`);
+
+    logger.info(`\n✅ Generated bot ID: ${botId}`);
+    logger.info(`📝 Bot name: ${botName}`);
 
     // Create WhatsApp initializer for authentication
     const initializer = new WhatsAppInitializer(botId);
@@ -39,24 +41,24 @@ export async function createBotCommand() {
 
     // Handle QR code generation
     initializer.onQRCode((qr: string) => {
-      console.log('\n📱 Scan this QR code with WhatsApp to link your account:');
+      logger.info('\n📱 Scan this QR code with WhatsApp to link your account:');
       qrcode.generate(qr, { small: true });
     });
 
     // Handle successful authentication
     initializer.onAuthSuccess((phone: string) => {
-      console.log('\n✅ WhatsApp account linked successfully!');
-      console.log(`📱 Connected to WhatsApp with phone: ${phone}`);
+      logger.info('\n✅ WhatsApp account linked successfully!');
+      logger.info(`📱 Connected to WhatsApp with phone: ${phone}`);
       phoneNumber = phone;
     });
 
     // Handle authentication failure
     initializer.onAuthFailure((error: Error) => {
-      console.error('\n❌ Authentication failed:', error.message);
+      logger.error('\n❌ Authentication failed:', error.message);
       process.exit(1);
     });
 
-    console.log('\n🔗 Initializing WhatsApp Web client...');
+    logger.info('\n🔗 Initializing WhatsApp Web client...');
     await initializer.initialize();
 
     // Wait for authentication to complete
@@ -89,17 +91,17 @@ export async function createBotCommand() {
 
     // Save configuration to file
     await saveBotConfig(botConfig);
-    
-    console.log(`\n📁 Bot configuration saved to config/main.yml`);
-    console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
-    console.log('\nTo start using your bot, run: npm start');
+
+    logger.info(`\n📁 Bot configuration saved to config/main.yml`);
+    logger.info(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
+    logger.info('\nTo start using your bot, run: npm start');
     
     // Clean up resources
     await initializer.destroy();
     process.exit(0);
 
   } catch (error) {
-    console.error('\n❌ Error creating bot:', error);
+    logger.error('\n❌ Error creating bot:', error);
     process.exit(1);
   }
 }
@@ -112,6 +114,7 @@ function generateBotId(name: string): string {
 }
 
 async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
+  const logger = getLogger();
   const configDir = joinPaths(process.cwd(), 'config');
   const configFile = joinPaths(configDir, 'main.yml');
 
@@ -133,7 +136,7 @@ async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
         existingConfig.bots = [];
       }
     } catch (error) {
-      console.warn('⚠️  Could not parse existing config file, creating new one');
+      logger.warn('⚠️  Could not parse existing config file, creating new one');
       existingConfig = { bots: [] };
     }
   }
@@ -143,11 +146,11 @@ async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
   if (existingBotIndex >= 0) {
     // Update existing bot
     existingConfig.bots[existingBotIndex] = botConfig;
-    console.log(`\n📝 Updated existing bot: ${botConfig.name} (${botConfig.id})`);
+    logger.info(`\n📝 Updated existing bot: ${botConfig.name} (${botConfig.id})`);
   } else {
     // Add new bot
     existingConfig.bots.push(botConfig);
-    console.log(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`);
+    logger.info(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`);
   }
 
   // Write updated config
@@ -158,3 +161,4 @@ async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
   });
   writeFileSync(configFile, yamlContent, 'utf8');
 }
+

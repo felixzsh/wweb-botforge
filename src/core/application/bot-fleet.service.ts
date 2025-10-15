@@ -7,6 +7,7 @@ import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
 import { IChannelManager } from '../domain/entities/channel-manager';
 import { BotConfiguration, ConfigFile } from '../domain/dtos/config.dto';
+import { getLogger } from '../infrastructure/logger';
 
 /**
  * Main bot fleet service for WWeb BotForge
@@ -37,20 +38,24 @@ export class BotFleetService {
     this.messageHandlerService = new MessageHandlerService(this.autoResponseService, this.webhookService);
   }
 
+  private get logger() {
+    return getLogger();
+  }
+
   /**
     * Start all bots from configuration
     */
    async start(configFile: ConfigFile): Promise<Map<string, Bot>> {
     if (this.isRunning) {
-      console.log('🤖 Bot Fleet Launcher is already running');
+      this.logger.info('🤖 Bot Fleet Launcher is already running');
       return this.bots;
     }
 
     try {
-      console.log('🚀 Starting WWeb BotForge...');
+      this.logger.info('🚀 Starting WWeb BotForge...');
 
       if (configFile.bots.length === 0) {
-        console.log('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.');
+        this.logger.warn('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.');
         return this.bots;
       }
 
@@ -60,14 +65,14 @@ export class BotFleetService {
 
         // Add delay between bot initializations to prevent resource conflicts
         if (configFile.bots.length > 1) {
-          console.log('⏳ Waiting 3 seconds before initializing next bot...');
+          this.logger.info('⏳ Waiting 3 seconds before initializing next bot...');
           await this.delay(3000);
         }
       }
 
       this.isRunning = true;
-      console.log(`🎉 WWeb BotForge started successfully with ${this.bots.size} bot(s)!`);
-      console.log('💬 Bots are now listening for messages...');
+      this.logger.info(`🎉 WWeb BotForge started successfully with ${this.bots.size} bot(s)!`);
+      this.logger.info('💬 Bots are now listening for messages...');
 
       // Set up graceful shutdown
       this.setupGracefulShutdown();
@@ -75,7 +80,7 @@ export class BotFleetService {
       return this.bots;
 
     } catch (error) {
-      console.error('❌ Failed to start Bot Fleet Launcher:', error);
+      this.logger.error('❌ Failed to start Bot Fleet Launcher:', error);
       throw error;
     }
   }
@@ -84,67 +89,67 @@ export class BotFleetService {
    * Stop all bots and clean up resources
    */
   async stop(): Promise<void> {
-    if (!this.isRunning) {
-      return;
-    }
+   if (!this.isRunning) {
+     return;
+   }
 
-    console.log('🛑 Stopping WWeb BotForge...');
+   this.logger.info('🛑 Stopping WWeb BotForge...');
 
-    try {
-      // Shutdown message queues
-      await this.messageQueueService.shutdown();
+   try {
+     // Shutdown message queues
+     await this.messageQueueService.shutdown();
 
-      // Destroy all channels
-      await this.channelManager.removeAllChannels();
+     // Destroy all channels
+     await this.channelManager.removeAllChannels();
 
-      // Clear bot instances
-      this.bots.clear();
+     // Clear bot instances
+     this.bots.clear();
 
 
-      this.isRunning = false;
-      console.log('✅ WWeb BotForge stopped successfully');
-    } catch (error) {
-      console.error('❌ Error stopping Bot Fleet:', error);
-      throw error;
-    }
-  }
+     this.isRunning = false;
+     this.logger.info('✅ WWeb BotForge stopped successfully');
+   } catch (error) {
+     this.logger.error('❌ Error stopping Bot Fleet:', error);
+     throw error;
+   }
+ }
 
   /**
    * Initialize a single bot
    */
   private async initializeBot(config: any): Promise<void> {
-    try {
-      console.log(`🤖 Initializing bot: ${config.name} (${config.id})`);
+   try {
+     this.logger.info(`🤖 Initializing bot: ${config.name} (${config.id})`);
 
-      // Create bot entity
-      const bot = this.botFactory.createFromConfig(config);
-      this.bots.set(bot.id.value, bot);
+     // Create bot entity
+     const bot = this.botFactory.createFromConfig(config);
+     this.bots.set(bot.id.value, bot);
 
-      // Create message channel for this bot
-      const channel = this.channelManager.createChannel(bot.id.value);
+     // Create message channel for this bot
+     const channel = this.channelManager.createChannel(bot.id.value);
 
-      // Register channel with bot
-      bot.registerChannel(channel);
+     // Register channel with bot
+     bot.registerChannel(channel);
 
-      // Configure message queue for this bot
-      this.messageQueueService.setupBotQueue(bot);
+     // Configure message queue for this bot
+     this.messageQueueService.setupBotQueue(bot);
 
-      // Register bot with message handler service
-      this.messageHandlerService.registerBot(bot);
+     // Register bot with message handler service
+     this.messageHandlerService.registerBot(bot);
 
-      // Set up event handlers
-      this.setupBotEventHandlers(bot);
+     // Set up event handlers
+     this.setupBotEventHandlers(bot);
 
-      // Initialize channel
-      await bot.channel!.connect();
+     // Initialize channel
+     await bot.channel!.connect();
 
-      console.log(`✅ Bot "${bot.name}" initialized and ready`);
+     this.logger.info(`✅ Bot "${bot.name}" initialized and ready`);
 
-    } catch (error) {
-      console.error(`❌ Failed to initialize bot "${config.name}":`, error);
-      throw error;
-    }
-  }
+   } catch (error) {
+     this.logger.error(`❌ Failed to initialize bot "${config.name}":`, error);
+     throw error;
+   }
+ }
 
 
   /**
@@ -157,27 +162,27 @@ export class BotFleetService {
 
      // Handle ready event
      bot.channel.onReady(() => {
-       console.log(`✅ Bot "${bot.name}" is ready!`);
+       this.logger.info(`✅ Bot "${bot.name}" is ready!`);
      });
 
      // Handle disconnections
      bot.channel.onDisconnected((reason: string) => {
-       console.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason);
+       this.logger.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason);
      });
 
      // Handle auth failures
      bot.channel.onAuthFailure((error: Error) => {
-       console.error(`❌ Bot "${bot.name}" authentication failed:`, error.message);
+       this.logger.error(`❌ Bot "${bot.name}" authentication failed:`, error.message);
      });
 
      // Handle connection errors
      bot.channel.onConnectionError((error: Error) => {
-       console.error(`❌ Bot "${bot.name}" connection error:`, error.message);
+       this.logger.error(`❌ Bot "${bot.name}" connection error:`, error.message);
      });
 
      // Handle state changes
      bot.channel.onStateChange((state: string) => {
-       console.log(`ℹ️  Bot "${bot.name}" state changed to:`, state);
+       this.logger.info(`ℹ️  Bot "${bot.name}" state changed to:`, state);
      });
    }
 
@@ -186,29 +191,29 @@ export class BotFleetService {
    * Set up graceful shutdown handlers
    */
   private setupGracefulShutdown(): void {
-    const shutdown = async () => {
-      console.log('\n🛑 Received shutdown signal...');
-      await this.stop();
-      process.exit(0);
-    };
+   const shutdown = async () => {
+     this.logger.info('\n🛑 Received shutdown signal...');
+     await this.stop();
+     process.exit(0);
+   };
 
-    // Handle various shutdown signals
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
-    process.on('SIGUSR2', shutdown); // nodemon restart
+   // Handle various shutdown signals
+   process.on('SIGINT', shutdown);
+   process.on('SIGTERM', shutdown);
+   process.on('SIGUSR2', shutdown); // nodemon restart
 
-    // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      console.error('❌ Uncaught Exception:', error);
-      this.stop().finally(() => process.exit(1));
-    });
+   // Handle uncaught exceptions
+   process.on('uncaughtException', (error) => {
+     this.logger.error('❌ Uncaught Exception:', error);
+     this.stop().finally(() => process.exit(1));
+   });
 
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-      this.stop().finally(() => process.exit(1));
-    });
-  }
+   // Handle unhandled promise rejections
+   process.on('unhandledRejection', (reason, promise) => {
+     this.logger.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+     this.stop().finally(() => process.exit(1));
+   });
+ }
 
   /**
    * Get status of all bots

@@ -1,5 +1,6 @@
 import { Bot } from '../domain/entities/bot.entity';
 import { OutgoingMessage } from '../domain/dtos/message.dto';
+import { getLogger } from '../infrastructure/logger';
 
 /**
  * Represents a message in the queue
@@ -26,12 +27,16 @@ export class MessageQueueService {
   private delays: Map<string, number> = new Map();
   private sendCallbacks: Map<string, SendMessageCallback> = new Map();
 
+  private get logger() {
+    return getLogger();
+  }
+
   /**
    * Set delay for a specific bot (in milliseconds)
    */
   setBotDelay(botId: string, delayMs: number): void {
     this.delays.set(botId, delayMs);
-    console.log(`📋 Queue delay for bot "${botId}" set to ${delayMs}ms`);
+    this.logger.info(`📋 Queue delay for bot "${botId}" set to ${delayMs}ms`);
   }
 
   /**
@@ -59,7 +64,7 @@ export class MessageQueueService {
        await bot.channel!.send(message);
      });
 
-     console.log(`📋 Configured message queue for bot "${bot.name}": delay=${bot.settings.typingDelay}ms`);
+     this.logger.info(`📋 Configured message queue for bot "${bot.name}": delay=${bot.settings.typingDelay}ms`);
    }
 
   /**
@@ -96,7 +101,7 @@ export class MessageQueueService {
      // Add to end of queue (FIFO)
      botQueue.push(queuedMessage);
 
-     console.log(`📨 Message queued for bot "${botId}": ${messageId} (queue size: ${botQueue.length})`);
+     this.logger.info(`📨 Message queued for bot "${botId}": ${messageId} (queue size: ${botQueue.length})`);
 
      // Start processing if not already running
      if (!this.processing.get(botId)) {
@@ -115,7 +120,7 @@ export class MessageQueueService {
     }
 
     this.processing.set(botId, true);
-    console.log(`▶️  Started processing queue for bot "${botId}"`);
+    this.logger.info(`▶️  Started processing queue for bot "${botId}"`);
 
     const botQueue = this.queues.get(botId);
     if (!botQueue) {
@@ -129,28 +134,28 @@ export class MessageQueueService {
 
       try {
         // Wait before sending (simulate human-like delay)
-        console.log(`⏳ Waiting ${delay}ms before sending message ${messageData.id} from bot "${botId}"...`);
+        this.logger.debug(`⏳ Waiting ${delay}ms before sending message ${messageData.id} from bot "${botId}"...`);
         await this.delay(delay);
 
-        console.log(`📤 Processing queued message: ${messageData.id} from bot "${botId}"`);
+        this.logger.info(`📤 Processing queued message: ${messageData.id} from bot "${botId}"`);
 
         // Send message using callback
         const callback = this.sendCallbacks.get(botId);
         if (callback) {
           await callback(botId, messageData.message);
-          console.log(`✅ Queued message sent successfully: ${messageData.id}`);
+          this.logger.info(`✅ Queued message sent successfully: ${messageData.id}`);
         } else {
-          console.error(`❌ No send callback configured for bot "${botId}"`);
+          this.logger.error(`❌ No send callback configured for bot "${botId}"`);
         }
 
       } catch (error) {
-        console.error(`❌ Error sending queued message ${messageData.id} from bot "${botId}":`, error);
+        this.logger.error(`❌ Error sending queued message ${messageData.id} from bot "${botId}":`, error);
         // Could implement retry logic here
       }
     }
 
     this.processing.set(botId, false);
-    console.log(`⏸️  Queue processing completed for bot "${botId}"`);
+    this.logger.info(`⏸️  Queue processing completed for bot "${botId}"`);
   }
 
   /**
@@ -202,7 +207,7 @@ export class MessageQueueService {
    */
   clearBotQueue(botId: string): void {
     this.queues.set(botId, []);
-    console.log(`🗑️  Queue cleared for bot "${botId}"`);
+    this.logger.info(`🗑️  Queue cleared for bot "${botId}"`);
   }
 
   /**
@@ -210,7 +215,7 @@ export class MessageQueueService {
    */
   clearAllQueues(): void {
     this.queues.clear();
-    console.log('🗑️  All queues cleared');
+    this.logger.info('🗑️  All queues cleared');
   }
 
   /**
@@ -225,7 +230,7 @@ export class MessageQueueService {
     const index = queue.findIndex(msg => msg.id === messageId);
     if (index !== -1) {
       queue.splice(index, 1);
-      console.log(`🗑️  Message ${messageId} removed from bot "${botId}" queue`);
+      this.logger.info(`🗑️  Message ${messageId} removed from bot "${botId}" queue`);
       return true;
     }
 
@@ -243,7 +248,7 @@ export class MessageQueueService {
    * Shutdown all processing
    */
   async shutdown(): Promise<void> {
-    console.log('🛑 Shutting down message queues...');
+    this.logger.info('🛑 Shutting down message queues...');
 
     // Wait for all processing to complete
     const processingPromises: Promise<void>[] = [];
@@ -255,6 +260,7 @@ export class MessageQueueService {
     }
 
     await Promise.allSettled(processingPromises);
-    console.log('✅ Message queues shutdown complete');
+    this.logger.info('✅ Message queues shutdown complete');
   }
 }
+
