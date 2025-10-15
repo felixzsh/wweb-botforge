@@ -7,6 +7,7 @@ import qrcode from 'qrcode-terminal';
 import { BotConfiguration, ConfigFile } from '../../core/domain/dtos/config.dto';
 import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
 import { getLogger } from '../../core/infrastructure/logger';
+import { YamlLoader } from '../../core/infrastructure/yaml-loader';
 
 export async function createBotCommand() {
   const logger = getLogger();
@@ -92,7 +93,8 @@ export async function createBotCommand() {
     // Save configuration to file
     await saveBotConfig(botConfig);
 
-    logger.info(`\n📁 Bot configuration saved to config/main.yml`);
+    const yamlLoader = new YamlLoader();
+    logger.info(`\n📁 Bot configuration saved to ${yamlLoader.getConfigPath()}`);
     logger.info(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
     logger.info('\nTo start using your bot, run: npm start');
     
@@ -115,10 +117,11 @@ function generateBotId(name: string): string {
 
 async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
   const logger = getLogger();
-  const configDir = joinPaths(process.cwd(), 'config');
-  const configFile = joinPaths(configDir, 'main.yml');
+  const yamlLoader = new YamlLoader();
+  const configFile = yamlLoader.getConfigPath();
 
   // Create config directory if it doesn't exist
+  const configDir = joinPaths(configFile, '..');
   if (!existsPathSync(configDir)) {
     mkdirSync(configDir, { recursive: true });
   }

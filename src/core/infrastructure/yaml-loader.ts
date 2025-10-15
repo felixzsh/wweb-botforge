@@ -16,6 +16,10 @@ export class YamlLoader {
       : 'config/main.yml');
   }
 
+  getConfigPath(): string {
+    return this.configPath;
+  }
+
   async loadMainConfig(): Promise<ConfigFile> {
     const content = fs.readFileSync(this.configPath, 'utf8');
     const processedContent = this.processIncludes(content, path.dirname(this.configPath));
