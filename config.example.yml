@@ -1,0 +1,169 @@
+# WWeb BotForge Configuration Example
+# This is a comprehensive example showing all available configuration options
+# Copy this to ~/.config/wweb-botforge/config.yml and customize for your needs
+
+# Global system configuration
+global:
+  chromiumPath: "/usr/bin/chromium"  # Path to your Chromium/Chrome installation
+  apiPort: 3000                     # Port for REST API (optional)
+  apiEnabled: true                  # Enable REST API for external integrations
+  logLevel: "info"                  # Log level: info, debug, warn, error
+
+# Bot definitions
+bots:
+  # Example Support Bot
+  - id: support-bot-001
+    name: "Customer Support"
+    phone: "1234567890"  # Will be filled after WhatsApp authentication
+
+    # Auto-responses for instant replies
+    auto_responses:
+      - pattern: "^(hello|hi|hey|good morning|good afternoon)$"
+        response: "Hello! 👋 Welcome to our support chat. How can I help you today?"
+        case_insensitive: true
+        priority: 1
+        cooldown: 30  # 30 seconds cooldown per sender
+
+      - pattern: "\\b(help|support|assist)\\b"
+        response: "I'm here to help! You can ask me about:\n• Our products\n• Order status\n• Technical issues\n• Contact information"
+        case_insensitive: true
+        priority: 2
+        cooldown: 60
+
+      - pattern: "\\b(hours|time|open|schedule)\\b"
+        response: "🕒 Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
+        case_insensitive: true
+        priority: 1
+
+      - pattern: "\\b(thank|thanks|gracias)\\b"
+        response: "You're welcome! 😊 Is there anything else I can help you with?"
+        case_insensitive: true
+        priority: 1
+
+      # Advanced response with media
+      - pattern: "\\b(brochure|catalog|pdf)\\b"
+        response: "Here's our product catalog:"
+        case_insensitive: true
+        priority: 2
+        cooldown: 300  # 5 minutes cooldown
+        response_options:
+          media: "https://example.com/catalog.pdf"
+          caption: "Product Catalog - Updated 2024"
+
+    # Webhooks for external integrations
+    webhooks:
+      - name: "support-ticket"
+        pattern: "\\b(urgent|emergency|problem|issue|error)\\b"
+        url: "https://api.example.com/support/tickets"
+        method: "POST"
+        headers:
+          "Content-Type": "application/json"
+          "Authorization": "Bearer your-api-token"
+          "X-Source": "whatsapp-bot"
+        timeout: 10000    # 10 seconds
+        retry: 3         # Retry up to 3 times
+        priority: 1
+        cooldown: 300    # 5 minutes cooldown
+
+      - name: "lead-capture"
+        pattern: "\\b(interested|quote|price|cost|budget)\\b"
+        url: "https://crm.example.com/leads"
+        method: "POST"
+        headers:
+          "Content-Type": "application/json"
+          "X-API-Key": "your-crm-key"
+        timeout: 5000
+        retry: 2
+        priority: 2
+        cooldown: 600  # 10 minutes
+
+    # Bot behavior settings
+    settings:
+      simulate_typing: true      # Show typing indicator
+      typing_delay: 1500         # Delay before typing (ms)
+      read_receipts: true        # Mark messages as read
+      ignore_groups: true        # Ignore group messages
+      ignored_senders:           # Senders to ignore
+        - "status@broadcast"     # WhatsApp status broadcasts
+        - "1234567890"          # Specific numbers
+      admin_numbers:             # Admin numbers (can send commands)
+        - "1987654321"
+      log_level: "info"          # Bot-specific log level
+
+  # Example Sales Bot
+  - id: sales-bot-002
+    name: "Sales Assistant"
+    phone: "1234567891"
+
+    auto_responses:
+      - pattern: "^(hi|hello|hey)$"
+        response: "Hi there! 🚀 I'm your sales assistant. Ready to help you find the perfect solution?"
+        case_insensitive: true
+        priority: 1
+
+      - pattern: "\\b(demo|trial|test|try)\\b"
+        response: "Great! I'd love to show you a demo. 📅 When would be a good time for you?"
+        case_insensitive: true
+        priority: 2
+
+      - pattern: "\\b(price|cost|pricing|fee)\\b"
+        response: "Our pricing starts at $29/month for the basic plan. 💰 Would you like me to send you a detailed pricing guide?"
+        case_insensitive: true
+        priority: 2
+
+    webhooks:
+      - name: "sales-lead"
+        pattern: "\\b(interested|buy|purchase|order|subscribe)\\b"
+        url: "https://sales.example.com/leads"
+        method: "POST"
+        headers:
+          "Content-Type": "application/json"
+          "X-Source": "whatsapp-sales-bot"
+        timeout: 8000
+        retry: 3
+        priority: 1
+
+    settings:
+      simulate_typing: true
+      typing_delay: 1000
+      read_receipts: true
+      ignore_groups: false  # Sales bot might want to engage in groups
+      ignored_senders: []
+      admin_numbers:
+        - "1987654321"
+      log_level: "info"
+
+  # Example Notification Bot (minimal config)
+  - id: notifications-bot-003
+    name: "Alert Bot"
+    phone: "1234567892"
+
+    # Minimal auto-responses
+    auto_responses:
+      - pattern: ".*"
+        response: "📢 This is an automated notification service. For support, please contact our team."
+        case_insensitive: false
+        priority: 1
+        cooldown: 60
+
+    # No webhooks for this bot
+    webhooks: []
+
+    settings:
+      simulate_typing: false
+      typing_delay: 500
+      read_receipts: true
+      ignore_groups: false
+      ignored_senders: []
+      admin_numbers:
+        - "1987654321"
+      log_level: "warn"
+
+# Notes:
+# - Bot IDs are auto-generated but you can customize them
+# - Phone numbers are filled after WhatsApp QR code authentication
+# - Patterns use regex, so escape special characters with \\
+# - Cooldowns prevent spam (per sender-pattern combination)
+# - Priorities determine which response matches first (lower = higher priority)
+# - Webhooks support GET/POST/PUT/PATCH methods
+# - All webhook calls include sender info and message content

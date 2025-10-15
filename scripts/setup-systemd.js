@@ -43,6 +43,24 @@ function setupSystemd() {
       console.log(`✅ Created config directory: ${configDir}`);
     }
 
+    // Create example config file only if config.yml doesn't exist
+    const exampleConfigPath = path.join(__dirname, '..', 'config.example.yml');
+    const targetConfigPath = path.join(configDir, 'config.yml');
+
+    if (fs.existsSync(exampleConfigPath) && !fs.existsSync(targetConfigPath)) {
+      const exampleContent = fs.readFileSync(exampleConfigPath, 'utf8');
+      // Comment out all lines for the default config
+      const commentedContent = exampleContent
+        .split('\n')
+        .map(line => line.trim() ? `# ${line}` : line)
+        .join('\n');
+      fs.writeFileSync(targetConfigPath, commentedContent);
+      console.log(`✅ Created example config file: ${targetConfigPath}`);
+      console.log(`   📝 Uncomment and edit this file to configure your bots`);
+    } else if (fs.existsSync(targetConfigPath)) {
+      console.log(`ℹ️  Config file already exists: ${targetConfigPath}`);
+    }
+
     if (!fs.existsSync(systemdUserDir)) {
       fs.mkdirSync(systemdUserDir, { recursive: true });
       console.log(`✅ Created systemd user directory: ${systemdUserDir}`);
