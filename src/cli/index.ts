@@ -32,40 +32,42 @@ program
   .description('Create a new WhatsApp bot interactively')
   .action(createBotCommand);
 
-// If no command is provided, start the bots automatically
-if (process.argv.length === 2) {
+program
+  .command('start')
+  .description('Start the WhatsApp bots')
+  .action(async () => {
+    await startBots();
+  });
+
+async function startBots() {
   console.log('🤖 WWeb BotForge - Starting bots...\n');
 
-  (async () => {
-    // Composition root - wire up dependencies
-    const messageQueueService = new MessageQueueService();
-    const botFactory = new BotFactory();
-    const channelManager = WhatsAppSessionManager.getInstance();
-    const fleetLauncher = new BotFleetService(botFactory, channelManager, messageQueueService);
+  // Composition root - wire up dependencies
+  const messageQueueService = new MessageQueueService();
+  const botFactory = new BotFactory();
+  const channelManager = WhatsAppSessionManager.getInstance();
+  const fleetLauncher = new BotFleetService(botFactory, channelManager, messageQueueService);
 
-    // Load bot configurations from YAML
-    const yamlLoader = new YamlLoader();
-    const configFile = await yamlLoader.loadMainConfig();
+  // Load bot configurations from YAML
+  const yamlLoader = new YamlLoader();
+  const configFile = await yamlLoader.loadMainConfig();
 
-    // Set global configuration for infrastructure
-    if (configFile.global) {
-      WhatsAppConfig.setGlobalConfig(configFile.global);
-    }
+  // Set global configuration for infrastructure
+  if (configFile.global) {
+    WhatsAppConfig.setGlobalConfig(configFile.global);
+  }
 
-    // Start bots and get the bot instances
-    const bots = await fleetLauncher.start(configFile);
+  // Start bots and get the bot instances
+  const bots = await fleetLauncher.start(configFile);
 
-    // Start API server if enabled
-    if (configFile.global?.apiEnabled) {
-      const apiPort = configFile.global.apiPort || 3000;
-      const apiServer = new ApiServer(messageQueueService, bots, apiPort);
-      await apiServer.start();
-    }
-  })().catch((error) => {
-    console.error('❌ Failed to start bots:', error);
-    process.exit(1);
-  });
-} else {
-  program.parse();
+  // Start API server if enabled
+  if (configFile.global?.apiEnabled) {
+    const apiPort = configFile.global.apiPort || 3000;
+    const apiServer = new ApiServer(messageQueueService, bots, apiPort);
+    await apiServer.start();
+  }
 }
+
+program.parse();
+
 
