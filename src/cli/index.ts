@@ -9,6 +9,7 @@ import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp
 import { WhatsAppConfig } from '../core/infrastructure/whatsapp/whatsapp-config';
 import { YamlLoader } from '../core/infrastructure/yaml-loader';
 import { ApiServer } from '../core/infrastructure/api/server';
+import { setGlobalLogger, getLogger } from '../core/infrastructure/logger';
 import { execSync } from 'child_process';
 import * as path from 'path';
 
@@ -40,17 +41,23 @@ program
   });
 
 async function startBots() {
-  console.log('🤖 WWeb BotForge - Starting bots...\n');
+  // Load bot configurations from YAML first to get log level
+  const yamlLoader = new YamlLoader();
+  const configFile = await yamlLoader.loadMainConfig();
+
+  // Configure global logger with log level from config
+  if (configFile.global) {
+    setGlobalLogger(configFile.global);
+  }
+
+  const logger = getLogger();
+  logger.info('🤖 WWeb BotForge - Starting bots...');
 
   // Composition root - wire up dependencies
   const messageQueueService = new MessageQueueService();
   const botFactory = new BotFactory();
   const channelManager = WhatsAppSessionManager.getInstance();
   const fleetLauncher = new BotFleetService(botFactory, channelManager, messageQueueService);
-
-  // Load bot configurations from YAML
-  const yamlLoader = new YamlLoader();
-  const configFile = await yamlLoader.loadMainConfig();
 
   // Set global configuration for infrastructure
   if (configFile.global) {
@@ -69,5 +76,6 @@ async function startBots() {
 }
 
 program.parse();
+
 
 
