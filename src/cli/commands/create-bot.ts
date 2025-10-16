@@ -78,12 +78,9 @@ export async function createBotCommand() {
       auto_responses: [],
       webhooks: [],
       settings: {
-        simulate_typing: true,
         queue_delay: 1000,
-        read_receipts: true,
         ignore_groups: true,
         ignored_senders: ['status@broadcast'],
-        admin_numbers: [],
         log_level: 'info'
       }
     };

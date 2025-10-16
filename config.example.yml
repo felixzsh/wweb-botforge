@@ -79,15 +79,11 @@ bots:
 
     # Bot behavior settings
     settings:
-      simulate_typing: true      # Show typing indicator
-      queue_delay: 1500         # Delay before typing (ms)
-      read_receipts: true        # Mark messages as read
+      queue_delay: 1500         # Delay before sending messages (ms)
       ignore_groups: true        # Ignore group messages
       ignored_senders:           # Senders to ignore
         - "status@broadcast"     # WhatsApp status broadcasts
         - "1234567890"          # Specific numbers
-      admin_numbers:             # Admin numbers (can send commands)
-        - "1987654321"
       log_level: "info"          # Bot-specific log level
 
   # Example Sales Bot
@@ -124,13 +120,9 @@ bots:
         priority: 1
 
     settings:
-      simulate_typing: true
       queue_delay: 1000
-      read_receipts: true
       ignore_groups: false  # Sales bot might want to engage in groups
       ignored_senders: []
-      admin_numbers:
-        - "1987654321"
       log_level: "info"
 
   # Example Notification Bot (minimal config)
@@ -150,13 +142,9 @@ bots:
     webhooks: []
 
     settings:
-      simulate_typing: false
       queue_delay: 500
-      read_receipts: true
       ignore_groups: false
       ignored_senders: []
-      admin_numbers:
-        - "1987654321"
       log_level: "warn"
 
 # Notes:

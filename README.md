@@ -5,14 +5,14 @@
 
 **Create multiple WhatsApp bots without writing code** - Just configure in YAML!
 
-WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) for reliable WhatsApp Web automation.
+WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
 
 ## ✨ What Can You Do?
 
 - 🤖 **Multiple Bots**: Run several WhatsApp bots from one server
 - 📝 **YAML Configuration**: Define bot behavior in simple YAML files
-- 🔗 **Webhooks**: Connect to your existing apps (Python, C++, Node.js, etc.)
-- 📱 **Auto-Responses**: Set up instant replies to common messages
+-  **Auto-Responses**: Set up instant replies to common messages
+- 🔗 **Webhooks**: Connect to your existing apps in any language.
 - 🌐 **REST API**: Send messages programmatically (optional)
 - 🚀 **Systemd Service**: Run as a proper system service with auto-restart
 
@@ -215,12 +215,9 @@ webhooks:
 
 ```yaml
 settings:
-  simulate_typing: true
-  typing_delay: 1000
-  read_receipts: true
+  queue_delay: 1000
   ignore_groups: false
-  admin_numbers:
-    - "+1234567890"
+  ignored_senders: []
   log_level: "info"
 ```
 
