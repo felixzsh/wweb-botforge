@@ -80,7 +80,7 @@ bots:
     # Bot behavior settings
     settings:
       simulate_typing: true      # Show typing indicator
-      typing_delay: 1500         # Delay before typing (ms)
+      queue_delay: 1500         # Delay before typing (ms)
       read_receipts: true        # Mark messages as read
       ignore_groups: true        # Ignore group messages
       ignored_senders:           # Senders to ignore
@@ -125,7 +125,7 @@ bots:
 
     settings:
       simulate_typing: true
-      typing_delay: 1000
+      queue_delay: 1000
       read_receipts: true
       ignore_groups: false  # Sales bot might want to engage in groups
       ignored_senders: []
@@ -151,7 +151,7 @@ bots:
 
     settings:
       simulate_typing: false
-      typing_delay: 500
+      queue_delay: 500
       read_receipts: true
       ignore_groups: false
       ignored_senders: []

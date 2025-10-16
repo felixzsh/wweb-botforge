@@ -33,7 +33,7 @@ webhooks:
     priority: 10
 settings:
   simulate_typing: true
-  typing_delay: 1000
+  queue_delay: 1000
   read_receipts: true
   ignore_groups: true
   admin_numbers:

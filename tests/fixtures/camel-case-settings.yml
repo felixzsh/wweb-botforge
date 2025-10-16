@@ -3,7 +3,7 @@ bots:
     name: "Camel Case Bot"
     settings:
       simulateTyping: false
-      typingDelay: 2000
+      queueDelay: 2000
       readReceipts: false
       ignoreGroups: false
       adminNumbers: ["+521234567891"]

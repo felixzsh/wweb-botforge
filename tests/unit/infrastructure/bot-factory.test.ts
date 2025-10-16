@@ -154,7 +154,7 @@ describe('BotFactory', () => {
         name: 'Test Bot',
         settings: {
           simulate_typing: false,
-          typing_delay: 2000,
+          queue_delay: 2000,
           read_receipts: false,
           ignore_groups: false,
           admin_numbers: ['+521234567891'],
@@ -167,7 +167,7 @@ describe('BotFactory', () => {
       const bot = factory.createFromConfig(config);
 
       expect(bot.settings.simulateTyping).toBe(false);
-      expect(bot.settings.typingDelay).toBe(2000);
+      expect(bot.settings.queueDelay).toBe(2000);
       expect(bot.settings.readReceipts).toBe(false);
       expect(bot.settings.ignoreGroups).toBe(false);
       expect(bot.settings.adminNumbers).toHaveLength(1);

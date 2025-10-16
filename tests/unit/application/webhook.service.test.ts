@@ -23,7 +23,7 @@ describe('WebhookService', () => {
       phone: new PhoneNumber('+1234567890'),
       settings: {
         simulateTyping: true,
-        typingDelay: 1000,
+        queueDelay: 1000,
         readReceipts: true,
         ignoreGroups: false,
         ignoredSenders: [],

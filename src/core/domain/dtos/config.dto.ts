@@ -12,7 +12,7 @@ export interface BotConfiguration {
 
 export interface BotSettingsData {
   simulateTyping: boolean;
-  typingDelay: number;
+  queueDelay: number;
   readReceipts: boolean;
   ignoreGroups: boolean;
   ignoredSenders: string[];

@@ -28,7 +28,7 @@ bots:
         priority: 10
     settings:
       simulate_typing: true
-      typing_delay: 1000
+      queue_delay: 1000
       read_receipts: true
       ignore_groups: true
       admin_numbers:
@@ -43,7 +43,7 @@ bots:
     webhooks: []
     settings:
       simulate_typing: false
-      typing_delay: 500
+      queue_delay: 500
       read_receipts: true
       ignore_groups: false
       log_level: "debug"

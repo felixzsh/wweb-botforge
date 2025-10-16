@@ -12,7 +12,7 @@ describe('Bot', () => {
     botId = new BotId('test-bot');
     settings = {
       simulateTyping: true,
-      typingDelay: 1000,
+      queueDelay: 1000,
       readReceipts: true,
       ignoreGroups: true,
       adminNumbers: [],

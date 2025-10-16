@@ -39,7 +39,7 @@ describe('CLI Bot Creation Integration Test', () => {
       webhooks: [],
       settings: {
         simulate_typing: true,
-        typing_delay: 1000,
+        queue_delay: 1000,
         read_receipts: true,
         ignore_groups: true,
         admin_numbers: [],
@@ -70,7 +70,7 @@ bots:
     webhooks: []
     settings:
       simulate_typing: true
-      typing_delay: 1000
+      queue_delay: 1000
       read_receipts: true
       ignore_groups: true
       admin_numbers: []
@@ -87,7 +87,7 @@ bots:
       webhooks: [],
       settings: {
         simulate_typing: true,
-        typing_delay: 1000,
+        queue_delay: 1000,
         read_receipts: true,
         ignore_groups: true,
         admin_numbers: [],
@@ -205,7 +205,7 @@ function generateYamlConfig(bots: BotConfiguration[]): string {
     yaml += `    webhooks: []\n`;
     yaml += `    settings:\n`;
     yaml += `      simulate_typing: true\n`;
-    yaml += `      typing_delay: 1000\n`;
+    yaml += `      queue_delay: 1000\n`;
     yaml += `      read_receipts: true\n`;
     yaml += `      ignore_groups: true\n`;
     yaml += `      admin_numbers: []\n`;

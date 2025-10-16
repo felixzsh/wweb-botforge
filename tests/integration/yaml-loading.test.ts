@@ -91,7 +91,7 @@ describe('YAML Loading Integration', () => {
         expect(singleBot.name).toBe(includeBot.name);
         expect(singleBot.phone?.value).toBe(includeBot.phone?.value);
         expect(singleBot.settings.simulateTyping).toBe(includeBot.settings.simulateTyping);
-        expect(singleBot.settings.typingDelay).toBe(includeBot.settings.typingDelay);
+        expect(singleBot.settings.queueDelay).toBe(includeBot.settings.queueDelay);
         expect(singleBot.settings.readReceipts).toBe(includeBot.settings.readReceipts);
         expect(singleBot.settings.ignoreGroups).toBe(includeBot.settings.ignoreGroups);
         expect(singleBot.settings.logLevel).toBe(includeBot.settings.logLevel);
@@ -157,7 +157,7 @@ describe('YAML Loading Integration', () => {
       expect(bot.webhooks).toHaveLength(0);
       // Check defaults
       expect(bot.settings.simulateTyping).toBe(true);
-      expect(bot.settings.typingDelay).toBe(1000);
+      expect(bot.settings.queueDelay).toBe(1000);
       expect(bot.settings.readReceipts).toBe(true);
       expect(bot.settings.ignoreGroups).toBe(true);
       expect(bot.settings.adminNumbers).toHaveLength(0);
@@ -172,7 +172,7 @@ describe('YAML Loading Integration', () => {
       const bot = bots[0];
 
       expect(bot.settings.simulateTyping).toBe(false);
-      expect(bot.settings.typingDelay).toBe(2000);
+      expect(bot.settings.queueDelay).toBe(2000);
       expect(bot.settings.readReceipts).toBe(false);
       expect(bot.settings.ignoreGroups).toBe(false);
       expect(bot.settings.adminNumbers).toHaveLength(1);

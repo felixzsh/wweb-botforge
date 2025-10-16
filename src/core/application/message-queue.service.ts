@@ -57,14 +57,14 @@ export class MessageQueueService {
      const botId = bot.id.value;
 
      // Set delay based on bot's typing delay setting
-     this.setBotDelay(botId, bot.settings.typingDelay);
+     this.setBotDelay(botId, bot.settings.queueDelay);
 
      // Set send callback that uses message channel
      this.setBotSendCallback(botId, async (botId: string, message: OutgoingMessage) => {
        await bot.channel!.send(message);
      });
 
-     this.logger.info(`📋 Configured message queue for bot "${bot.name}": delay=${bot.settings.typingDelay}ms`);
+     this.logger.info(`📋 Configured message queue for bot "${bot.name}": delay=${bot.settings.queueDelay}ms`);
    }
 
   /**
