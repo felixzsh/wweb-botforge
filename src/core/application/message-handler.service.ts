@@ -65,12 +65,18 @@ export class MessageHandlerService {
   }
 
   /**
-   * Handle incoming message from chat
-   */
+    * Handle incoming message from chat
+    */
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
     this.logger.info(`📨 Message received for bot "${bot.name}": ${message.content.substring(0, 50)}...`);
 
     try {
+      // Check if sender is in ignored senders list
+      if (this.isSenderIgnored(bot, message.from)) {
+        this.logger.debug(`🚫 Ignoring message from "${message.from}" for bot "${bot.name}" (sender in ignored list)`);
+        return;
+      }
+
       // Check if message should be processed
       if (!this.autoResponseService.shouldProcessMessage(bot, message)) {
         return;
@@ -124,9 +130,16 @@ export class MessageHandlerService {
   }
 
   /**
-   * Get bot by ID
-   */
+    * Get bot by ID
+    */
   getBot(botId: string): Bot | undefined {
     return this.bots.get(botId);
+  }
+
+  /**
+    * Check if sender is in the ignored senders list
+    */
+  private isSenderIgnored(bot: Bot, sender: string): boolean {
+    return bot.settings.ignoredSenders.includes(sender);
   }
 }
