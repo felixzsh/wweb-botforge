@@ -6,13 +6,11 @@ import { load as loadYaml, dump as dumpYaml } from 'js-yaml';
 import qrcode from 'qrcode-terminal';
 import { BotConfiguration, ConfigFile } from '../../core/domain/dtos/config.dto';
 import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
-import { getLogger } from '../../core/infrastructure/logger';
 import { YamlLoader } from '../../core/infrastructure/yaml-loader';
 
 export async function createBotCommand() {
-  const logger = getLogger();
-  logger.info('🤖 Welcome to WWeb BotForge!');
-  logger.info('Let\'s create a new WhatsApp bot...\n');
+  console.log('🤖 Welcome to WWeb BotForge!');
+  console.log('Let\'s create a new WhatsApp bot...\n');
 
   try {
     // Ask for bot name
@@ -33,8 +31,8 @@ export async function createBotCommand() {
     const botName = answers.botName.trim();
     const botId = generateBotId(botName);
 
-    logger.info(`\n✅ Generated bot ID: ${botId}`);
-    logger.info(`📝 Bot name: ${botName}`);
+    console.log(`\n✅ Generated bot ID: ${botId}`);
+    console.log(`📝 Bot name: ${botName}`);
 
     // Create WhatsApp initializer for authentication
     const initializer = new WhatsAppInitializer(botId);
@@ -42,24 +40,24 @@ export async function createBotCommand() {
 
     // Handle QR code generation
     initializer.onQRCode((qr: string) => {
-      logger.info('\n📱 Scan this QR code with WhatsApp to link your account:');
+      console.log('\n📱 Scan this QR code with WhatsApp to link your account:');
       qrcode.generate(qr, { small: true });
     });
 
     // Handle successful authentication
     initializer.onAuthSuccess((phone: string) => {
-      logger.info('\n✅ WhatsApp account linked successfully!');
-      logger.info(`📱 Connected to WhatsApp with phone: ${phone}`);
+      console.log('\n✅ WhatsApp account linked successfully!');
+      console.log(`📱 Connected to WhatsApp with phone: ${phone}`);
       phoneNumber = phone;
     });
 
     // Handle authentication failure
     initializer.onAuthFailure((error: Error) => {
-      logger.error('\n❌ Authentication failed:', error.message);
+      console.error('\n❌ Authentication failed:', error.message);
       process.exit(1);
     });
 
-    logger.info('\n🔗 Initializing WhatsApp Web client...');
+    console.log('\n🔗 Initializing WhatsApp Web client...');
     await initializer.initialize();
 
     // Wait for authentication to complete
@@ -81,7 +79,7 @@ export async function createBotCommand() {
       webhooks: [],
       settings: {
         simulate_typing: true,
-        typing_delay: 1000,
+        queue_delay: 1000,
         read_receipts: true,
         ignore_groups: true,
         ignored_senders: ['status@broadcast'],
@@ -94,16 +92,16 @@ export async function createBotCommand() {
     await saveBotConfig(botConfig);
 
     const yamlLoader = new YamlLoader();
-    logger.info(`\n📁 Bot configuration saved to ${yamlLoader.getConfigPath()}`);
-    logger.info(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
-    logger.info('\nTo start using your bot, run: npm start');
+    console.log(`\n📁 Bot configuration saved to ${yamlLoader.getConfigPath()}`);
+    console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
+    console.log('\nTo start using your bot, run: npm start');
     
     // Clean up resources
     await initializer.destroy();
     process.exit(0);
 
   } catch (error) {
-    logger.error('\n❌ Error creating bot:', error);
+    console.error('\n❌ Error creating bot:', error);
     process.exit(1);
   }
 }
@@ -116,7 +114,6 @@ function generateBotId(name: string): string {
 }
 
 async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
-  const logger = getLogger();
   const yamlLoader = new YamlLoader();
   const configFile = yamlLoader.getConfigPath();
 
@@ -139,7 +136,7 @@ async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
         existingConfig.bots = [];
       }
     } catch (error) {
-      logger.warn('⚠️  Could not parse existing config file, creating new one');
+      console.warn('⚠️  Could not parse existing config file, creating new one');
       existingConfig = { bots: [] };
     }
   }
@@ -149,11 +146,11 @@ async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
   if (existingBotIndex >= 0) {
     // Update existing bot
     existingConfig.bots[existingBotIndex] = botConfig;
-    logger.info(`\n📝 Updated existing bot: ${botConfig.name} (${botConfig.id})`);
+    console.log(`\n📝 Updated existing bot: ${botConfig.name} (${botConfig.id})`);
   } else {
     // Add new bot
     existingConfig.bots.push(botConfig);
-    logger.info(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`);
+    console.log(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`);
   }
 
   // Write updated config
