@@ -13,6 +13,7 @@ export class BotFactory {
     // Create settings
     const settings: BotSettingsData = {
       simulateTyping: config.settings?.simulate_typing ?? config.settings?.simulateTyping ?? true,
+      typingDelay: config.settings?.typing_delay ?? config.settings?.typingDelay ?? 1000,
       queueDelay: config.settings?.queue_delay ?? config.settings?.queueDelay ?? 1000,
       readReceipts: config.settings?.read_receipts ?? config.settings?.readReceipts ?? true,
       ignoreGroups: config.settings?.ignore_groups ?? config.settings?.ignoreGroups ?? true,
