@@ -1,7 +1,8 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { BotConfiguration, ConfigFile } from '../domain/dtos/config.dto';
+import { ConfigFile } from '../domain/dtos/config.dto';
 
 interface IncludeReference {
   '!include': string;
@@ -11,13 +12,16 @@ export class YamlLoader {
   private configPath: string;
 
   constructor(configPath?: string) {
-    this.configPath = configPath || (process.env.CONFIG_DIR
-      ? path.join(process.env.CONFIG_DIR, 'config.yml')
-      : 'config/main.yml');
+    this.configPath = configPath || this.getDefaultConfigPath();
   }
 
   getConfigPath(): string {
     return this.configPath;
+  }
+
+  private getDefaultConfigPath(): string {
+    const home = process.env.HOME || os.homedir();
+    return path.join(home, '.config', 'wweb-botforge', 'config.yml');
   }
 
   async loadMainConfig(): Promise<ConfigFile> {
