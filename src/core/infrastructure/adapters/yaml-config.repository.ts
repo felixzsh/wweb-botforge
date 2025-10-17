@@ -30,9 +30,10 @@ export class YamlConfigRepository implements IConfigRepository {
    */
   async read(): Promise<ConfigFileDTO> {
     try {
-      const content = await fs.readFile(this.configPath, 'utf-8');
-      const config = yaml.load(content) as ConfigFileDTO;
-      
+      const rawContent = await fs.readFile(this.configPath, 'utf-8');
+      const processedContent = await this.processIncludes(rawContent, path.dirname(this.configPath));
+      const config = yaml.load(processedContent) as ConfigFileDTO;
+
       if (!config.bots || !Array.isArray(config.bots)) {
         throw new Error('Configuration must contain a "bots" array');
       }
@@ -41,6 +42,34 @@ export class YamlConfigRepository implements IConfigRepository {
     } catch (error) {
       throw new Error(`Failed to read configuration from ${this.configPath}: ${error}`);
     }
+  }
+
+  /**
+   * Process includes in YAML content
+   */
+  private async processIncludes(content: string, baseDir: string): Promise<string> {
+    const lines = content.split('\n');
+    const processedLines: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const includeMatch = line.match(/^\s*-\s*!include\s+(.+)$/);
+      if (includeMatch) {
+        const includePath = path.resolve(baseDir, includeMatch[1]);
+        const includedContent = await fs.readFile(includePath, 'utf8');
+        // Add the dash and indent the content
+        const indent = line.match(/^\s*/)?.[0] || '';
+        const indentedContent = includedContent
+          .split('\n')
+          .map((line, index) => index === 0 ? indent + '- ' + line : indent + '  ' + line)
+          .join('\n');
+        processedLines.push(indentedContent);
+      } else {
+        processedLines.push(line);
+      }
+    }
+
+    return processedLines.join('\n');
   }
 
   /**

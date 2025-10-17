@@ -4,9 +4,9 @@ import { Command } from 'commander';
 import { createBotCommand } from './commands/create-bot';
 import { BotFleetService } from '../core/application/services/bot-fleet.service';
 import { MessageQueueService } from '../core/application/services/message-queue.service';
-import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp-session-manager';
-import { WhatsAppConfig } from '../core/infrastructure/whatsapp/whatsapp-config';
-import { YamlLoader } from '../core/infrastructure/yaml-loader';
+import { WhatsAppSessionManager } from '../core/infrastructure/adapters/whatsapp/whatsapp-session-manager';
+import { WhatsAppConfig } from '../core/infrastructure/adapters/whatsapp/whatsapp-config';
+import { YamlConfigRepository } from '../core/infrastructure/adapters/yaml-config.repository';
 import { ApiServer } from '../core/infrastructure/api/server';
 import { setGlobalLogger, getLogger } from '../core/infrastructure/logger';
 import { execSync } from 'child_process';
@@ -41,8 +41,8 @@ program
 
 async function startBots() {
   // Load bot configurations from YAML first to get log level
-  const yamlLoader = new YamlLoader();
-  const configFile = await yamlLoader.loadMainConfig();
+  const configRepository = new YamlConfigRepository();
+  const configFile = await configRepository.read();
 
   // Configure global logger with log level from config
   if (configFile.global) {
