@@ -7,8 +7,8 @@ import {
   AuthFailureHandler,
   ConnectionErrorHandler,
   StateChangeHandler
-} from '../../domain/entities/channel.entity';
-import { IncomingMessage, OutgoingMessage } from '../../domain/dtos/message.dto';
+} from '../../domain/ports/channel.entity';
+import { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
 import { WhatsAppMessageAdapter } from './whatsapp-message-adapter';
 import { WhatsAppConnectionState } from './whatsapp-types';
 import { WhatsAppConfig } from './whatsapp-config';
@@ -38,6 +38,7 @@ export class WhatsAppChannel implements MessageChannel {
 
     // Message event
     this.client.on('message', msg => {
+      // Convert WhatsApp Web.js message directly to domain value object
       const domainMessage = WhatsAppMessageAdapter.toDomainMessage(msg);
       this.messageHandlers.forEach(handler => handler(domainMessage));
     });

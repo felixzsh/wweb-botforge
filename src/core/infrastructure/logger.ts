@@ -1,5 +1,5 @@
 import pino from 'pino';
-import { GlobalConfig } from '../domain/dtos/config.dto';
+import { GlobalConfigDTO } from '../application/dtos/config-file.dto';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -93,7 +93,7 @@ export function getLogger(): Logger {
   return globalLogger;
 }
 
-export function setGlobalLogger(config: GlobalConfig): void {
+export function setGlobalLogger(config: GlobalConfigDTO): void {
   const logLevel = config.logLevel || 'info';
   globalLogger = createLogger(logLevel);
 }

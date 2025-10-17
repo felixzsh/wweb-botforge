@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { MessageQueueService } from '../../../application/message-queue.service';
+import { MessageQueueService } from '../../../application/services/message-queue.service';
 import { Bot } from '../../../domain/entities/bot.entity';
 
 export function createMessagesRouter(

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { ConfigFile } from '../domain/dtos/config.dto';
+import { ConfigFileDTO } from '../application/dtos/config-file.dto';
 
 interface IncludeReference {
   '!include': string;
@@ -24,10 +24,10 @@ export class YamlLoader {
     return path.join(home, '.config', 'wweb-botforge', 'config.yml');
   }
 
-  async loadMainConfig(): Promise<ConfigFile> {
+  async loadMainConfig(): Promise<ConfigFileDTO> {
     const content = fs.readFileSync(this.configPath, 'utf8');
     const processedContent = this.processIncludes(content, path.dirname(this.configPath));
-    const mainConfig = yaml.load(processedContent) as ConfigFile;
+    const mainConfig = yaml.load(processedContent) as ConfigFileDTO;
 
     // Validate configuration
     this.validateConfig(mainConfig);
@@ -35,7 +35,7 @@ export class YamlLoader {
     return mainConfig;
   }
 
-  private validateConfig(config: ConfigFile): void {
+  private validateConfig(config: ConfigFileDTO): void {
     if (!config.bots || !Array.isArray(config.bots)) {
       throw new Error('Configuration must contain a "bots" array');
     }

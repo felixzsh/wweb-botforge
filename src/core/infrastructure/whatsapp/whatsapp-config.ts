@@ -1,15 +1,15 @@
-import { GlobalConfig } from '../../domain/dtos/config.dto';
+import { ConfigFileDTO } from '../../application/dtos/config-file.dto';
 
 /**
  * Common WhatsApp Web.js configuration
  */
 export class WhatsAppConfig {
-  private static globalConfig: GlobalConfig | undefined;
+  private static globalConfig: ConfigFileDTO['global'] | undefined;
 
   /**
    * Set global configuration for WhatsApp
    */
-  static setGlobalConfig(config: GlobalConfig): void {
+  static setGlobalConfig(config: ConfigFileDTO['global']): void {
     this.globalConfig = config;
   }
 

@@ -1,12 +1,9 @@
 import inquirer from 'inquirer';
 import { createHash } from 'crypto';
-import { existsSync as existsPathSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { join as joinPaths } from 'path';
-import { load as loadYaml, dump as dumpYaml } from 'js-yaml';
 import qrcode from 'qrcode-terminal';
-import { BotConfiguration, ConfigFile } from '../../core/domain/dtos/config.dto';
+import { BotConfigDTO } from '../../core/application/dtos/config-file.dto';
 import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
-import { YamlLoader } from '../../core/infrastructure/yaml-loader';
+import { YamlConfigRepository } from '../../core/infrastructure/adapters/yaml-config.repository';
 
 export async function createBotCommand() {
   console.log('🤖 Welcome to WWeb BotForge!');
@@ -71,7 +68,7 @@ export async function createBotCommand() {
     });
 
     // Create bot configuration
-    const botConfig: BotConfiguration = {
+    const botConfig: BotConfigDTO = {
       id: botId,
       name: botName,
       phone: phoneNumber,
@@ -85,11 +82,12 @@ export async function createBotCommand() {
       }
     };
 
-    // Save configuration to file
-    await saveBotConfig(botConfig);
-
-    const yamlLoader = new YamlLoader();
-    console.log(`\n📁 Bot configuration saved to ${yamlLoader.getConfigPath()}`);
+    // Save configuration to file using repository
+    const configRepository = new YamlConfigRepository();
+    await configRepository.addBotConfig(botConfig);
+    
+    console.log(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`);
+    console.log(`\n📁 Bot configuration saved to ${configRepository.getConfigPath()}`);
     console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`);
     console.log('\nTo start using your bot, run: npm start');
     
@@ -109,53 +107,3 @@ function generateBotId(name: string): string {
   // Take first 8 characters and add a prefix for readability
   return `bot-${hash.substring(0, 8)}`;
 }
-
-async function saveBotConfig(botConfig: BotConfiguration): Promise<void> {
-  const yamlLoader = new YamlLoader();
-  const configFile = yamlLoader.getConfigPath();
-
-  // Create config directory if it doesn't exist
-  const configDir = joinPaths(configFile, '..');
-  if (!existsPathSync(configDir)) {
-    mkdirSync(configDir, { recursive: true });
-  }
-
-  let existingConfig: ConfigFile = { bots: [] };
-
-  // Read existing config if it exists
-  if (existsPathSync(configFile)) {
-    try {
-      const content = readFileSync(configFile, 'utf8');
-      existingConfig = loadYaml(content) as ConfigFile;
-
-      // Ensure bots array exists
-      if (!existingConfig.bots) {
-        existingConfig.bots = [];
-      }
-    } catch (error) {
-      console.warn('⚠️  Could not parse existing config file, creating new one');
-      existingConfig = { bots: [] };
-    }
-  }
-
-  // Check if bot already exists
-  const existingBotIndex = existingConfig.bots.findIndex(bot => bot.id === botConfig.id);
-  if (existingBotIndex >= 0) {
-    // Update existing bot
-    existingConfig.bots[existingBotIndex] = botConfig;
-    console.log(`\n📝 Updated existing bot: ${botConfig.name} (${botConfig.id})`);
-  } else {
-    // Add new bot
-    existingConfig.bots.push(botConfig);
-    console.log(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`);
-  }
-
-  // Write updated config
-  const yamlContent = dumpYaml(existingConfig, {
-    indent: 2,
-    lineWidth: -1,
-    noRefs: true
-  });
-  writeFileSync(configFile, yamlContent, 'utf8');
-}
-

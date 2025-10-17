@@ -1,8 +1,8 @@
-import { Bot } from '../domain/entities/bot.entity';
-import { WebhookData } from '../domain/dtos/config.dto';
-import { IncomingMessage } from '../domain/dtos/message.dto';
+import { Bot } from '../../domain/entities/bot.entity';
+import { Webhook } from '../../domain/value-objects/webhook.vo';
+import { IncomingMessage } from '../../domain/value-objects/incoming-message.vo';
 import { CooldownService } from './cooldown.service';
-import { getLogger } from '../infrastructure/logger';
+import { getLogger } from '../../infrastructure/logger';
 
 /**
  * Service for handling outbound webhooks triggered by message patterns
@@ -46,17 +46,19 @@ export class WebhookService {
   private async triggerWebhook(
     bot: Bot,
     message: IncomingMessage,
-    webhook: WebhookData
+    webhook: Webhook
   ): Promise<void> {
     // Check cooldown (convert seconds to milliseconds)
     const cooldownMs = (webhook.cooldown || 0) * 1000;
-    if (this.cooldownService.isOnCooldown(message.from, webhook.name, cooldownMs)) {
-      this.logger.debug(`⏳ Webhook cooldown active for sender "${message.from}" on webhook "${webhook.name}" in bot "${bot.name}"`);
+    const senderKey = message.from.getValue();
+    
+    if (this.cooldownService.isOnCooldown(senderKey, webhook.name, cooldownMs)) {
+      this.logger.debug(`⏳ Webhook cooldown active for sender "${senderKey}" on webhook "${webhook.name}" in bot "${bot.name}"`);
       return;
     }
 
     // Set cooldown timestamp
-    this.cooldownService.setCooldown(message.from, webhook.name);
+    this.cooldownService.setCooldown(senderKey, webhook.name);
 
     this.logger.info(`🔗 Triggering webhook "${webhook.name}" for bot "${bot.name}": ${webhook.method} ${webhook.url}`);
 
@@ -70,10 +72,10 @@ export class WebhookService {
   /**
    * Build the webhook payload from message data
    */
-  private buildWebhookPayload(bot: Bot, message: IncomingMessage, webhook: WebhookData): any {
+  private buildWebhookPayload(bot: Bot, message: IncomingMessage, webhook: Webhook): any {
     return {
       // Message data
-      sender: message.from,
+      sender: message.from.getValue(),
       message: message.content,
       timestamp: message.timestamp,
 
@@ -81,9 +83,9 @@ export class WebhookService {
       botId: bot.id.value,
       botName: bot.name,
 
-      // Webhook metadata
+      // Webhook context
       webhookName: webhook.name,
-      webhookPattern: webhook.pattern,
+      webhookPattern: webhook.pattern.getPattern(),
 
       // Additional metadata
       metadata: message.metadata || {}
@@ -91,54 +93,41 @@ export class WebhookService {
   }
 
   /**
-   * Make HTTP request to webhook URL with retry logic
+   * Make HTTP request with retry logic
    */
-  private async makeHttpRequest(webhook: WebhookData, payload: any): Promise<void> {
-    const maxRetries = webhook.retry || 3;
-    const timeout = webhook.timeout || 5000;
+  private async makeHttpRequest(webhook: Webhook, payload: any): Promise<void> {
+    const maxRetries = webhook.retries || 3;
+    let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-
         const response = await fetch(webhook.url, {
-          method: webhook.method,
+          method: webhook.method || 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...webhook.headers
+            ...(webhook.headers || {})
           },
-          body: webhook.method !== 'GET' ? JSON.stringify(payload) : undefined,
-          signal: controller.signal
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(webhook.timeout || 5000)
         });
-
-        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        this.logger.info(`✅ Webhook "${webhook.name}" triggered successfully (attempt ${attempt}/${maxRetries})`);
+        this.logger.info(`✅ Webhook request successful: ${webhook.url}`);
         return;
-
       } catch (error) {
-        this.logger.warn(`⚠️ Webhook "${webhook.name}" attempt ${attempt}/${maxRetries} failed:`, error);
-
-        if (attempt === maxRetries) {
-          throw new Error(`Webhook "${webhook.name}" failed after ${maxRetries} attempts: ${error}`);
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        if (attempt < maxRetries) {
+          const backoffMs = Math.pow(2, attempt - 1) * 1000;
+          this.logger.warn(`⚠️ Webhook request failed (attempt ${attempt}/${maxRetries}), retrying in ${backoffMs}ms:`, lastError.message);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
         }
-
-        // Wait before retry (exponential backoff)
-        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-        await this.delay(delay);
       }
     }
-  }
 
-  /**
-   * Utility method for delays
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    throw new Error(`Webhook request failed after ${maxRetries} attempts: ${lastError?.message}`);
   }
 }

@@ -13,4 +13,8 @@ export class PhoneNumber {
   toString(): string {
     return this.value;
   }
+
+  getValue(): string {
+    return this.value;
+  }
 }

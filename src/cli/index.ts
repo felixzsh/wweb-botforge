@@ -2,9 +2,8 @@
 
 import { Command } from 'commander';
 import { createBotCommand } from './commands/create-bot';
-import { BotFleetService } from '../core/application/bot-fleet.service';
-import { BotFactory } from '../core/application/bot-factory';
-import { MessageQueueService } from '../core/application/message-queue.service';
+import { BotFleetService } from '../core/application/services/bot-fleet.service';
+import { MessageQueueService } from '../core/application/services/message-queue.service';
 import { WhatsAppSessionManager } from '../core/infrastructure/whatsapp/whatsapp-session-manager';
 import { WhatsAppConfig } from '../core/infrastructure/whatsapp/whatsapp-config';
 import { YamlLoader } from '../core/infrastructure/yaml-loader';
@@ -55,9 +54,8 @@ async function startBots() {
 
   // Composition root - wire up dependencies
   const messageQueueService = new MessageQueueService();
-  const botFactory = new BotFactory();
   const channelManager = WhatsAppSessionManager.getInstance();
-  const fleetLauncher = new BotFleetService(botFactory, channelManager, messageQueueService);
+  const fleetLauncher = new BotFleetService(channelManager, messageQueueService);
 
   // Set global configuration for infrastructure
   if (configFile.global) {
@@ -76,6 +74,4 @@ async function startBots() {
 }
 
 program.parse();
-
-
 

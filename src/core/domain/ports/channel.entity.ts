@@ -1,4 +1,5 @@
-import { IncomingMessage, OutgoingMessage} from "../dtos/message.dto";
+import { IncomingMessage } from "../value-objects/incoming-message.vo";
+import { OutgoingMessage } from "../value-objects/outgoing-message.vo";
 
 /**
  * Core event handlers for message channels
@@ -13,6 +14,9 @@ export type StateChangeHandler = (newState: string) => void | Promise<void>;
 /**
  * Represents a bidirectional communication channel
  * This is the core abstraction that any chat provider must implement
+ * 
+ * The channel works with domain value objects (IncomingMessage, OutgoingMessage)
+ * not with DTOs, ensuring the domain layer remains independent of external formats
  */
 export interface MessageChannel {
   /**

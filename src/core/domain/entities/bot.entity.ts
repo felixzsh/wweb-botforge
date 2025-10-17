@@ -1,21 +1,31 @@
 import { BotId } from '../value-objects/bot-id.vo';
 import { PhoneNumber } from '../value-objects/phone-number.vo';
-import { MessageChannel } from './channel.entity';
-import { BotSettingsData, AutoResponseData, WebhookData } from '../dtos/config.dto';
+import { MessageChannel } from '../ports/channel.entity';
+import { BotSettings } from '../value-objects/bot-settings.vo';
+import { AutoResponse } from '../value-objects/auto-response.vo';
+import { Webhook } from '../value-objects/webhook.vo';
 
-
+export interface BotProps {
+  id: BotId;
+  name: string;
+  settings: BotSettings;
+  phone?: PhoneNumber;
+  autoResponses: AutoResponse[];
+  webhooks: Webhook[];
+}
 
 export class Bot {
   public channel?: MessageChannel;
 
-  constructor(
-    public readonly id: BotId,
-    public name: string,
-    public settings: BotSettingsData,
-    public phone?: PhoneNumber,
-    public autoResponses: AutoResponseData[] = [],
-    public webhooks: WebhookData[] = []
-  ) {}
+  private constructor(private props: BotProps) {
+    if (!props.name || props.name.trim().length === 0) {
+      throw new Error('Bot name cannot be empty');
+    }
+  }
+
+  static create(props: BotProps): Bot {
+    return new Bot(props);
+  }
 
   /**
    * Register a message channel for this bot
@@ -25,35 +35,49 @@ export class Bot {
   }
 
   // Business methods
-  findMatchingAutoResponse(message: string): AutoResponseData | null {
+  findMatchingAutoResponse(message: string): AutoResponse | null {
     // Sort by priority descending (highest first) and find first match
-    return [...this.autoResponses]
+    return [...this.props.autoResponses]
       .sort((a, b) => b.priority - a.priority)
-      .find(response => {
-        const flags = response.caseInsensitive ? 'i' : '';
-        const regex = new RegExp(response.pattern, flags);
-        return regex.test(message);
-      }) || null;
+      .find(response => response.matches(message)) || null;
   }
 
-  findMatchingWebhook(message: string): WebhookData | null {
+  findMatchingWebhook(message: string): Webhook | null {
     // Sort by priority descending (highest first) and find first match
-    return [...this.webhooks]
+    return [...this.props.webhooks]
       .sort((a, b) => b.priority - a.priority)
-      .find(webhook => {
-        const regex = new RegExp(webhook.pattern, 'i');
-        return regex.test(message);
-      }) || null;
+      .find(webhook => webhook.matches(message)) || null;
   }
 
-  findMatchingWebhooks(message: string): WebhookData[] {
+  findMatchingWebhooks(message: string): Webhook[] {
     // Sort by priority descending (highest first) and find all matches
-    return [...this.webhooks]
+    return [...this.props.webhooks]
       .sort((a, b) => b.priority - a.priority)
-      .filter(webhook => {
-        const regex = new RegExp(webhook.pattern, 'i');
-        return regex.test(message);
-      });
+      .filter(webhook => webhook.matches(message));
+  }
+
+  // Getters
+  get id(): BotId {
+    return this.props.id;
+  }
+
+  get name(): string {
+    return this.props.name;
+  }
+
+  get settings(): BotSettings {
+    return this.props.settings;
+  }
+
+  get phone(): PhoneNumber | undefined {
+    return this.props.phone;
+  }
+
+  get autoResponses(): AutoResponse[] {
+    return this.props.autoResponses;
+  }
+
+  get webhooks(): Webhook[] {
+    return this.props.webhooks;
   }
 }
-

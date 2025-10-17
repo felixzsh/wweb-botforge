@@ -1,8 +1,9 @@
-import { Bot } from '../domain/entities/bot.entity';
-import { IncomingMessage, OutgoingMessage } from '../domain/dtos/message.dto';
+import { Bot } from '../../domain/entities/bot.entity';
+import { IncomingMessage } from '../../domain/value-objects/incoming-message.vo';
 import { AutoResponseService } from './auto-response.service';
 import { WebhookService } from './webhook.service';
-import { getLogger } from '../infrastructure/logger';
+import { PhoneNumber } from '../../domain/value-objects/phone-number.vo';
+import { getLogger } from '../../infrastructure/logger';
 
 /**
  * Callback type for handling processed messages
@@ -73,7 +74,7 @@ export class MessageHandlerService {
     try {
       // Check if sender is in ignored senders list
       if (this.isSenderIgnored(bot, message.from)) {
-        this.logger.debug(`🚫 Ignoring message from "${message.from}" for bot "${bot.name}" (sender in ignored list)`);
+        this.logger.debug(`🚫 Ignoring message from "${message.from.getValue()}" for bot "${bot.name}" (sender in ignored list)`);
         return;
       }
 
@@ -94,14 +95,6 @@ export class MessageHandlerService {
       this.webhookService.processWebhooks(bot, message).catch(error => {
         this.logger.error(`❌ Error processing webhooks for bot "${bot.name}":`, error);
       });
-
-      // Log the message processing
-      this.autoResponseService.logMessageProcessing(
-        bot,
-        message,
-        !!autoResponse,
-        autoResponse?.response
-      );
 
       // Call custom handler if registered
       const customHandler = this.messageHandlers.get(bot.id.value);
@@ -139,7 +132,7 @@ export class MessageHandlerService {
   /**
     * Check if sender is in the ignored senders list
     */
-  private isSenderIgnored(bot: Bot, sender: string): boolean {
-    return bot.settings.ignoredSenders.includes(sender);
+  private isSenderIgnored(bot: Bot, sender: PhoneNumber): boolean {
+    return bot.settings.isIgnoredSender(sender.getValue());
   }
 }

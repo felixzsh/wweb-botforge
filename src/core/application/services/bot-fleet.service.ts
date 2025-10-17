@@ -1,13 +1,13 @@
-import { Bot } from '../domain/entities/bot.entity';
-import { BotFactory } from './bot-factory';
+import { Bot } from '../../domain/entities/bot.entity';
 import { AutoResponseService } from './auto-response.service';
 import { CooldownService } from './cooldown.service';
 import { WebhookService } from './webhook.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
-import { IChannelManager } from '../domain/entities/channel-manager';
-import { BotConfiguration, ConfigFile } from '../domain/dtos/config.dto';
-import { getLogger } from '../infrastructure/logger';
+import { IChannelManager } from '../../domain/ports/channel-manager';
+import { ConfigFileDTO } from '../dtos/config-file.dto';
+import { getLogger } from '../../infrastructure/logger';
+import { loadBotsFromConfig } from '../use-cases/load-bots.use-case';
 
 /**
  * Main bot fleet service for WWeb BotForge
@@ -20,16 +20,13 @@ export class BotFleetService {
   private webhookService: WebhookService;
   private messageQueueService: MessageQueueService;
   private messageHandlerService: MessageHandlerService;
-  private botFactory: BotFactory;
   private channelManager: IChannelManager;
   private isRunning: boolean = false;
 
   constructor(
-    botFactory: BotFactory,
     channelManager: IChannelManager,
     messageQueueService: MessageQueueService
   ) {
-    this.botFactory = botFactory;
     this.channelManager = channelManager;
     this.messageQueueService = messageQueueService;
     this.cooldownService = new CooldownService();
@@ -45,7 +42,7 @@ export class BotFleetService {
   /**
     * Start all bots from configuration
     */
-   async start(configFile: ConfigFile): Promise<Map<string, Bot>> {
+   async start(configFile: ConfigFileDTO): Promise<Map<string, Bot>> {
     if (this.isRunning) {
       this.logger.info('🤖 Bot Fleet Launcher is already running');
       return this.bots;
@@ -59,12 +56,15 @@ export class BotFleetService {
         return this.bots;
       }
 
+      // Load bots from configuration
+      const loadedBots = await loadBotsFromConfig(configFile.bots);
+
       // Create and initialize bots with delays to avoid conflicts
-      for (const config of configFile.bots) {
-        await this.initializeBot(config);
+      for (const bot of loadedBots) {
+        await this.initializeBot(bot);
 
         // Add delay between bot initializations to prevent resource conflicts
-        if (configFile.bots.length > 1) {
+        if (loadedBots.length > 1) {
           this.logger.info('⏳ Waiting 3 seconds before initializing next bot...');
           await this.delay(3000);
         }
@@ -117,12 +117,10 @@ export class BotFleetService {
   /**
    * Initialize a single bot
    */
-  private async initializeBot(config: any): Promise<void> {
+  private async initializeBot(bot: Bot): Promise<void> {
    try {
-     this.logger.info(`🤖 Initializing bot: ${config.name} (${config.id})`);
+     this.logger.info(`🤖 Initializing bot: ${bot.name} (${bot.id.value})`);
 
-     // Create bot entity
-     const bot = this.botFactory.createFromConfig(config);
      this.bots.set(bot.id.value, bot);
 
      // Create message channel for this bot
@@ -146,7 +144,7 @@ export class BotFleetService {
      this.logger.info(`✅ Bot "${bot.name}" initialized and ready`);
 
    } catch (error) {
-     this.logger.error(`❌ Failed to initialize bot "${config.name}":`, error);
+     this.logger.error(`❌ Failed to initialize bot "${bot.name}":`, error);
      throw error;
    }
  }
@@ -260,4 +258,3 @@ export class BotFleetService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
-

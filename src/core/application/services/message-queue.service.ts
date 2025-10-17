@@ -1,6 +1,6 @@
-import { Bot } from '../domain/entities/bot.entity';
-import { OutgoingMessage } from '../domain/dtos/message.dto';
-import { getLogger } from '../infrastructure/logger';
+import { Bot } from '../../domain/entities/bot.entity';
+import { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
+import { getLogger } from '../../infrastructure/logger';
 
 /**
  * Represents a message in the queue
@@ -78,11 +78,7 @@ export class MessageQueueService {
    ): string {
      const messageId = `${botId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-     const outgoingMessage: OutgoingMessage = {
-       to,
-       content,
-       metadata
-     };
+     const outgoingMessage = OutgoingMessage.create(to, content, metadata);
 
      const queuedMessage: QueuedMessage = {
        id: messageId,
@@ -174,31 +170,9 @@ export class MessageQueueService {
       hasCallback: this.sendCallbacks.has(botId),
       nextMessage: queue.length > 0 ? {
         id: queue[0].id,
-        to: queue[0].message.to,
+        to: queue[0].message.getTo(),
         age: Date.now() - queue[0].timestamp
       } : null
-    };
-  }
-
-  /**
-   * Get status for all bots
-   */
-  getAllQueuesStatus(): any {
-    const allBots = new Set([
-      ...this.queues.keys(),
-      ...this.processing.keys(),
-      ...this.delays.keys(),
-      ...this.sendCallbacks.keys()
-    ]);
-
-    const status: any = {};
-    for (const botId of allBots) {
-      status[botId] = this.getBotQueueStatus(botId);
-    }
-
-    return {
-      totalBots: allBots.size,
-      bots: status
     };
   }
 
@@ -206,61 +180,50 @@ export class MessageQueueService {
    * Clear queue for a specific bot
    */
   clearBotQueue(botId: string): void {
-    this.queues.set(botId, []);
+    this.queues.delete(botId);
     this.logger.info(`🗑️  Queue cleared for bot "${botId}"`);
   }
 
   /**
-   * Clear all queues
+   * Get status of all queues
    */
-  clearAllQueues(): void {
+  getAllQueuesStatus(): any {
+    const allStatuses: any[] = [];
+
+    for (const [botId, queue] of this.queues.entries()) {
+      const status = this.getBotQueueStatus(botId);
+      allStatuses.push(status);
+    }
+
+    return {
+      totalQueues: allStatuses.length,
+      queues: allStatuses
+    };
+  }
+
+  /**
+   * Shutdown all queues and stop processing
+   */
+  async shutdown(): Promise<void> {
+    this.logger.info('🛑 Shutting down message queue service...');
+
+    // Stop all processing
+    for (const [botId] of this.processing.entries()) {
+      this.processing.set(botId, false);
+    }
+
+    // Clear all queues
     this.queues.clear();
-    this.logger.info('🗑️  All queues cleared');
+    this.delays.clear();
+    this.sendCallbacks.clear();
+
+    this.logger.info('✅ Message queue service shut down');
   }
 
   /**
-   * Remove a specific message from queue
-   */
-  removeMessage(botId: string, messageId: string): boolean {
-    const queue = this.queues.get(botId);
-    if (!queue) {
-      return false;
-    }
-
-    const index = queue.findIndex(msg => msg.id === messageId);
-    if (index !== -1) {
-      queue.splice(index, 1);
-      this.logger.info(`🗑️  Message ${messageId} removed from bot "${botId}" queue`);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Utility method for delays
+   * Delay helper
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-
-  /**
-   * Shutdown all processing
-   */
-  async shutdown(): Promise<void> {
-    this.logger.info('🛑 Shutting down message queues...');
-
-    // Wait for all processing to complete
-    const processingPromises: Promise<void>[] = [];
-    for (const [botId, isProcessing] of this.processing.entries()) {
-      if (isProcessing) {
-        // Wait a bit for processing to complete
-        processingPromises.push(this.delay(100));
-      }
-    }
-
-    await Promise.allSettled(processingPromises);
-    this.logger.info('✅ Message queues shutdown complete');
-  }
 }
-
