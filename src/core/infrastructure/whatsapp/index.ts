@@ -6,7 +6,7 @@
  */
 
 // Export domain interfaces that this infrastructure implements
-export { MessageChannel } from '../../domain/ports/channel.entity';
+export { IMessageChannel } from '../../domain/ports/imessage-channel';
 export { IncomingMessage } from '../../domain/value-objects/incoming-message.vo';
 export { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
 

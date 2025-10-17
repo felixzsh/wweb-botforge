@@ -1,4 +1,4 @@
-import { MessageChannel } from './channel.entity';
+import { IMessageChannel } from '../../domain/ports/imessage-channel';
 
 /**
  * Interface for managing multiple message channels
@@ -6,9 +6,9 @@ import { MessageChannel } from './channel.entity';
  * without knowing the specific implementation details
  */
 export interface IChannelManager {
-  createChannel(id: string): MessageChannel;
-  getChannel(id: string): MessageChannel | undefined;
-  getAllChannels(): Map<string, MessageChannel>;
+  createChannel(id: string): IMessageChannel;
+  getChannel(id: string): IMessageChannel | undefined;
+  getAllChannels(): Map<string, IMessageChannel>;
   removeChannel(id: string): Promise<void>;
   removeAllChannels(): Promise<void>;
   hasChannel(id: string): boolean;

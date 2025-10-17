@@ -4,7 +4,7 @@ import { CooldownService } from './cooldown.service';
 import { WebhookService } from './webhook.service';
 import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
-import { IChannelManager } from '../../domain/ports/channel-manager';
+import { IChannelManager } from '../ports/ichannel-manager';
 import { ConfigFileDTO } from '../dtos/config-file.dto';
 import { getLogger } from '../../infrastructure/logger';
 import { loadBotsFromConfig } from '../use-cases/load-bots.use-case';

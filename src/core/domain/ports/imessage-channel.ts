@@ -18,7 +18,7 @@ export type StateChangeHandler = (newState: string) => void | Promise<void>;
  * The channel works with domain value objects (IncomingMessage, OutgoingMessage)
  * not with DTOs, ensuring the domain layer remains independent of external formats
  */
-export interface MessageChannel {
+export interface IMessageChannel {
   /**
    * Send a message through this channel
    */

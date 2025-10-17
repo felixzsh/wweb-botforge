@@ -1,5 +1,5 @@
-import { MessageChannel } from '../../domain/ports/channel.entity';
-import { IChannelManager } from '../../domain/ports/channel-manager';
+import { IMessageChannel } from '../../domain/ports/imessage-channel';
+import { IChannelManager } from '../../application/ports/ichannel-manager';
 import { WhatsAppChannel } from './whatsapp-channel';
 
 /**
@@ -24,7 +24,7 @@ export class WhatsAppSessionManager implements IChannelManager {
   /**
    * Create a new WhatsApp channel
    */
-  createChannel(id: string): MessageChannel {
+  createChannel(id: string): IMessageChannel {
     if (this.channels.has(id)) {
       throw new Error(`Channel already exists for ID ${id}`);
     }
@@ -37,14 +37,14 @@ export class WhatsAppSessionManager implements IChannelManager {
   /**
    * Get an existing WhatsApp channel
    */
-  getChannel(id: string): MessageChannel | undefined {
+  getChannel(id: string): IMessageChannel | undefined {
     return this.channels.get(id);
   }
 
   /**
    * Get all active channels
    */
-  getAllChannels(): Map<string, MessageChannel> {
+  getAllChannels(): Map<string, IMessageChannel> {
     return new Map(this.channels);
   }
 

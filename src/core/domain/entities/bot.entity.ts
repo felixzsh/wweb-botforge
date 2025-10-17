@@ -1,6 +1,6 @@
 import { BotId } from '../value-objects/bot-id.vo';
 import { PhoneNumber } from '../value-objects/phone-number.vo';
-import { MessageChannel } from '../ports/channel.entity';
+import { IMessageChannel } from '../ports/imessage-channel';
 import { BotSettings } from '../value-objects/bot-settings.vo';
 import { AutoResponse } from '../value-objects/auto-response.vo';
 import { Webhook } from '../value-objects/webhook.vo';
@@ -15,7 +15,7 @@ export interface BotProps {
 }
 
 export class Bot {
-  public channel?: MessageChannel;
+  public channel?: IMessageChannel;
 
   private constructor(private props: BotProps) {
     if (!props.name || props.name.trim().length === 0) {
@@ -30,7 +30,7 @@ export class Bot {
   /**
    * Register a message channel for this bot
    */
-  registerChannel(channel: MessageChannel): void {
+  registerChannel(channel: IMessageChannel): void {
     this.channel = channel;
   }
 

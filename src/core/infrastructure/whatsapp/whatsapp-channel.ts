@@ -1,19 +1,19 @@
 import { Client } from 'whatsapp-web.js';
 import {
-  MessageChannel,
+  IMessageChannel,
   MessageHandler,
   ReadyHandler,
   DisconnectedHandler,
   AuthFailureHandler,
   ConnectionErrorHandler,
   StateChangeHandler
-} from '../../domain/ports/channel.entity';
+} from '../../domain/ports/imessage-channel';
 import { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
 import { WhatsAppMessageAdapter } from './whatsapp-message-adapter';
 import { WhatsAppConnectionState } from './whatsapp-types';
 import { WhatsAppConfig } from './whatsapp-config';
 
-export class WhatsAppChannel implements MessageChannel {
+export class WhatsAppChannel implements IMessageChannel {
   private client: Client;
   private messageHandlers: MessageHandler[] = [];
   private readyHandlers: ReadyHandler[] = [];
