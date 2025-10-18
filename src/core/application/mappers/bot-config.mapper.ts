@@ -43,6 +43,7 @@ export class BotConfigMapper {
         pattern: ResponsePattern.create(wh.pattern, true),
         url: wh.url,
         method: wh.method ?? 'POST',
+        headers: wh.headers,
         timeout: wh.timeout ?? 5000,
         retries: wh.retry ?? 3,
         priority: wh.priority ?? 1,
