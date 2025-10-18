@@ -92,8 +92,7 @@ export class AutoResponseService {
    * Get response options for sending the message
    */
   private getResponseMetadata(autoResponse: AutoResponse): Record<string, any> {
-    // AutoResponse entity doesn't have responseOptions, return empty for now
-    return {};
+    return autoResponse.responseOptions || {};
   }
 
   /**

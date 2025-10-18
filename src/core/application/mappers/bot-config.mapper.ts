@@ -24,17 +24,16 @@ export class BotConfigMapper {
       : BotSettings.createDefault();
 
     // Mapear auto responses
-    const autoResponses = (dto.auto_responses || []).map(ar => 
+    const autoResponses = (dto.auto_responses || []).map(ar =>
       AutoResponse.create({
         pattern: ResponsePattern.create(
-          ar.pattern, 
+          ar.pattern,
           ar.case_insensitive ?? false
         ),
         response: ar.response,
         priority: ar.priority ?? 1,
         cooldown: ar.cooldown,
-        mediaUrl: ar.response_options?.media,
-        caption: ar.response_options?.caption
+        responseOptions: ar.response_options
       })
     );
 

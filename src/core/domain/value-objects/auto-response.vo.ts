@@ -5,8 +5,7 @@ export interface AutoResponseProps {
   response: string;
   priority: number;
   cooldown?: number;
-  mediaUrl?: string;
-  caption?: string;
+  responseOptions?: Record<string, any>;
 }
 
 export class AutoResponse {
@@ -43,11 +42,8 @@ export class AutoResponse {
     return this.props.cooldown;
   }
 
-  get mediaUrl(): string | undefined {
-    return this.props.mediaUrl;
-  }
 
-  get caption(): string | undefined {
-    return this.props.caption;
+  get responseOptions(): Record<string, any> | undefined {
+    return this.props.responseOptions;
   }
 }
