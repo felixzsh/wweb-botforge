@@ -7,8 +7,8 @@ import {
   AuthFailureHandler,
   ConnectionErrorHandler,
   StateChangeHandler
-} from '../../domain/ports/imessage-channel';
-import { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
+} from '../../../domain/ports/imessage-channel';
+import { OutgoingMessage } from '../../../domain/value-objects/outgoing-message.vo';
 import { WhatsAppMessageAdapter } from './whatsapp-message-adapter';
 import { WhatsAppConnectionState } from './whatsapp-types';
 import { WhatsAppConfig } from './whatsapp-config';

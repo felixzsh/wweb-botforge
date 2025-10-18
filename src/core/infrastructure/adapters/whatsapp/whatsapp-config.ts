@@ -1,4 +1,4 @@
-import { ConfigFileDTO } from '../../application/dtos/config-file.dto';
+import { ConfigFileDTO } from '../../../application/dtos/config-file.dto';
 
 /**
  * Common WhatsApp Web.js configuration

@@ -1,7 +1,7 @@
 import { Message as WWebJSMessage } from 'whatsapp-web.js';
-import { IncomingMessage } from '../../domain/value-objects/incoming-message.vo';
-import { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
-import { PhoneNumber } from '../../domain/value-objects/phone-number.vo';
+import { IncomingMessage } from '../../../domain/value-objects/incoming-message.vo';
+import { OutgoingMessage } from '../../../domain/value-objects/outgoing-message.vo';
+import { PhoneNumber } from '../../../domain/value-objects/phone-number.vo';
 import { WhatsAppUtils } from './whatsapp-types';
 
 /**

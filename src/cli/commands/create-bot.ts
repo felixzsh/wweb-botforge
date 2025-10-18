@@ -2,7 +2,7 @@ import inquirer from 'inquirer';
 import { createHash } from 'crypto';
 import qrcode from 'qrcode-terminal';
 import { BotConfigDTO } from '../../core/application/dtos/config-file.dto';
-import { WhatsAppInitializer } from '../../core/infrastructure/whatsapp/whatsapp-initializer';
+import { WhatsAppInitializer } from '../../core/infrastructure/adapters/whatsapp/whatsapp-initializer';
 import { YamlConfigRepository } from '../../core/infrastructure/adapters/yaml-config.repository';
 
 export async function createBotCommand() {

@@ -1,5 +1,5 @@
-import { IMessageChannel } from '../../domain/ports/imessage-channel';
-import { IChannelManager } from '../../application/ports/ichannel-manager';
+import { IMessageChannel } from '../../../domain/ports/imessage-channel';
+import { IChannelManager } from '../../../application/ports/ichannel-manager';
 import { WhatsAppChannel } from './whatsapp-channel';
 
 /**
