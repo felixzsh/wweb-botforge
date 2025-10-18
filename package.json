@@ -78,7 +78,7 @@
   "files": [
     "dist",
     "scripts",
-    "templates",
+    "systemd",
     "README.md",
     "LICENSE"
   ],
