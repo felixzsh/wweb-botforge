@@ -1,6 +1,7 @@
 import { Bot } from '../../domain/entities/bot.entity';
 import { Webhook } from '../../domain/value-objects/webhook.vo';
 import { IncomingMessage } from '../../domain/value-objects/incoming-message.vo';
+import { WebhookPayloadDTO } from '../dtos/webhook-payload.dto';
 import { CooldownService } from './cooldown.service';
 import { getLogger } from '../../infrastructure/utils/logger';
 
@@ -72,12 +73,12 @@ export class WebhookService {
   /**
    * Build the webhook payload from message data
    */
-  private buildWebhookPayload(bot: Bot, message: IncomingMessage, webhook: Webhook): any {
+  private buildWebhookPayload(bot: Bot, message: IncomingMessage, webhook: Webhook): WebhookPayloadDTO {
     return {
       // Message data
       sender: message.from.getValue(),
       message: message.content,
-      timestamp: message.timestamp,
+      timestamp: message.timestamp.toISOString(),
 
       // Bot context
       botId: bot.id.value,
@@ -131,3 +132,4 @@ export class WebhookService {
     throw new Error(`Webhook request failed after ${maxRetries} attempts: ${lastError?.message}`);
   }
 }
+
