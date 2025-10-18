@@ -99,18 +99,6 @@ auto_responses:
     cooldown: 30           # optional, cooldown in seconds per sender-pattern
 ```
 
-For advanced usage, you can include `response_options` to access WhatsApp Web's [Message Send Options](https://docs.wwebjs.dev/global.html#MessageSendOptions) like link previews, media handling, and more (all optional).
-
-Example with media:
-
-```yaml
-auto_responses:
-  - pattern: "image|photo"
-    response: "Here's an image:"
-    response_options:
-      media: "https://example.com/image.jpg"
-      caption: "Check this out!"
-```
 
 ### Webhooks
 

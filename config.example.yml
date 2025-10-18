@@ -40,15 +40,12 @@ bots:
         case_insensitive: true
         priority: 1
 
-      # Advanced response with media
+      # Advanced response example
       - pattern: "\\b(brochure|catalog|pdf)\\b"
-        response: "Here's our product catalog:"
+        response: "Here's our product catalog: https://example.com/catalog.pdf"
         case_insensitive: true
         priority: 2
         cooldown: 300  # 5 minutes cooldown
-        response_options:
-          media: "https://example.com/catalog.pdf"
-          caption: "Product Catalog - Updated 2024"
 
     # Webhooks for external integrations
     webhooks:
