@@ -78,6 +78,8 @@ export class MessageQueueService {
    ): string {
      const messageId = `${botId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+     this.logger.debug(`📨 Queueing message for bot "${botId}" with metadata:`, metadata);
+
      const outgoingMessage = OutgoingMessage.create(to, content, metadata);
 
      const queuedMessage: QueuedMessage = {

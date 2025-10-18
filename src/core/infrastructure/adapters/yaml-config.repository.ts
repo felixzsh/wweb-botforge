@@ -5,6 +5,7 @@ import * as fs from 'fs/promises';
 import * as fsSync from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { getLogger } from '../utils/logger';
 
 /**
  * YAML configuration repository adapter
@@ -16,6 +17,11 @@ export class YamlConfigRepository implements IConfigRepository {
 
   constructor(configPath?: string) {
     this.configPath = configPath || this.getDefaultConfigPath();
+  }
+
+  
+  private get logger() {
+    return getLogger();
   }
 
   /**

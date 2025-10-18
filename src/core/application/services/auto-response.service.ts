@@ -92,7 +92,9 @@ export class AutoResponseService {
    * Get response options for sending the message
    */
   private getResponseMetadata(autoResponse: AutoResponse): Record<string, any> {
-    return autoResponse.responseOptions || {};
+    const metadata = autoResponse.responseOptions || {};
+    this.logger.debug(`🔧 Auto-response metadata for "${autoResponse.response}":`, metadata);
+    return metadata;
   }
 
   /**
@@ -119,15 +121,23 @@ export class AutoResponseService {
     autoResponse: AutoResponse
   ): string {
     try {
+      // Get response metadata (includes responseOptions)
+      const metadata = this.getResponseMetadata(autoResponse);
+
       // Create outgoing message using Value Object directly
       const outgoingMessage = OutgoingMessage.create(
         originalMessage.from.getValue(),
         autoResponse.response,
-        this.getResponseMetadata(autoResponse)
+        metadata
       );
 
-      // Queue the message
-      const messageId = this.messageQueue.enqueue(bot.id.value, originalMessage.from.getValue(), autoResponse.response);
+      // Queue the message with metadata
+      const messageId = this.messageQueue.enqueue(
+        bot.id.value,
+        originalMessage.from.getValue(),
+        autoResponse.response,
+        metadata
+      );
 
       this.logger.info(`📤 Auto-response queued for bot "${bot.name}" with ID: ${messageId}`);
       return messageId;

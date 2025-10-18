@@ -12,6 +12,7 @@ import { OutgoingMessage } from '../../../domain/value-objects/outgoing-message.
 import { WhatsAppMessageAdapter } from './whatsapp-message-adapter';
 import { WhatsAppConnectionState } from './whatsapp-types';
 import { WhatsAppConfig } from './whatsapp-config';
+import { getLogger } from '../../utils/logger';
 
 export class WhatsAppChannel implements IMessageChannel {
   private client: Client;
@@ -27,6 +28,10 @@ export class WhatsAppChannel implements IMessageChannel {
     this.client = new Client(WhatsAppConfig.getClientOptions(clientId));
 
     this.setupEventListeners();
+  }
+
+  private get logger() {
+    return getLogger();
   }
 
   private setupEventListeners(): void {
@@ -102,6 +107,8 @@ export class WhatsAppChannel implements IMessageChannel {
     }
 
     const whatsappMsg = WhatsAppMessageAdapter.toWhatsAppFormat(message);
+    this.logger.debug('📤 WhatsApp send options:', JSON.stringify(whatsappMsg.options, null, 2));
+
     const result = await this.client.sendMessage(
       whatsappMsg.to,
       whatsappMsg.content,
