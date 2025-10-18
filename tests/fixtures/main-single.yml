@@ -1,7 +1,7 @@
 bots:
   - id: soporte-bot
     name: "Bot de Soporte"
-    phone: "+521234567890"
+    phone: "521234567890"
     auto_responses:
       - pattern: "^hola|hi|hello$"
         response: "¡Hola! ¿En qué puedo ayudarte?"

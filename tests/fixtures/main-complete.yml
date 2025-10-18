@@ -1,0 +1,109 @@
+global:
+  chromiumPath: "/usr/bin/chromium"
+  apiPort: 3000
+  apiEnabled: true
+  logLevel: "info"
+
+bots:
+  - id: support-bot-001
+    name: "Customer Support"
+    phone: "1234567890"
+
+    auto_responses:
+      - pattern: "^(hello|hi|hey|good morning|good afternoon)$"
+        response: "Hello! 👋 Welcome to our support chat. How can I help you today?"
+        case_insensitive: true
+        priority: 1
+        cooldown: 30
+
+      - pattern: "\\b(help|support|assist)\\b"
+        response: "I'm here to help! You can ask me about:\n• Our products\n• Order status\n• Technical issues\n• Contact information"
+        case_insensitive: true
+        priority: 2
+        cooldown: 60
+
+      - pattern: "\\b(hours|time|open|schedule)\\b"
+        response: "🕒 Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
+        case_insensitive: true
+        priority: 1
+
+      - pattern: "\\b(thank|thanks|gracias)\\b"
+        response: "You're welcome! 😊 Is there anything else I can help you with?"
+        case_insensitive: true
+        priority: 1
+
+      - pattern: "\\b(brochure|catalog|pdf)\\b"
+        response: "Here's our product catalog: https://example.com/catalog.pdf"
+        case_insensitive: true
+        priority: 2
+        cooldown: 300
+
+    webhooks:
+      - name: "support-ticket"
+        pattern: "\\b(urgent|emergency|problem|issue|error)\\b"
+        url: "https://api.example.com/support/tickets"
+        method: "POST"
+        headers:
+          "Content-Type": "application/json"
+          "Authorization": "Bearer your-api-token"
+          "X-Source": "whatsapp-bot"
+        timeout: 10000
+        retry: 3
+        priority: 1
+        cooldown: 300
+
+      - name: "lead-capture"
+        pattern: "\\b(interested|quote|price|cost|budget)\\b"
+        url: "https://crm.example.com/leads"
+        method: "POST"
+        headers:
+          "Content-Type": "application/json"
+          "X-API-Key": "your-crm-key"
+        timeout: 5000
+        retry: 2
+        priority: 2
+        cooldown: 600
+
+    settings:
+      queue_delay: 1500
+      ignore_groups: true
+      ignored_senders:
+        - "status@broadcast"
+        - "1234567890"
+
+  - id: sales-bot-002
+    name: "Sales Assistant"
+    phone: "1234567891"
+
+    auto_responses:
+      - pattern: "^(hi|hello|hey)$"
+        response: "Hi there! 🚀 I'm your sales assistant. Ready to help you find the perfect solution?"
+        case_insensitive: true
+        priority: 1
+
+      - pattern: "\\b(demo|trial|test|try)\\b"
+        response: "Great! I'd love to show you a demo. 📅 When would be a good time for you?"
+        case_insensitive: true
+        priority: 2
+
+      - pattern: "\\b(price|cost|pricing|fee)\\b"
+        response: "Our pricing starts at $29/month for the basic plan. 💰 Would you like me to send you a detailed pricing guide?"
+        case_insensitive: true
+        priority: 2
+
+    webhooks:
+      - name: "sales-lead"
+        pattern: "\\b(interested|buy|purchase|order|subscribe)\\b"
+        url: "https://sales.example.com/leads"
+        method: "POST"
+        headers:
+          "Content-Type": "application/json"
+          "X-Source": "whatsapp-sales-bot"
+        timeout: 8000
+        retry: 3
+        priority: 1
+
+    settings:
+      queue_delay: 1000
+      ignore_groups: false
+      ignored_senders: []

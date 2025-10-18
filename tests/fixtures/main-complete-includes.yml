@@ -1,0 +1,9 @@
+global:
+  chromiumPath: "/usr/bin/chromium"
+  apiPort: 3000
+  apiEnabled: true
+  logLevel: "info"
+
+bots:
+  - !include bots/support-bot-complete.yml
+  - !include bots/sales-bot-complete.yml
