@@ -3,7 +3,7 @@ import { IncomingMessage } from '../../domain/value-objects/incoming-message.vo'
 import { AutoResponseService } from './auto-response.service';
 import { WebhookService } from './webhook.service';
 import { PhoneNumber } from '../../domain/value-objects/phone-number.vo';
-import { getLogger } from '../../infrastructure/logger';
+import { getLogger } from '../../infrastructure/utils/logger';
 
 /**
  * Callback type for handling processed messages

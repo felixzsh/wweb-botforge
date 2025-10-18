@@ -1,7 +1,7 @@
 import { Bot } from '../../domain/entities/bot.entity';
 import { BotConfigDTO } from '../dtos/config-file.dto';
 import { BotConfigMapper } from '../mappers/bot-config.mapper';
-import { getLogger } from '../../infrastructure/logger';
+import { getLogger } from '../../infrastructure/utils/logger';
 
 /**
  * Load and map bot configurations from DTOs to domain entities

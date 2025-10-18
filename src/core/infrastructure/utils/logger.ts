@@ -1,5 +1,5 @@
 import pino from 'pino';
-import { GlobalConfigDTO } from '../application/dtos/config-file.dto';
+import { GlobalConfigDTO } from '../../application/dtos/config-file.dto';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

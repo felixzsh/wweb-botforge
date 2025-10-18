@@ -2,7 +2,7 @@ import { Bot } from '../../domain/entities/bot.entity';
 import { Webhook } from '../../domain/value-objects/webhook.vo';
 import { IncomingMessage } from '../../domain/value-objects/incoming-message.vo';
 import { CooldownService } from './cooldown.service';
-import { getLogger } from '../../infrastructure/logger';
+import { getLogger } from '../../infrastructure/utils/logger';
 
 /**
  * Service for handling outbound webhooks triggered by message patterns

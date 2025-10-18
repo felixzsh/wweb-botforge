@@ -8,7 +8,7 @@ import { WhatsAppSessionManager } from '../core/infrastructure/adapters/whatsapp
 import { WhatsAppConfig } from '../core/infrastructure/adapters/whatsapp/whatsapp-config';
 import { YamlConfigRepository } from '../core/infrastructure/adapters/yaml-config.repository';
 import { ApiServer } from '../core/infrastructure/api/server';
-import { setGlobalLogger, getLogger } from '../core/infrastructure/logger';
+import { setGlobalLogger, getLogger } from '../core/infrastructure/utils/logger';
 import { execSync } from 'child_process';
 import * as path from 'path';
 

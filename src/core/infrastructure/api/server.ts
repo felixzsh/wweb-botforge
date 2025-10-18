@@ -2,7 +2,7 @@ import express from 'express';
 import { MessageQueueService } from '../../application/services/message-queue.service';
 import { Bot } from '../../domain/entities/bot.entity';
 import { createApiRoutes } from './routes';
-import { getLogger } from '../logger';
+import { getLogger } from '../utils/logger';
 
 export class ApiServer {
   private app: express.Application;

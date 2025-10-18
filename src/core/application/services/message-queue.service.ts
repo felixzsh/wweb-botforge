@@ -1,6 +1,6 @@
 import { Bot } from '../../domain/entities/bot.entity';
 import { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
-import { getLogger } from '../../infrastructure/logger';
+import { getLogger } from '../../infrastructure/utils/logger';
 
 /**
  * Represents a message in the queue

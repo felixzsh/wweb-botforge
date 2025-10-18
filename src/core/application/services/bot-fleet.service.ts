@@ -6,7 +6,7 @@ import { MessageQueueService } from './message-queue.service';
 import { MessageHandlerService } from './message-handler.service';
 import { IChannelManager } from '../ports/ichannel-manager';
 import { ConfigFileDTO } from '../dtos/config-file.dto';
-import { getLogger } from '../../infrastructure/logger';
+import { getLogger } from '../../infrastructure/utils/logger';
 import { loadBotsFromConfig } from '../use-cases/load-bots.use-case';
 
 /**

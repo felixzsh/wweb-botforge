@@ -4,7 +4,7 @@ import { IncomingMessage } from '../../domain/value-objects/incoming-message.vo'
 import { OutgoingMessage } from '../../domain/value-objects/outgoing-message.vo';
 import { MessageQueueService } from './message-queue.service';
 import { CooldownService } from './cooldown.service';
-import { getLogger } from '../../infrastructure/logger';
+import { getLogger } from '../../infrastructure/utils/logger';
 
 /**
  * Service for handling automatic responses based on message patterns
