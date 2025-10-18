@@ -16,8 +16,8 @@ import { loadBotsFromConfig } from '../use-cases/load-bots.use-case';
 export class BotFleetService {
   private bots: Map<string, Bot> = new Map();
   private autoResponseService: AutoResponseService;
-  private cooldownService: CooldownService;
   private webhookService: WebhookService;
+  private cooldownService: CooldownService;
   private messageQueueService: MessageQueueService;
   private messageHandlerService: MessageHandlerService;
   private channelManager: IChannelManager;
@@ -49,8 +49,6 @@ export class BotFleetService {
     }
 
     try {
-      this.logger.info('🚀 Starting WWeb BotForge...');
-
       if (configFile.bots.length === 0) {
         this.logger.warn('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.');
         return this.bots;

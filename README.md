@@ -63,26 +63,6 @@ systemctl --user enable wweb-botforge
 
 Your bot is now running as a system service! Send messages to test it.
 
-### Alternative: Docker Deployment
-
-For containerized deployments (no `xvfb` needed):
-
-```dockerfile
-# Dockerfile
-FROM node:18
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 3000
-CMD ["npx", "botforge", "start"]
-```
-
-```bash
-docker build -t wweb-botforge .
-docker run -d wweb-botforge
-```
-
 ## 🔧 Configuration Guide
 
 ### Global Configuration
