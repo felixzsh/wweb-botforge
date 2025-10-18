@@ -39,41 +39,24 @@ export interface AutoResponseDTO {
 
 export interface ResponseOptionsDTO {
   linkPreview?: boolean;
-  link_preview?: boolean;
   sendAudioAsVoice?: boolean;
-  send_audio_as_voice?: boolean;
   sendVideoAsGif?: boolean;
-  send_video_as_gif?: boolean;
   sendMediaAsSticker?: boolean;
-  send_media_as_sticker?: boolean;
   sendMediaAsDocument?: boolean;
-  send_media_as_document?: boolean;
   sendMediaAsHd?: boolean;
-  send_media_as_hd?: boolean;
   isViewOnce?: boolean;
-  is_view_once?: boolean;
   parseVCards?: boolean;
-  parse_v_cards?: boolean;
   caption?: string;
   quotedMessageId?: string;
-  quoted_message_id?: string;
   groupMentions?: any[];
-  group_mentions?: any[];
   mentions?: string[];
   sendSeen?: boolean;
-  send_seen?: boolean;
   invokedBotWid?: string;
-  invoked_bot_wid?: string;
   stickerAuthor?: string;
-  sticker_author?: string;
   stickerName?: string;
-  sticker_name?: string;
   stickerCategories?: string[];
-  sticker_categories?: string[];
   ignoreQuoteErrors?: boolean;
-  ignore_quote_errors?: boolean;
   waitUntilMsgSent?: boolean;
-  wait_until_msg_sent?: boolean;
   media?: string;
 }
 
