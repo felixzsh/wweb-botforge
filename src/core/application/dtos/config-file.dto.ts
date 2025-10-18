@@ -26,7 +26,6 @@ export interface BotSettingsDTO {
   ignore_groups?: boolean;
   ignored_senders?: string[];
   admin_numbers?: string[];
-  log_level?: 'info' | 'debug' | 'warn' | 'error';
 }
 
 export interface AutoResponseDTO {

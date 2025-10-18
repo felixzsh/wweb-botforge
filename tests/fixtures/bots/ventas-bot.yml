@@ -10,4 +10,3 @@ settings:
   queue_delay: 500
   read_receipts: true
   ignore_groups: false
-  log_level: "debug"

@@ -10,7 +10,7 @@ import { BotConfigDTO } from '../dtos/config-file.dto';
 export class BotConfigMapper {
   static toDomain(dto: BotConfigDTO): Bot {
     // Mapear settings con defaults
-    const settings = dto.settings 
+    const settings = dto.settings
       ? BotSettings.create({
           simulateTyping: dto.settings.simulate_typing ?? true,
           typingDelay: dto.settings.typing_delay ?? 1000,
@@ -18,8 +18,7 @@ export class BotConfigMapper {
           readReceipts: dto.settings.read_receipts ?? true,
           ignoreGroups: dto.settings.ignore_groups ?? true,
           ignoredSenders: dto.settings.ignored_senders || [],
-          adminNumbers: dto.settings.admin_numbers || [],
-          logLevel: dto.settings.log_level ?? 'info'
+          adminNumbers: dto.settings.admin_numbers || []
         })
       : BotSettings.createDefault();
 
@@ -90,8 +89,7 @@ export class BotConfigMapper {
         read_receipts: bot.settings.readReceipts,
         ignore_groups: bot.settings.ignoreGroups,
         ignored_senders: bot.settings.ignoredSenders,
-        admin_numbers: bot.settings.adminNumbers,
-        log_level: bot.settings.logLevel
+        admin_numbers: bot.settings.adminNumbers
       }
     };
   }

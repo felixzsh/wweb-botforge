@@ -38,4 +38,3 @@ settings:
   ignore_groups: true
   admin_numbers:
     - "+521234567891"
-  log_level: "info"

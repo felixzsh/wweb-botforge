@@ -6,7 +6,6 @@ export interface BotSettingsProps {
   ignoreGroups: boolean;
   ignoredSenders: string[];
   adminNumbers: string[];
-  logLevel: 'info' | 'debug' | 'warn' | 'error';
 }
 
 export class BotSettings {
@@ -31,8 +30,7 @@ export class BotSettings {
       readReceipts: true,
       ignoreGroups: true,
       ignoredSenders: [],
-      adminNumbers: [],
-      logLevel: 'info'
+      adminNumbers: []
     });
   }
 
@@ -62,10 +60,6 @@ export class BotSettings {
 
   get adminNumbers(): string[] {
     return this.props.adminNumbers;
-  }
-
-  get logLevel(): 'info' | 'debug' | 'warn' | 'error' {
-    return this.props.logLevel;
   }
 
   isAdminNumber(phone: string): boolean {

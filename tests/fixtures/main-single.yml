@@ -33,7 +33,6 @@ bots:
       ignore_groups: true
       admin_numbers:
         - "+521234567891"
-      log_level: "info"
   - id: ventas-bot
     name: "Bot de Ventas"
     auto_responses:
@@ -46,4 +45,3 @@ bots:
       queue_delay: 500
       read_receipts: true
       ignore_groups: false
-      log_level: "debug"

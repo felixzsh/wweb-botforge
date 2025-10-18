@@ -7,4 +7,3 @@ bots:
       readReceipts: false
       ignoreGroups: false
       adminNumbers: ["+521234567891"]
-      logLevel: "debug"

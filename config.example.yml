@@ -84,7 +84,6 @@ bots:
       ignored_senders:           # Senders to ignore
         - "status@broadcast"     # WhatsApp status broadcasts
         - "1234567890"          # Specific numbers
-      log_level: "info"          # Bot-specific log level
 
   # Example Sales Bot
   - id: sales-bot-002
@@ -123,7 +122,6 @@ bots:
       queue_delay: 1000
       ignore_groups: false  # Sales bot might want to engage in groups
       ignored_senders: []
-      log_level: "info"
 
   # Example Notification Bot (minimal config)
   - id: notifications-bot-003
@@ -145,7 +143,6 @@ bots:
       queue_delay: 500
       ignore_groups: false
       ignored_senders: []
-      log_level: "warn"
 
 # Notes:
 # - Bot IDs are auto-generated but you can customize them

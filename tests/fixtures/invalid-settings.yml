@@ -2,4 +2,3 @@ bots:
   - id: test-bot
     name: "Bot with invalid settings"
     settings:
-      log_level: "invalid"

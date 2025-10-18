@@ -11,7 +11,7 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 
 - 🤖 **Multiple Bots**: Run several WhatsApp bots from one server
 - 📝 **YAML Configuration**: Define bot behavior in simple YAML files
--  **Auto-Responses**: Set up instant replies to common messages
+- 💬 **Auto-Responses**: Set up instant replies to common messages
 - 🔗 **Webhooks**: Connect to your existing apps in any language.
 - 🌐 **REST API**: Send messages programmatically (optional)
 - 🚀 **Systemd Service**: Run as a proper system service with auto-restart
@@ -198,7 +198,6 @@ settings:
   queue_delay: 1000
   ignore_groups: false
   ignored_senders: []
-  log_level: "info"
 ```
 
 ## 🛠️ Service Management

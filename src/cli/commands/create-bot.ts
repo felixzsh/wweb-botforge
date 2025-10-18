@@ -77,8 +77,7 @@ export async function createBotCommand() {
       settings: {
         queue_delay: 1000,
         ignore_groups: true,
-        ignored_senders: ['status@broadcast'],
-        log_level: 'info'
+        ignored_senders: ['status@broadcast']
       }
     };
 
