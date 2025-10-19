@@ -1,6 +1,6 @@
 {
   "name": "wweb-botforge",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Create powerful WhatsApp bots with YAML configuration",
   "scripts": {
     "build": "tsc",
