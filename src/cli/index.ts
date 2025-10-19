@@ -11,13 +11,17 @@ import { ApiServer } from '../core/infrastructure/api/server';
 import { setGlobalLogger, getLogger } from '../core/infrastructure/utils/logger';
 import { execSync } from 'child_process';
 import * as path from 'path';
+import { readFileSync } from 'fs';
+
+const packageJsonPath = path.join(__dirname, '..', '..', 'package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 
 const program = new Command();
 
 program
   .name('botforge')
   .description('CLI tool for creating and managing WhatsApp bots')
-  .version('1.0.0');
+  .version(packageJson.version); // ← Ahora lee del package.json
 
 program
   .command('setup')
