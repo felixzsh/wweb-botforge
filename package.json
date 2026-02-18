@@ -4,8 +4,8 @@
   "description": "Create powerful WhatsApp bots with YAML configuration",
   "scripts": {
     "build": "tsc",
-    "dev": "ts-node src/cli/index.ts",
-    "start": "node ./dist/cli/index.js",
+    "dev": "ts-node src/index.ts",
+    "start": "node ./dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -82,7 +82,7 @@
     "node": ">=16.0.0"
   },
   "bin": {
-    "botforge": "./dist/cli/index.js"
+    "botforge": "./dist/index.js"
   },
   "files": [
     "dist",

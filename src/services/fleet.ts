@@ -1,0 +1,207 @@
+import { Bot, ConfigFile, BotConfig } from '../bot/types'
+import { mapBotsFromConfig } from '../bot/mapper'
+import { AutoResponseService } from './auto-response'
+import { WebhookService } from './webhook'
+import { CooldownService } from './cooldown'
+import { MessageQueueService, SendMessageCallback } from './message-queue'
+import { MessageHandlerService } from './message-handler'
+import { SessionManager } from '../whatsapp/session'
+import { setGlobalConfig } from '../whatsapp/client'
+import { getLogger } from '../utils/logger'
+
+export class BotFleet {
+  private bots: Map<string, Bot> = new Map()
+  private autoResponseService: AutoResponseService
+  private webhookService: WebhookService
+  private cooldownService: CooldownService
+  private messageQueueService: MessageQueueService
+  private messageHandlerService: MessageHandlerService
+  private sessionManager: SessionManager
+  private isRunning: boolean = false
+
+  constructor(messageQueueService: MessageQueueService) {
+    this.sessionManager = SessionManager.getInstance()
+    this.messageQueueService = messageQueueService
+    this.cooldownService = new CooldownService()
+    this.autoResponseService = new AutoResponseService(this.cooldownService)
+    this.webhookService = new WebhookService(this.cooldownService)
+    this.messageHandlerService = new MessageHandlerService(this.cooldownService)
+  }
+
+  private get logger() {
+    return getLogger()
+  }
+
+  async start(configFile: ConfigFile): Promise<Map<string, Bot>> {
+    if (this.isRunning) {
+      this.logger.info('🤖 Bot Fleet Launcher is already running')
+      return this.bots
+    }
+
+    try {
+      if (configFile.bots.length === 0) {
+        this.logger.warn('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.')
+        return this.bots
+      }
+
+      const loadedBots = mapBotsFromConfig(configFile.bots)
+
+      for (const bot of loadedBots) {
+        await this.initializeBot(bot)
+
+        if (loadedBots.length > 1) {
+          this.logger.info('⏳ Waiting 3 seconds before initializing next bot...')
+          await this.delay(3000)
+        }
+      }
+
+      this.isRunning = true
+      this.logger.info(`🎉 WWeb BotForge started successfully with ${this.bots.size} bot(s)!`)
+      this.logger.info('💬 Bots are now listening for messages...')
+
+      this.setupGracefulShutdown()
+
+      return this.bots
+
+    } catch (error) {
+      this.logger.error('❌ Failed to start Bot Fleet Launcher:', error)
+      throw error
+    }
+  }
+
+  async stop(): Promise<void> {
+    if (!this.isRunning) {
+      return
+    }
+
+    this.logger.info('🛑 Stopping WWeb BotForge...')
+
+    try {
+      await this.messageQueueService.shutdown()
+      await this.sessionManager.removeAllChannels()
+      this.bots.clear()
+
+      this.isRunning = false
+      this.logger.info('✅ WWeb BotForge stopped successfully')
+    } catch (error) {
+      this.logger.error('❌ Error stopping Bot Fleet:', error)
+      throw error
+    }
+  }
+
+  private async initializeBot(bot: Bot): Promise<void> {
+    try {
+      this.logger.info(`🤖 Initializing bot: ${bot.name} (${bot.id})`)
+
+      this.bots.set(bot.id, bot)
+
+      const channel = this.sessionManager.createChannel(bot.id)
+      bot.channel = channel
+
+      this.messageQueueService.setupBotQueue(bot)
+      this.messageHandlerService.registerBot(bot)
+
+      this.setupBotEventHandlers(bot)
+
+      await bot.channel.connect()
+
+      this.logger.info(`✅ Bot "${bot.name}" initialized and ready`)
+
+    } catch (error) {
+      this.logger.error(`❌ Failed to initialize bot "${bot.name}":`, error)
+      throw error
+    }
+  }
+
+  private setupBotEventHandlers(bot: Bot): void {
+    if (!bot.channel) {
+      throw new Error(`Bot "${bot.name}" does not have a registered channel`)
+    }
+
+    bot.channel.onReady(() => {
+      this.logger.info(`✅ Bot "${bot.name}" is ready!`)
+    })
+
+    bot.channel.onDisconnected((reason: string) => {
+      this.logger.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason)
+    })
+
+    bot.channel.onAuthFailure((error: Error) => {
+      this.logger.error(`❌ Bot "${bot.name}" authentication failed:`, error.message)
+    })
+
+    bot.channel.onConnectionError((error: Error) => {
+      this.logger.error(`❌ Bot "${bot.name}" connection error:`, error.message)
+    })
+
+    bot.channel.onStateChange((state: string) => {
+      this.logger.info(`ℹ️  Bot "${bot.name}" state changed to:`, state)
+    })
+  }
+
+  private setupGracefulShutdown(): void {
+    const shutdown = async () => {
+      this.logger.info('\n🛑 Received shutdown signal...')
+      await this.stop()
+      process.exit(0)
+    }
+
+    process.on('SIGINT', shutdown)
+    process.on('SIGTERM', shutdown)
+    process.on('SIGUSR2', shutdown)
+
+    process.on('uncaughtException', (error) => {
+      this.logger.error('❌ Uncaught Exception:', error)
+      this.stop().finally(() => process.exit(1))
+    })
+
+    process.on('unhandledRejection', (reason, promise) => {
+      this.logger.error('❌ Unhandled Rejection at:', promise, 'reason:', reason)
+      this.stop().finally(() => process.exit(1))
+    })
+  }
+
+  getStatus(): any {
+    const botStatuses = Array.from(this.bots.values()).map(bot => {
+      const queueStatus = this.messageQueueService.getBotQueueStatus(bot.id)
+
+      return {
+        id: bot.id,
+        name: bot.name,
+        autoResponsesCount: bot.autoResponses.length,
+        webhooksCount: bot.webhooks.length,
+        queue: {
+          size: queueStatus.queueSize,
+          delayMs: queueStatus.delayMs,
+          isProcessing: queueStatus.isProcessing,
+          hasCallback: queueStatus.hasCallback,
+        },
+      }
+    })
+
+    const queueStatus = this.messageQueueService.getAllQueuesStatus()
+
+    return {
+      isRunning: this.isRunning,
+      bots: botStatuses,
+      totalBots: botStatuses.length,
+      queues: queueStatus,
+    }
+  }
+
+  isRunningStatus(): boolean {
+    return this.isRunning
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  getMessageQueueService(): MessageQueueService {
+    return this.messageQueueService
+  }
+
+  getBots(): Map<string, Bot> {
+    return this.bots
+  }
+}
