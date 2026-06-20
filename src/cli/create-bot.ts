@@ -3,9 +3,10 @@ import { createHash } from 'crypto'
 import qrcode from 'qrcode-terminal'
 import { BotConfig } from '../bot/types'
 import { WhatsAppInitializer } from '../whatsapp/client'
-import { addBotConfig, getConfigPath } from '../config/yaml'
+import { addBotConfig, getConfigPath, setConfigPath } from '../config/yaml'
 
-export async function runCreateBot() {
+export async function runCreateBot(configPath?: string) {
+  if (configPath) setConfigPath(configPath)
   console.log('🤖 Welcome to WWeb BotForge!')
   console.log('Let\'s create a new WhatsApp bot...\n')
 
@@ -74,7 +75,7 @@ export async function runCreateBot() {
       },
     }
 
-    await addBotConfig(botConfig)
+    await addBotConfig(botConfig, configPath)
 
     console.log(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`)
     console.log(`\n📁 Bot configuration saved to ${getConfigPath()}`)

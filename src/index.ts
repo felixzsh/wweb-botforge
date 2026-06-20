@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import { BotFleet } from './services/fleet'
 import { OutboxService } from './services/outbox'
 import { ApiServer } from './api/server'
-import { loadConfig } from './config/yaml'
+import { loadConfig, setConfigPath } from './config/yaml'
 import { setGlobalLogger, getLogger } from './utils/logger'
 import { setGlobalConfig } from './whatsapp/client'
 import { runCreateBot } from './cli/create-bot'
@@ -21,6 +21,7 @@ program
   .name('botforge')
   .description('CLI tool for creating and managing WhatsApp bots')
   .version(packageJson.version)
+  .option('-c, --config <path>', 'Path to config file (default: ~/.config/wweb-botforge/config.yml)')
 
 program
   .command('setup')
@@ -33,17 +34,18 @@ program
 program
   .command('create-bot')
   .description('Create a new WhatsApp bot interactively')
-  .action(runCreateBot)
+  .action(() => runCreateBot(program.opts().config))
 
 program
   .command('start')
   .description('Start the WhatsApp bots')
   .action(async () => {
-    await startBots()
+    await startBots(program.opts().config)
   })
 
-async function startBots() {
-  const configFile = await loadConfig()
+async function startBots(configPath?: string) {
+  if (configPath) setConfigPath(configPath)
+  const configFile = await loadConfig(configPath)
 
   if (configFile.global) {
     setGlobalLogger(configFile.global)
