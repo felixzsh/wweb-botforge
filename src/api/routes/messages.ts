@@ -1,9 +1,9 @@
 import { Router } from 'express'
-import { MessageQueueService } from '../../services/message-queue'
+import { OutboxService } from '../../services/outbox'
 import { Bot } from '../../bot/types'
 
 export function createMessagesRouter(
-  messageQueueService: MessageQueueService,
+  outboxService: OutboxService,
   bots: Map<string, Bot>
 ): Router {
   const router = Router()
@@ -24,7 +24,7 @@ export function createMessagesRouter(
         })
       }
 
-      const messageId = messageQueueService.enqueue(botId, to, content, metadata)
+      const messageId = outboxService.enqueue(botId, to, content, metadata)
 
       res.json({
         success: true,
@@ -50,7 +50,7 @@ export function createMessagesRouter(
         })
       }
 
-      const queueStatus = messageQueueService.getBotQueueStatus(botId)
+      const queueStatus = outboxService.getBotQueueStatus(botId)
 
       res.json({
         botId,
@@ -66,7 +66,7 @@ export function createMessagesRouter(
 
   router.get('/queue', (req, res) => {
     try {
-      const queueStatus = messageQueueService.getAllQueuesStatus()
+      const queueStatus = outboxService.getAllQueuesStatus()
       res.json(queueStatus)
     } catch (error) {
       console.error('Error getting all queues status:', error)

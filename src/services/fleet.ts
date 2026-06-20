@@ -3,8 +3,8 @@ import { mapBotsFromConfig } from '../bot/mapper'
 import { AutoResponseService } from './auto-response'
 import { WebhookService } from './webhook'
 import { CooldownService } from './cooldown'
-import { MessageQueueService, SendMessageCallback } from './message-queue'
-import { MessageHandlerService } from './message-handler'
+import { OutboxService } from './outbox'
+import { InboxService } from './inbox'
 import { SessionManager } from '../whatsapp/session'
 import { setGlobalConfig } from '../whatsapp/client'
 import { getLogger } from '../utils/logger'
@@ -14,18 +14,18 @@ export class BotFleet {
   private autoResponseService: AutoResponseService
   private webhookService: WebhookService
   private cooldownService: CooldownService
-  private messageQueueService: MessageQueueService
-  private messageHandlerService: MessageHandlerService
+  private outboxService: OutboxService
+  private inboxService: InboxService
   private sessionManager: SessionManager
   private isRunning: boolean = false
 
-  constructor(messageQueueService: MessageQueueService) {
+  constructor(outboxService: OutboxService) {
     this.sessionManager = SessionManager.getInstance()
-    this.messageQueueService = messageQueueService
+    this.outboxService = outboxService
     this.cooldownService = new CooldownService()
     this.autoResponseService = new AutoResponseService(this.cooldownService)
     this.webhookService = new WebhookService(this.cooldownService)
-    this.messageHandlerService = new MessageHandlerService(this.cooldownService)
+    this.inboxService = new InboxService(this.cooldownService)
   }
 
   private get logger() {
@@ -77,7 +77,7 @@ export class BotFleet {
     this.logger.info('🛑 Stopping WWeb BotForge...')
 
     try {
-      await this.messageQueueService.shutdown()
+      await this.outboxService.shutdown()
       await this.sessionManager.removeAllChannels()
       this.bots.clear()
 
@@ -98,8 +98,8 @@ export class BotFleet {
       const channel = this.sessionManager.createChannel(bot.id)
       bot.channel = channel
 
-      this.messageQueueService.setupBotQueue(bot)
-      this.messageHandlerService.registerBot(bot)
+      this.outboxService.setupBotQueue(bot)
+      this.inboxService.registerBot(bot)
 
       this.setupBotEventHandlers(bot)
 
@@ -163,7 +163,7 @@ export class BotFleet {
 
   getStatus(): any {
     const botStatuses = Array.from(this.bots.values()).map(bot => {
-      const queueStatus = this.messageQueueService.getBotQueueStatus(bot.id)
+      const queueStatus = this.outboxService.getBotQueueStatus(bot.id)
 
       return {
         id: bot.id,
@@ -179,7 +179,7 @@ export class BotFleet {
       }
     })
 
-    const queueStatus = this.messageQueueService.getAllQueuesStatus()
+    const queueStatus = this.outboxService.getAllQueuesStatus()
 
     return {
       isRunning: this.isRunning,
@@ -197,11 +197,15 @@ export class BotFleet {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  getMessageQueueService(): MessageQueueService {
-    return this.messageQueueService
+  getOutboxService(): OutboxService {
+    return this.outboxService
   }
 
   getBots(): Map<string, Bot> {
     return this.bots
+  }
+
+  getInboxService(): InboxService {
+    return this.inboxService
   }
 }

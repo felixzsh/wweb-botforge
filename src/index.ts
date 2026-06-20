@@ -5,7 +5,7 @@ import { execSync } from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
 import { BotFleet } from './services/fleet'
-import { MessageQueueService } from './services/message-queue'
+import { OutboxService } from './services/outbox'
 import { ApiServer } from './api/server'
 import { loadConfig } from './config/yaml'
 import { setGlobalLogger, getLogger } from './utils/logger'
@@ -53,14 +53,14 @@ async function startBots() {
   const logger = getLogger()
   logger.info('🤖 WWeb BotForge - Starting bots...')
 
-  const messageQueueService = new MessageQueueService()
-  const fleet = new BotFleet(messageQueueService)
+  const outboxService = new OutboxService()
+  const fleet = new BotFleet(outboxService)
 
   const bots = await fleet.start(configFile)
 
   if (configFile.global?.apiEnabled) {
     const apiPort = configFile.global.apiPort || 3000
-    const apiServer = new ApiServer(messageQueueService, bots, apiPort)
+    const apiServer = new ApiServer(outboxService, bots, apiPort)
     await apiServer.start()
   }
 }

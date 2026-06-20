@@ -1,5 +1,5 @@
 import express from 'express'
-import { MessageQueueService } from '../services/message-queue'
+import { OutboxService } from '../services/outbox'
 import { Bot } from '../bot/types'
 import { createApiRoutes } from './routes'
 import { getLogger } from '../utils/logger'
@@ -7,14 +7,14 @@ import { getLogger } from '../utils/logger'
 export class ApiServer {
   private app: express.Application
   private port: number
-  private messageQueueService: MessageQueueService
+  private outboxService: OutboxService
   private bots: Map<string, Bot>
   private server: any
 
-  constructor(messageQueueService: MessageQueueService, bots: Map<string, Bot>, port: number = 3000) {
+  constructor(outboxService: OutboxService, bots: Map<string, Bot>, port: number = 3000) {
     this.app = express()
     this.port = port
-    this.messageQueueService = messageQueueService
+    this.outboxService = outboxService
     this.bots = bots
 
     this.setupMiddleware()
@@ -42,7 +42,7 @@ export class ApiServer {
   }
 
   private setupRoutes(): void {
-    this.app.use('/api', createApiRoutes(this.messageQueueService, this.bots))
+    this.app.use('/api', createApiRoutes(this.outboxService, this.bots))
 
     this.app.get('/', (req, res) => {
       res.json({

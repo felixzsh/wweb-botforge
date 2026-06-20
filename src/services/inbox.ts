@@ -4,11 +4,11 @@ import { WebhookService } from './webhook'
 import { CooldownService } from './cooldown'
 import { getLogger } from '../utils/logger'
 
-export type MessageHandlerCallback = (bot: Bot, message: IncomingMessage, response?: string) => void
+export type InboxCallback = (bot: Bot, message: IncomingMessage, response?: string) => void
 
-export class MessageHandlerService {
+export class InboxService {
   private bots: Map<string, Bot> = new Map()
-  private messageHandlers: Map<string, MessageHandlerCallback> = new Map()
+  private handlers: Map<string, InboxCallback> = new Map()
   private autoResponseService: AutoResponseService
   private webhookService: WebhookService
 
@@ -39,11 +39,11 @@ export class MessageHandlerService {
 
   unregisterBot(botId: string): void {
     this.bots.delete(botId)
-    this.messageHandlers.delete(botId)
+    this.handlers.delete(botId)
   }
 
-  registerMessageHandler(botId: string, handler: MessageHandlerCallback): void {
-    this.messageHandlers.set(botId, handler)
+  registerMessageHandler(botId: string, handler: InboxCallback): void {
+    this.handlers.set(botId, handler)
   }
 
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
@@ -74,7 +74,7 @@ export class MessageHandlerService {
         this.logger.error(`❌ Error processing webhooks for bot "${bot.name}":`, error)
       })
 
-      const customHandler = this.messageHandlers.get(bot.id)
+      const customHandler = this.handlers.get(bot.id)
       if (customHandler) {
         customHandler(bot, message, autoResponse?.response)
       }

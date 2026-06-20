@@ -10,7 +10,7 @@ export interface QueuedMessage {
 
 export type SendMessageCallback = (botId: string, message: OutgoingMessage) => Promise<void>
 
-export class MessageQueueService {
+export class OutboxService {
   private queues: Map<string, QueuedMessage[]> = new Map()
   private processing: Map<string, boolean> = new Map()
   private delays: Map<string, number> = new Map()
@@ -165,7 +165,7 @@ export class MessageQueueService {
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('🛑 Shutting down message queue service...')
+    this.logger.info('🛑 Shutting down outbox service...')
 
     for (const [botId] of this.processing.entries()) {
       this.processing.set(botId, false)
@@ -175,7 +175,7 @@ export class MessageQueueService {
     this.delays.clear()
     this.sendCallbacks.clear()
 
-    this.logger.info('✅ Message queue service shut down')
+    this.logger.info('✅ Outbox service shut down')
   }
 
   private delay(ms: number): Promise<void> {
