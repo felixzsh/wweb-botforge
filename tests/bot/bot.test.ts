@@ -11,44 +11,48 @@ describe('Bot', () => {
 
     autoResponses = [
       {
-        pattern: new RegExp('hello', 'i'),
-        patternString: 'hello',
+        fuzzySegments: ['hello', 'hi', 'hey'],
+        patternString: 'hello, hi, hey',
         response: 'Hi there!',
         priority: 1,
         cooldown: 30,
+        fuzzyThreshold: 0.6,
       },
       {
-        pattern: new RegExp('bye', 'i'),
-        patternString: 'bye',
+        fuzzySegments: ['bye', 'goodbye'],
+        patternString: 'bye, goodbye',
         response: 'Goodbye!',
         priority: 2,
         cooldown: 0,
+        fuzzyThreshold: 0.6,
       },
     ]
 
     webhooks = [
       {
         name: 'greeting-webhook',
-        pattern: new RegExp('hello', 'i'),
-        patternString: 'hello',
+        fuzzySegments: ['hello', 'hi', 'hey'],
+        patternString: 'hello, hi, hey',
         url: 'https://example.com/webhook',
         method: 'POST',
         headers: {},
         timeout: 5000,
         retries: 3,
         priority: 1,
+        fuzzyThreshold: 0.6,
         cooldown: 60,
       },
       {
         name: 'farewell-webhook',
-        pattern: new RegExp('bye', 'i'),
-        patternString: 'bye',
+        fuzzySegments: ['bye', 'goodbye'],
+        patternString: 'bye, goodbye',
         url: 'https://example.com/farewell',
         method: 'POST',
         headers: {},
         timeout: 5000,
         retries: 3,
         priority: 2,
+        fuzzyThreshold: 0.6,
       },
     ]
   })
@@ -165,17 +169,19 @@ describe('Bot', () => {
 
     it('should prioritize higher priority responses', () => {
       const highPriority: AutoResponse = {
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         response: 'High priority',
         priority: 10,
+        fuzzyThreshold: 0.6,
       }
 
       const lowPriority: AutoResponse = {
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         response: 'Low priority',
         priority: 1,
+        fuzzyThreshold: 0.6,
       }
 
       const bot = createBot({
@@ -235,7 +241,7 @@ describe('Bot', () => {
     it('should prioritize higher priority webhooks', () => {
       const highPriority: Webhook = {
         name: 'high-priority',
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         url: 'https://example.com/high',
         method: 'POST',
@@ -243,11 +249,12 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 10,
+        fuzzyThreshold: 0.6,
       }
 
       const lowPriority: Webhook = {
         name: 'low-priority',
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         url: 'https://example.com/low',
         method: 'POST',
@@ -255,6 +262,7 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 1,
+        fuzzyThreshold: 0.6,
       }
 
       const bot = createBot({
@@ -274,7 +282,7 @@ describe('Bot', () => {
     it('should find all matching webhooks', () => {
       const webhook1: Webhook = {
         name: 'webhook1',
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         url: 'https://example.com/1',
         method: 'POST',
@@ -282,11 +290,12 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 1,
+        fuzzyThreshold: 0.6,
       }
 
       const webhook2: Webhook = {
         name: 'webhook2',
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         url: 'https://example.com/2',
         method: 'POST',
@@ -294,11 +303,12 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 2,
+        fuzzyThreshold: 0.6,
       }
 
       const webhook3: Webhook = {
         name: 'webhook3',
-        pattern: new RegExp('other', 'i'),
+        fuzzySegments: ['other'],
         patternString: 'other',
         url: 'https://example.com/3',
         method: 'POST',
@@ -306,6 +316,7 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 1,
+        fuzzyThreshold: 0.6,
       }
 
       const bot = createBot({
@@ -338,7 +349,7 @@ describe('Bot', () => {
     it('should sort webhooks by priority descending', () => {
       const webhook1: Webhook = {
         name: 'webhook1',
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         url: 'https://example.com/1',
         method: 'POST',
@@ -346,11 +357,12 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 1,
+        fuzzyThreshold: 0.6,
       }
 
       const webhook2: Webhook = {
         name: 'webhook2',
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         url: 'https://example.com/2',
         method: 'POST',
@@ -358,11 +370,12 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 5,
+        fuzzyThreshold: 0.6,
       }
 
       const webhook3: Webhook = {
         name: 'webhook3',
-        pattern: new RegExp('test', 'i'),
+        fuzzySegments: ['test'],
         patternString: 'test',
         url: 'https://example.com/3',
         method: 'POST',
@@ -370,6 +383,7 @@ describe('Bot', () => {
         timeout: 5000,
         retries: 3,
         priority: 3,
+        fuzzyThreshold: 0.6,
       }
 
       const bot = createBot({

@@ -11,15 +11,15 @@ importers:
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
-      '@types/pino':
-        specifier: ^7.0.5
-        version: 7.0.5
       commander:
         specifier: ^12.1.0
         version: 12.1.0
       express:
         specifier: ^5.1.0
         version: 5.1.0
+      fuse.js:
+        specifier: ^7.4.2
+        version: 7.4.2
       inquirer:
         specifier: ^12.4.1
         version: 12.9.6(@types/node@24.6.1)
@@ -29,6 +29,9 @@ importers:
       pino:
         specifier: ^10.0.0
         version: 10.0.0
+      pino-pretty:
+        specifier: ^13.1.2
+        version: 13.1.2
       qrcode-terminal:
         specifier: ^0.12.0
         version: 0.12.0
@@ -54,9 +57,6 @@ importers:
       jest:
         specifier: ^30.2.0
         version: 30.2.0(@types/node@24.6.1)(ts-node@10.9.2(@types/node@24.6.1)(typescript@5.9.3))
-      pino-pretty:
-        specifier: ^13.1.2
-        version: 13.1.2
       ts-jest:
         specifier: ^29.4.4
         version: 29.4.4(@babel/core@7.28.4)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.28.4))(jest-util@30.2.0)(jest@30.2.0(@types/node@24.6.1)(ts-node@10.9.2(@types/node@24.6.1)(typescript@5.9.3)))(typescript@5.9.3)
@@ -582,10 +582,6 @@ packages:
 
   '@types/node@24.6.1':
     resolution: {integrity: sha512-ljvjjs3DNXummeIaooB4cLBKg2U6SPI6Hjra/9rRIy7CpM0HpLtG9HptkMKAb4HYWy5S7HUvJEuWgr/y0U8SHw==}
-
-  '@types/pino@7.0.5':
-    resolution: {integrity: sha512-wKoab31pknvILkxAF8ss+v9iNyhw5Iu/0jLtRkUD74cNfOOLJNnqfFKAv0r7wVaTQxRZtWrMpGfShwwBjOcgcg==}
-    deprecated: This is a stub types definition. pino provides its own type definitions, so you do not need this installed.
 
   '@types/qrcode-terminal@0.12.2':
     resolution: {integrity: sha512-v+RcIEJ+Uhd6ygSQ0u5YYY7ZM+la7GgPbs0V/7l/kFs2uO4S8BcIUEMoP7za4DNIqNnUD5npf0A/7kBhrCKG5Q==}
@@ -1216,6 +1212,10 @@ packages:
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+
+  fuse.js@7.4.2:
+    resolution: {integrity: sha512-LVbzjD4WA6UP5B1UnP8wuaXJiLnqMdM/E4fiJXTJ5haJ5b/MBNsK29h2fm6swEoQaVQjvYFWKLE2RanyZIoRVQ==}
+    engines: {node: '>=10'}
 
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
@@ -2986,10 +2986,6 @@ snapshots:
     dependencies:
       undici-types: 7.13.0
 
-  '@types/pino@7.0.5':
-    dependencies:
-      pino: 10.0.0
-
   '@types/qrcode-terminal@0.12.2': {}
 
   '@types/qs@6.14.0': {}
@@ -3634,6 +3630,8 @@ snapshots:
     optional: true
 
   function-bind@1.1.2: {}
+
+  fuse.js@7.4.2: {}
 
   gensync@1.0.0-beta.2: {}
 

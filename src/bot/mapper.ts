@@ -58,6 +58,7 @@ export function mapAutoResponse(config: {
   pattern: string
   response: string
   case_insensitive?: boolean
+  fuzzy_threshold?: number
   priority?: number
   cooldown?: number
   response_options?: Record<string, any>
@@ -67,13 +68,22 @@ export function mapAutoResponse(config: {
     validatePriority(config.priority)
   }
 
-  const flags = config.case_insensitive ? 'i' : ''
+  const segments = config.pattern
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+
+  if (segments.length === 0) {
+    throw new Error('Auto-response pattern must contain at least one phrase')
+  }
+
   return {
-    pattern: new RegExp(config.pattern, flags),
+    fuzzySegments: segments,
     patternString: config.pattern,
     response: config.response,
     priority: config.priority ?? 1,
     cooldown: config.cooldown,
+    fuzzyThreshold: config.fuzzy_threshold ?? 0.6,
     responseOptions: config.response_options,
   }
 }
@@ -86,6 +96,7 @@ export function mapWebhook(config: {
   headers?: Record<string, string>
   timeout?: number
   retry?: number
+  fuzzy_threshold?: number
   priority?: number
   cooldown?: number
 }): Webhook {
@@ -95,9 +106,18 @@ export function mapWebhook(config: {
     validatePriority(config.priority)
   }
 
+  const segments = config.pattern
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0)
+
+  if (segments.length === 0) {
+    throw new Error('Webhook pattern must contain at least one phrase')
+  }
+
   return {
     name: config.name,
-    pattern: new RegExp(config.pattern, 'i'),
+    fuzzySegments: segments,
     patternString: config.pattern,
     url: config.url,
     method: config.method ?? 'POST',
@@ -105,6 +125,7 @@ export function mapWebhook(config: {
     timeout: config.timeout ?? 5000,
     retries: config.retry ?? 3,
     priority: config.priority ?? 1,
+    fuzzyThreshold: config.fuzzy_threshold ?? 0.6,
     cooldown: config.cooldown,
   }
 }

@@ -1,5 +1,6 @@
 import { Bot, Webhook, IncomingMessage, WebhookPayload } from '../bot/types'
 import { CooldownService } from './cooldown'
+import { matchFuzzy } from '../bot/fuzzy'
 import { getLogger } from '../utils/logger'
 
 export class WebhookService {
@@ -19,7 +20,9 @@ export class WebhookService {
     }
 
     const sorted = [...bot.webhooks].sort((a, b) => b.priority - a.priority)
-    const matchingWebhooks = sorted.filter(webhook => webhook.pattern.test(message.content))
+    const matchingWebhooks = sorted.filter(webhook =>
+      matchFuzzy(webhook.fuzzySegments, message.content, webhook.fuzzyThreshold)
+    )
 
     if (matchingWebhooks.length === 0) {
       return

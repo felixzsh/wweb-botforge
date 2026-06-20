@@ -1,5 +1,6 @@
 import { Bot, AutoResponse, IncomingMessage, OutgoingMessage } from '../bot/types'
 import { CooldownService } from './cooldown'
+import { matchFuzzy } from '../bot/fuzzy'
 import { getLogger } from '../utils/logger'
 
 export class AutoResponseService {
@@ -26,7 +27,9 @@ export class AutoResponseService {
     }
 
     const sorted = [...bot.autoResponses].sort((a, b) => b.priority - a.priority)
-    const matchingResponse = sorted.find(response => response.pattern.test(message.content))
+    const matchingResponse = sorted.find(response =>
+      matchFuzzy(response.fuzzySegments, message.content, response.fuzzyThreshold)
+    )
 
     if (matchingResponse) {
       const cooldownMs = (matchingResponse.cooldown || 0) * 1000

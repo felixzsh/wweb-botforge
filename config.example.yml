@@ -16,41 +16,42 @@ bots:
     name: "Customer Support"
     phone: "1234567890"  # Will be filled after WhatsApp authentication
 
-    # Auto-responses for instant replies
+    # Auto-responses with fuzzy matching (comma-separated phrases)
+    # Each phrase is matched independently — no regex needed
     auto_responses:
-      - pattern: "^(hello|hi|hey|good morning|good afternoon)$"
+      - pattern: "hello, hi, hey, good morning, good afternoon"
         response: "Hello! 👋 Welcome to our support chat. How can I help you today?"
-        case_insensitive: true
+        fuzzy_threshold: 0.6
         priority: 1
         cooldown: 30  # 30 seconds cooldown per sender
 
-      - pattern: "\\b(help|support|assist)\\b"
+      - pattern: "help, support, assist"
         response: "I'm here to help! You can ask me about:\n• Our products\n• Order status\n• Technical issues\n• Contact information"
-        case_insensitive: true
+        fuzzy_threshold: 0.6
         priority: 2
         cooldown: 60
 
-      - pattern: "\\b(hours|time|open|schedule)\\b"
+      - pattern: "hours, time, open, schedule"
         response: "🕒 Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
-        case_insensitive: true
+        fuzzy_threshold: 0.5
         priority: 1
 
-      - pattern: "\\b(thank|thanks|gracias)\\b"
+      - pattern: "thank, thanks, gracias"
         response: "You're welcome! 😊 Is there anything else I can help you with?"
-        case_insensitive: true
+        fuzzy_threshold: 0.7
         priority: 1
 
-      # Advanced response example
-      - pattern: "\\b(brochure|catalog|pdf)\\b"
+      # Stricter match for specific terms
+      - pattern: "brochure, catalog, pdf"
         response: "Here's our product catalog: https://example.com/catalog.pdf"
-        case_insensitive: true
+        fuzzy_threshold: 0.4
         priority: 2
         cooldown: 300  # 5 minutes cooldown
 
-    # Webhooks for external integrations
+    # Webhooks for external integrations (comma-separated phrases, fuzzy matched)
     webhooks:
       - name: "support-ticket"
-        pattern: "\\b(urgent|emergency|problem|issue|error)\\b"
+        pattern: "urgent, emergency, problem, issue, error"
         url: "https://api.example.com/support/tickets"
         method: "POST"
         headers:
@@ -63,7 +64,7 @@ bots:
         cooldown: 300    # 5 minutes cooldown
 
       - name: "lead-capture"
-        pattern: "\\b(interested|quote|price|cost|budget)\\b"
+        pattern: "interested, quote, price, cost, budget"
         url: "https://crm.example.com/leads"
         method: "POST"
         headers:
@@ -88,24 +89,24 @@ bots:
     phone: "1234567891"
 
     auto_responses:
-      - pattern: "^(hi|hello|hey)$"
+      - pattern: "hi, hello, hey"
         response: "Hi there! 🚀 I'm your sales assistant. Ready to help you find the perfect solution?"
-        case_insensitive: true
+        fuzzy_threshold: 0.6
         priority: 1
 
-      - pattern: "\\b(demo|trial|test|try)\\b"
+      - pattern: "demo, trial, test, try"
         response: "Great! I'd love to show you a demo. 📅 When would be a good time for you?"
-        case_insensitive: true
+        fuzzy_threshold: 0.6
         priority: 2
 
-      - pattern: "\\b(price|cost|pricing|fee)\\b"
+      - pattern: "price, cost, pricing, fee"
         response: "Our pricing starts at $29/month for the basic plan. 💰 Would you like me to send you a detailed pricing guide?"
-        case_insensitive: true
+        fuzzy_threshold: 0.6
         priority: 2
 
     webhooks:
       - name: "sales-lead"
-        pattern: "\\b(interested|buy|purchase|order|subscribe)\\b"
+        pattern: "interested, buy, purchase, order, subscribe"
         url: "https://sales.example.com/leads"
         method: "POST"
         headers:
@@ -125,11 +126,11 @@ bots:
     name: "Alert Bot"
     phone: "1234567892"
 
-    # Minimal auto-responses
+    # Catch-all response with high threshold
     auto_responses:
-      - pattern: ".*"
+      - pattern: "."
         response: "📢 This is an automated notification service. For support, please contact our team."
-        case_insensitive: false
+        fuzzy_threshold: 0.9
         priority: 1
         cooldown: 60
 
@@ -144,8 +145,9 @@ bots:
 # Notes:
 # - Bot IDs are auto-generated but you can customize them
 # - Phone numbers are filled after WhatsApp QR code authentication
-# - Patterns use regex, so escape special characters with \\
+# - All patterns use comma-separated phrases with fuzzy matching (no regex needed)
+# - fuzzy_threshold controls match strictness: 0.3=strict, 0.6=moderate (default), 0.9=loose
 # - Cooldowns prevent spam (per sender-pattern combination)
-# - Priorities determine which response matches first (lower = higher priority)
+# - Priorities determine which response matches first (higher = checked first)
 # - Webhooks support GET/POST/PUT/PATCH methods
 # - All webhook calls include sender info and message content

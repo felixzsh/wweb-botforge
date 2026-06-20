@@ -19,17 +19,18 @@ export interface BotSettings {
 }
 
 export interface AutoResponse {
-  pattern: RegExp
+  fuzzySegments: string[]
   patternString: string
   response: string
   priority: number
   cooldown?: number
+  fuzzyThreshold: number
   responseOptions?: Record<string, any>
 }
 
 export interface Webhook {
   name: string
-  pattern: RegExp
+  fuzzySegments: string[]
   patternString: string
   url: string
   method: 'GET' | 'POST' | 'PUT' | 'PATCH'
@@ -37,6 +38,7 @@ export interface Webhook {
   timeout: number
   retries: number
   priority: number
+  fuzzyThreshold: number
   cooldown?: number
 }
 
@@ -90,6 +92,7 @@ export interface AutoResponseConfig {
   pattern: string
   response: string
   case_insensitive?: boolean
+  fuzzy_threshold?: number
   priority?: number
   cooldown?: number
   response_options?: Record<string, any>
@@ -103,6 +106,7 @@ export interface WebhookConfig {
   headers?: Record<string, string>
   timeout?: number
   retry?: number
+  fuzzy_threshold?: number
   priority?: number
   cooldown?: number
 }

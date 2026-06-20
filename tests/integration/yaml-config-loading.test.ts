@@ -151,20 +151,22 @@ describe('YAML Configuration Loading Integration Tests', () => {
       )
     })
 
-    it('should throw error when auto-response pattern is invalid regex', () => {
+    it('should throw error when auto-response pattern is empty', () => {
       const invalidConfig: BotConfig = {
         id: 'test-bot',
         name: 'Test Bot',
         auto_responses: [
           {
-            pattern: '[invalid(regex',
+            pattern: '   , ',
             response: 'Test response',
             priority: 1,
           },
         ],
       }
 
-      expect(() => mapConfigToBot(invalidConfig)).toThrow()
+      expect(() => mapConfigToBot(invalidConfig)).toThrow(
+        'Auto-response pattern must contain at least one phrase'
+      )
     })
 
     it('should throw error when typing delay is negative', () => {

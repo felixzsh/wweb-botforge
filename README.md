@@ -13,8 +13,8 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 
 - 🤖 **Multiple Bots**: Run several WhatsApp bots from one server
 - 📝 **YAML Configuration**: Define bot behavior in simple YAML files
-- 💬 **Auto-Responses**: Set up instant replies to common messages
-- 🔗 **Webhooks**: Connect to your existing apps in any language.
+- 💬 **Auto-Responses**: Set up instant replies using fuzzy matching — no regex needed
+- 🔗 **Webhooks**: Connect to your existing apps in any language
 - 🌐 **REST API**: Send messages programmatically (optional)
 - 🚀 **Systemd Service**: Run as a proper system service with auto-restart
 
@@ -86,28 +86,34 @@ Each bot in your `config.yml` can have:
 - **`id`**: Unique identifier (auto-generated)
 - **`name`**: Display name
 - **`phone`**: Phone number (auto-filled after WhatsApp authentication)
-- **`auto_responses`**: Instant replies based on message patterns
+- **`auto_responses`**: Instant replies using fuzzy matching
 - **`webhooks`**: HTTP requests to external services
 - **`settings`**: Bot behavior options
 
 ### Auto-Responses
 
+Auto-responses use **fuzzy matching** against comma-separated phrases. The bot will match messages that are similar to any of the configured phrases — no regex knowledge needed.
+
 ```yaml
 auto_responses:
-  - pattern: "your regex pattern"
-    response: "Your reply message"
-    case_insensitive: true  # optional
-    priority: 1            # optional, lower = higher priority
-    cooldown: 30           # optional, cooldown in seconds per sender-pattern
+  - pattern: "hello, hi, hey, good morning"
+    response: "Hello! How can I help you?"
+    fuzzy_threshold: 0.6   # optional, 0=exact, 1=very loose (default: 0.6)
+    priority: 1            # optional, higher = checked first (default: 1)
+    cooldown: 30           # optional, cooldown in seconds per sender (default: none)
 ```
+
+- **`pattern`**: Comma-separated phrases. Each phrase is fuzzy-matched independently against incoming messages.
+- **`fuzzy_threshold`**: How strict the match is. `0.3` = very strict (exact words), `0.6` = moderate (typos and variations ok), `0.9` = very loose.
 
 
 ### Webhooks
 
-Webhooks allow your bot to send HTTP requests to external services when messages match specific patterns. This enables integration with APIs, notification systems, and other services.
+Webhooks allow your bot to send HTTP requests to external services when messages match specific phrases. This enables integration with APIs, notification systems, and other services.
 
 **Features:**
 - **Outbound HTTP requests**: Bot makes POST/PUT/GET requests to configured URLs
+- **Fuzzy matching**: Same fuzzy matching as auto-responses, comma-separated phrases
 - **Cooldown support**: Same cooldown system as auto-responses
 - **Retry logic**: Automatic retries with exponential backoff
 - **Custom headers**: Authentication and custom headers
@@ -119,9 +125,10 @@ Webhooks allow your bot to send HTTP requests to external services when messages
 ```yaml
 webhooks:
   - name: "order-webhook"
-    pattern: "nuevo pedido|new order"
+    pattern: "new order, nuevo pedido, compra"
     url: "https://api.example.com/orders"
     method: "POST"
+    fuzzy_threshold: 0.5
     headers:
       Authorization: "Bearer your-token"
       Content-Type: "application/json"
@@ -143,7 +150,7 @@ When triggered, the webhook sends a JSON payload:
   "botId": "bot-1",
   "botName": "My Bot",
   "webhookName": "order-webhook",
-  "webhookPattern": "nuevo pedido|new order",
+  "webhookPattern": "new order, nuevo pedido, compra",
   "metadata": {}
 }
 ```
@@ -161,11 +168,11 @@ Example with auto-responses:
 
 ```yaml
 auto_responses:
-  - pattern: "help|support"
+  - pattern: "help, support, assist"
     response: "How can I help you?"
     cooldown: 60  # 1 minute cooldown per sender for this pattern
 
-  - pattern: "price|cost"
+  - pattern: "price, cost, pricing"
     response: "Check our pricing at example.com/pricing"
     cooldown: 300  # 5 minutes cooldown
 ```
@@ -175,7 +182,7 @@ Example with webhooks:
 ```yaml
 webhooks:
   - name: "order-webhook"
-    pattern: "nuevo pedido|new order"
+    pattern: "new order, nuevo pedido"
     url: "https://api.example.com/orders"
     method: "POST"
     cooldown: 120  # 2 minutes cooldown per sender for this webhook
@@ -220,11 +227,14 @@ bots:
   - id: support-bot
     name: "Support Bot"
     auto_responses:
-      - pattern: "hours|time"
+      - pattern: "hours, time, schedule, open"
         response: "We're open Mon-Fri 9am-6pm, Sat 10am-2pm"
 
-      - pattern: "price|cost"
+      - pattern: "price, cost, pricing"
         response: "Check our pricing at website.com/pricing"
+
+      - pattern: "contact, email, phone, call"
+        response: "Email us at support@example.com or call +1-555-1234"
 ```
 
 ### Multi-Bot Setup
@@ -279,8 +289,8 @@ bots:
 
 **Messages not responding?**
 - Check bot status in logs
-- Verify regex patterns in config
-- Test with simple messages first
+- Verify phrase patterns in config
+- Test with exact phrases first, then tune `fuzzy_threshold`
 
 **Webhook not working?**
 - Test your endpoint with tools like Postman
@@ -298,7 +308,3 @@ MIT License - see [LICENSE](LICENSE) file.
 This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WWeb BotForge wouldn't be possible without this foundational work.
 
 **Made with ❤️ for the no-code bot community**
-
-
-
-

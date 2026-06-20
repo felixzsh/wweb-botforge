@@ -49,18 +49,21 @@ describe('Mapper', () => {
       const autoResponse = mapAutoResponse(config)
 
       expect(autoResponse.patternString).toBe('hello')
+      expect(autoResponse.fuzzySegments).toEqual(['hello'])
       expect(autoResponse.response).toBe('Hi there!')
       expect(autoResponse.priority).toBe(1)
       expect(autoResponse.cooldown).toBeUndefined()
+      expect(autoResponse.fuzzyThreshold).toBe(0.6)
     })
 
     it('should map auto-response with custom values', () => {
       const config = {
-        pattern: 'help',
+        pattern: 'help, assist, support',
         response: 'How can I help?',
         priority: 5,
         cooldown: 60,
         case_insensitive: true,
+        fuzzy_threshold: 0.3,
         response_options: { linkPreview: false },
       }
 
@@ -68,33 +71,30 @@ describe('Mapper', () => {
 
       expect(autoResponse.priority).toBe(5)
       expect(autoResponse.cooldown).toBe(60)
+      expect(autoResponse.fuzzySegments).toEqual(['help', 'assist', 'support'])
+      expect(autoResponse.fuzzyThreshold).toBe(0.3)
       expect(autoResponse.responseOptions).toEqual({ linkPreview: false })
     })
 
-    it('should create case-insensitive pattern when specified', () => {
+    it('should split pattern by comma into fuzzy segments', () => {
       const config = {
-        pattern: 'Hello',
-        response: 'Hi!',
-        case_insensitive: true,
+        pattern: 'hola, buenos dias, hey',
+        response: 'Saludos!',
       }
 
       const autoResponse = mapAutoResponse(config)
 
-      expect(autoResponse.pattern.test('HELLO')).toBe(true)
-      expect(autoResponse.pattern.test('hello')).toBe(true)
+      expect(autoResponse.fuzzySegments).toEqual(['hola', 'buenos dias', 'hey'])
+      expect(autoResponse.patternString).toBe('hola, buenos dias, hey')
     })
 
-    it('should create case-sensitive pattern by default', () => {
+    it('should throw error for empty pattern', () => {
       const config = {
-        pattern: 'Hello',
-        response: 'Hi!',
-        case_insensitive: false,
+        pattern: '   ,   ',
+        response: 'Response',
       }
 
-      const autoResponse = mapAutoResponse(config)
-
-      expect(autoResponse.pattern.test('Hello')).toBe(true)
-      expect(autoResponse.pattern.test('hello')).toBe(false)
+      expect(() => mapAutoResponse(config)).toThrow('Auto-response pattern must contain at least one phrase')
     })
   })
 
@@ -102,30 +102,33 @@ describe('Mapper', () => {
     it('should map webhook with default values', () => {
       const config = {
         name: 'test-webhook',
-        pattern: 'order',
+        pattern: 'order, pedido',
         url: 'https://api.example.com/orders',
       }
 
       const webhook = mapWebhook(config)
 
       expect(webhook.name).toBe('test-webhook')
-      expect(webhook.patternString).toBe('order')
+      expect(webhook.patternString).toBe('order, pedido')
+      expect(webhook.fuzzySegments).toEqual(['order', 'pedido'])
       expect(webhook.url).toBe('https://api.example.com/orders')
       expect(webhook.method).toBe('POST')
       expect(webhook.timeout).toBe(5000)
       expect(webhook.retries).toBe(3)
       expect(webhook.priority).toBe(1)
+      expect(webhook.fuzzyThreshold).toBe(0.6)
       expect(webhook.headers).toEqual({})
     })
 
     it('should map webhook with custom values', () => {
       const config = {
         name: 'custom-webhook',
-        pattern: 'custom',
+        pattern: 'custom, personalized',
         url: 'https://api.example.com/custom',
         method: 'PUT' as const,
         timeout: 10000,
         retry: 5,
+        fuzzy_threshold: 0.3,
         priority: 2,
         cooldown: 120,
         headers: {
@@ -140,21 +143,23 @@ describe('Mapper', () => {
       expect(webhook.timeout).toBe(10000)
       expect(webhook.retries).toBe(5)
       expect(webhook.priority).toBe(2)
+      expect(webhook.fuzzyThreshold).toBe(0.3)
+      expect(webhook.fuzzySegments).toEqual(['custom', 'personalized'])
       expect(webhook.cooldown).toBe(120)
       expect(webhook.headers['Authorization']).toBe('Bearer token123')
     })
 
-    it('should create case-insensitive pattern for webhooks', () => {
+    it('should split webhook pattern by comma', () => {
       const config = {
         name: 'test',
-        pattern: 'ORDER',
+        pattern: 'order, purchase, buy',
         url: 'https://example.com',
       }
 
       const webhook = mapWebhook(config)
 
-      expect(webhook.pattern.test('order')).toBe(true)
-      expect(webhook.pattern.test('ORDER')).toBe(true)
+      expect(webhook.fuzzySegments).toEqual(['order', 'purchase', 'buy'])
+      expect(webhook.patternString).toBe('order, purchase, buy')
     })
   })
 
@@ -245,21 +250,6 @@ describe('Mapper', () => {
       }
 
       expect(() => mapConfigToBot(config)).toThrow('Bot name cannot be empty')
-    })
-
-    it('should throw error for invalid regex pattern', () => {
-      const config: BotConfig = {
-        id: 'test-bot',
-        name: 'Test Bot',
-        auto_responses: [
-          {
-            pattern: '[invalid(regex',
-            response: 'Response',
-          },
-        ],
-      }
-
-      expect(() => mapConfigToBot(config)).toThrow()
     })
   })
 
