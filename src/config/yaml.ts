@@ -93,6 +93,30 @@ async function loadFlowsFromDir(dirPath: string): Promise<Record<string, FlowCon
   return flows
 }
 
+async function loadBotsFromDir(dirPath: string): Promise<Record<string, BotConfig>> {
+  const bots: Record<string, BotConfig> = {}
+
+  if (!fsSync.existsSync(dirPath)) {
+    return bots
+  }
+
+  const entries = await fs.readdir(dirPath)
+  const files = entries.filter(file => file.endsWith('.yml') || file.endsWith('.yaml'))
+
+  for (const file of files) {
+    const id = path.basename(file, path.extname(file))
+    const filePath = path.join(dirPath, file)
+    const content = await fs.readFile(filePath, 'utf8')
+    const parsed = yaml.load(content) as BotConfig
+
+    if (parsed && typeof parsed === 'object') {
+      bots[id] = parsed
+    }
+  }
+
+  return bots
+}
+
 export async function loadConfig(customPath?: string): Promise<ConfigFile> {
   const targetPath = customPath || getConfigPath()
   const logger = getLogger()
@@ -102,16 +126,24 @@ export async function loadConfig(customPath?: string): Promise<ConfigFile> {
     const processedContent = await processIncludes(rawContent, path.dirname(targetPath))
     const config = yaml.load(processedContent) as ConfigFile
 
-    if (!config.bots || typeof config.bots !== 'object') {
-      throw new Error('Configuration must contain a "bots" object')
+    if (config.bots !== undefined && config.bots !== null) {
+      if (typeof config.bots !== 'object' || Array.isArray(config.bots)) {
+        throw new Error('Configuration must contain a "bots" object')
+      }
     }
 
     const baseDir = path.dirname(targetPath)
     const actionsFromDir = await loadActionsFromDir(path.join(baseDir, 'actions'))
     const flowsFromDir = await loadFlowsFromDir(path.join(baseDir, 'flows'))
+    const botsFromDir = await loadBotsFromDir(path.join(baseDir, 'bots'))
 
     config.actions = { ...actionsFromDir, ...config.actions }
     config.flows = { ...flowsFromDir, ...config.flows }
+    config.bots = { ...botsFromDir, ...config.bots }
+
+    if (!config.bots || typeof config.bots !== 'object' || Object.keys(config.bots).length === 0) {
+      throw new Error('Configuration must contain a "bots" object with at least one bot')
+    }
 
     return config
   } catch (error) {
