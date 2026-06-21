@@ -28,6 +28,8 @@ function mapAction(id: string, config: ActionConfig): ActionDef {
     id,
     reply: config.reply,
     webhook: config.webhook ? mapWebhookAction(config.webhook) : undefined,
+    cooldown: config.cooldown,
+    cooldownReply: config.cooldown_reply,
   }
 }
 

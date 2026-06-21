@@ -11,6 +11,8 @@ export interface ActionDef {
   id: string
   reply?: string
   webhook?: WebhookAction
+  cooldown?: number
+  cooldownReply?: string
 }
 
 export type ActionCatalog = Map<string, ActionDef>

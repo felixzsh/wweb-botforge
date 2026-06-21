@@ -107,6 +107,8 @@ export interface WebhookActionConfig {
 export interface ActionConfig {
   reply?: string
   webhook?: WebhookActionConfig
+  cooldown?: number
+  cooldown_reply?: string
 }
 
 export interface FlowBranchConfig {

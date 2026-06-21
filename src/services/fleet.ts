@@ -64,7 +64,8 @@ export class BotFleet {
         this.flowCatalog,
         this.flowStateService,
         this.outboxService,
-        flowStateTimeout
+        flowStateTimeout,
+        this.cooldownService
       )
       this.inboxService.setFlowExecutor(this.flowExecutor)
 

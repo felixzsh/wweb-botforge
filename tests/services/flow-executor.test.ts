@@ -4,6 +4,7 @@ import * as os from 'os'
 import { FlowExecutor } from '../../src/services/flow-executor'
 import { FlowStateService } from '../../src/services/flow-state'
 import { OutboxService } from '../../src/services/outbox'
+import { CooldownService } from '../../src/services/cooldown'
 import { mapActionCatalog } from '../../src/action/catalog'
 import { mapFlowCatalog } from '../../src/flow/mapper'
 import { Bot, IncomingMessage } from '../../src/bot/types'
@@ -12,6 +13,7 @@ import { ActionConfig, FlowConfig } from '../../src/bot/types'
 describe('FlowExecutor', () => {
   let dbPath: string
   let flowStateService: FlowStateService
+  let cooldownService: CooldownService
   let outboxService: OutboxService
   let executor: FlowExecutor
   let bot: Bot
@@ -20,6 +22,7 @@ describe('FlowExecutor', () => {
   beforeEach(() => {
     dbPath = path.join(os.tmpdir(), `botforge-flow-test-${Date.now()}.db`)
     flowStateService = new FlowStateService(dbPath)
+    cooldownService = new CooldownService()
     sentMessages = []
     outboxService = {
       enqueue: (_botId: string, to: string, content: string) => {
@@ -34,6 +37,7 @@ describe('FlowExecutor', () => {
       prices: { reply: 'From $10/mo' },
       invalid: { reply: 'Invalid option' },
       farewell: { reply: 'Goodbye!' },
+      escalate: { reply: 'Escalating to human.', cooldown: 30, cooldown_reply: 'Please wait, action on cooldown.' },
     }
 
     const flows: Record<string, FlowConfig> = {
@@ -49,6 +53,7 @@ describe('FlowExecutor', () => {
             branches: [
               { when: '1, hours', goto: 'hours' },
               { when: '2, prices', goto: 'prices' },
+              { when: '3, human', goto: 'escalate' },
               { when: '0, exit', goto: 'end' },
               { goto: 'invalid' },
             ],
@@ -62,6 +67,13 @@ describe('FlowExecutor', () => {
           },
           prices: {
             action: 'prices',
+            branches: [
+              { when: 'menu, back', goto: 'menu' },
+              { goto: 'invalid' },
+            ],
+          },
+          escalate: {
+            action: 'escalate',
             branches: [
               { when: 'menu, back', goto: 'menu' },
               { goto: 'invalid' },
@@ -86,7 +98,8 @@ describe('FlowExecutor', () => {
       mapFlowCatalog(flows),
       flowStateService,
       outboxService,
-      300
+      300,
+      cooldownService
     )
 
     bot = {
@@ -188,5 +201,42 @@ describe('FlowExecutor', () => {
 
     const newSession = flowStateService.findActive('521234567890', 'support-bot')
     expect(newSession?.stepId).toBe('menu')
+  })
+
+  describe('cooldown on actions', () => {
+    it('should execute action normally when no cooldown active', async () => {
+      await executor.handleMessage(bot, makeMessage('menu'))
+      const handled = await executor.handleMessage(bot, makeMessage('human'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[1].content).toBe('Escalating to human.')
+    })
+
+    it('should send cooldown_reply when action on cooldown', async () => {
+      await executor.handleMessage(bot, makeMessage('menu'))
+      await executor.handleMessage(bot, makeMessage('human'))
+
+      expect(sentMessages[1].content).toBe('Escalating to human.')
+
+      await executor.handleMessage(bot, makeMessage('menu'))
+      const handled = await executor.handleMessage(bot, makeMessage('human'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[3].content).toBe('Please wait, action on cooldown.')
+    })
+
+    it('should navigate from cooldown state naturally', async () => {
+      await executor.handleMessage(bot, makeMessage('menu'))
+      await executor.handleMessage(bot, makeMessage('human'))
+      await executor.handleMessage(bot, makeMessage('menu'))
+      await executor.handleMessage(bot, makeMessage('human'))
+
+      expect(sentMessages[3].content).toBe('Please wait, action on cooldown.')
+
+      const handled = await executor.handleMessage(bot, makeMessage('menu'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[4].content).toContain('Menu:')
+    })
   })
 })

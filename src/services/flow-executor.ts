@@ -1,9 +1,11 @@
 import { Bot, IncomingMessage, WebhookPayload } from '../bot/types'
 import { ActionCatalog, ActionExecutionContext } from '../action/types'
 import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FlowState } from '../flow/types'
-import { executeAction } from '../action/executor'
+import { executeAction, getAction } from '../action/executor'
+import { resolveVars } from '../action/template'
 import { FlowStateService } from './flow-state'
 import { OutboxService } from './outbox'
+import { CooldownService } from './cooldown'
 import { sendWebhookRequest } from '../utils/webhook'
 import { matchFuzzy } from '../bot/fuzzy'
 import { getLogger } from '../utils/logger'
@@ -14,7 +16,8 @@ export class FlowExecutor {
     private flowCatalog: FlowCatalog,
     private flowStateService: FlowStateService,
     private outboxService: OutboxService,
-    private defaultTimeout: number = 300
+    private defaultTimeout: number = 300,
+    private cooldownService?: CooldownService
   ) {}
 
   private get logger() {
@@ -86,7 +89,11 @@ export class FlowExecutor {
         continue
       }
 
-      await this.executeStepAction(bot, message, entryStep, {})
+      const consumed = await this.executeStepAction(bot, message, entryStep, {})
+
+      if (!consumed) {
+        return false
+      }
 
       if (entryStep.branches.length === 0) {
         this.flowStateService.destroyBySenderBot(message.from, bot.id)
@@ -129,7 +136,7 @@ export class FlowExecutor {
     message: IncomingMessage,
     step: FlowStep,
     variables: Record<string, any>
-  ): Promise<void> {
+  ): Promise<boolean> {
     const context: ActionExecutionContext = {
       botId: bot.id,
       botName: bot.name,
@@ -138,7 +145,20 @@ export class FlowExecutor {
       variables,
     }
 
+    if (this.isActionOnCooldown(bot, step.action, message.from)) {
+      const action = getAction(this.actionCatalog, step.action)
+      if (action.cooldownReply) {
+        const reply = resolveVars(action.cooldownReply, context)
+        this.outboxService.enqueue(bot.id, message.from, reply)
+        this.logger.info(`Cooldown reply sent for action "${step.action}" to ${message.from}`)
+        return true
+      }
+      this.logger.warn(`Action "${step.action}" on cooldown, no cooldown_reply defined, skipping`)
+      return false
+    }
+
     const result = executeAction(this.actionCatalog, step.action, context)
+    this.setActionCooldown(step.action, message.from)
 
     if (result.reply) {
       this.outboxService.enqueue(bot.id, message.from, result.reply)
@@ -159,6 +179,37 @@ export class FlowExecutor {
         this.logger.error(`Failed to trigger webhook action for bot "${bot.name}":`, error)
       }
     }
+
+    return true
+  }
+
+  private isActionOnCooldown(bot: Bot, actionId: string, sender: string): boolean {
+    if (!this.cooldownService) {
+      return false
+    }
+
+    const action = getAction(this.actionCatalog, actionId)
+    if (!action.cooldown || action.cooldown <= 0) {
+      return false
+    }
+
+    const cooldownMs = action.cooldown * 1000
+    const cooldownKey = `action:${actionId}`
+
+    return this.cooldownService.isOnCooldown(sender, cooldownKey, cooldownMs)
+  }
+
+  private setActionCooldown(actionId: string, sender: string): void {
+    if (!this.cooldownService) {
+      return
+    }
+
+    const action = getAction(this.actionCatalog, actionId)
+    if (!action.cooldown || action.cooldown <= 0) {
+      return
+    }
+
+    this.cooldownService.setCooldown(sender, `action:${actionId}`)
   }
 
   private findMatchingBranch(branches: FlowBranch[], message: string): FlowBranch | null {
