@@ -1,0 +1,6 @@
+flows:
+  - id: faq
+    priority: 5
+settings:
+  queue_delay: 1000
+  ignore_groups: false

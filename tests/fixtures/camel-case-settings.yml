@@ -1,9 +1,0 @@
-bots:
-  - id: camel-bot
-    name: "Camel Case Bot"
-    settings:
-      simulateTyping: false
-      queueDelay: 2000
-      readReceipts: false
-      ignoreGroups: false
-      adminNumbers: ["+521234567891"]

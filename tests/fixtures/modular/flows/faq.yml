@@ -1,0 +1,20 @@
+entry_step: menu
+triggers: "menu, help, faq"
+fallback_step: invalid
+steps:
+  menu:
+    action: menu
+    branches:
+      - when: "1, hours"
+        goto: hours
+      - goto: invalid
+  hours:
+    action: hours
+    branches:
+      - when: "menu, back"
+        goto: menu
+      - goto: invalid
+  invalid:
+    action: invalid
+    branches:
+      - goto: menu

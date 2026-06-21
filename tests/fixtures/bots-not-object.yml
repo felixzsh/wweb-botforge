@@ -1,0 +1,1 @@
+bots: "this should fail because bots is not an object"

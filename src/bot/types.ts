@@ -124,6 +124,5 @@ export interface WebhookPayload {
   botId: string
   botName: string
   webhookName: string
-  webhookPattern?: string
   metadata: Record<string, any>
 }

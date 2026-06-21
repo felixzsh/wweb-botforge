@@ -1,0 +1,15 @@
+bots:
+  test-bot:
+    flows:
+      - id: notify-flow
+actions:
+  notify:
+    webhook:
+      url: "https://example.com/hook"
+flows:
+  notify-flow:
+    entry_step: trigger
+    steps:
+      trigger:
+        action: notify
+        branches: []

@@ -1,0 +1,15 @@
+bots:
+  test-bot:
+    flows:
+      - id: broken-flow
+actions:
+  broken-action:
+    cooldown: 30
+    cooldown_reply: "Wait"
+flows:
+  broken-flow:
+    entry_step: start
+    steps:
+      start:
+        action: broken-action
+        branches: []

@@ -1,0 +1,4 @@
+bots:
+  bad-bot:
+    settings:
+      queue_delay: -500

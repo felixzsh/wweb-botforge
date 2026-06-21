@@ -1,0 +1,12 @@
+bots:
+  bad-bot:
+    flows:
+      - id: some-flow
+        priority: -1
+flows:
+  some-flow:
+    entry_step: start
+    steps:
+      start:
+        action: greet
+        branches: []

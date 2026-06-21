@@ -1,11 +1,22 @@
 bots:
-  - id: extra-bot
-    name: "Bot with extra fields"
-    extra_field: "ignored"
-    another: 123
+  tolerant-bot:
+    unknown_field: "should be ignored"
+    another_extra: 42
+    flows:
+      - id: simple-flow
     settings:
-      simulate_typing: true
-    auto_responses:
-      - pattern: "hello"
-        response: "Hi!"
-        extra_in_response: "ignored"
+      simulate_typing: false
+      unknown_setting: true
+      extra_nested: { a: 1 }
+actions:
+  greet:
+    reply: "Hello!"
+    unknown_action_field: "ignored"
+flows:
+  simple-flow:
+    entry_step: start
+    unknown_flow_field: true
+    steps:
+      start:
+        action: greet
+        branches: []

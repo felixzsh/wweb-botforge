@@ -1,3 +1,0 @@
-bots:
-  - !include bots/soporte-bot.yml
-  - !include bots/ventas-bot.yml

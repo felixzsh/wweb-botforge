@@ -1,0 +1,126 @@
+global:
+  chromiumPath: "/usr/bin/chromium"
+  apiPort: 3000
+  apiEnabled: true
+  logLevel: "info"
+  sessionTimeout: 300
+
+actions:
+  greet:
+    reply: "Hello! How can I help you today?"
+
+  escalate:
+    reply: "Connecting you to a human agent."
+    webhook:
+      name: escalate-human
+      url: "https://api.example.com/support/escalate"
+      method: POST
+      headers:
+        Authorization: "Bearer token"
+      timeout: 10000
+      retry: 3
+    cooldown: 120
+    cooldown_reply: "You already requested a human agent. Please wait."
+
+  lead-notify:
+    webhook:
+      name: lead-capture
+      url: "https://crm.example.com/leads"
+      method: POST
+      headers:
+        X-API-Key: "key"
+      timeout: 5000
+      retry: 2
+
+  menu:
+    reply: "Main menu:\n1. Hours\n2. Pricing\n0. Exit"
+
+  hours:
+    reply: "Mon-Fri 9am-6pm, Sat 10am-2pm"
+
+  pricing:
+    reply: "Our pricing starts at $29/month."
+
+  invalid:
+    reply: "That option is not valid."
+
+  farewell:
+    reply: "Thanks! Bye."
+
+  pong:
+    reply: "pong!"
+
+flows:
+  faq-support:
+    entry_step: menu
+    triggers: "menu, hola, hello, help"
+    timeout: 300
+    fallback_step: invalid
+    steps:
+      menu:
+        action: menu
+        branches:
+          - when: "1, hours, schedule"
+            goto: hours
+          - when: "2, pricing, price"
+            goto: pricing
+          - when: "3, human, agent"
+            goto: escalate-flow
+          - goto: invalid
+      hours:
+        action: hours
+        branches:
+          - when: "menu, back"
+            goto: menu
+          - goto: invalid
+      pricing:
+        action: pricing
+        branches:
+          - when: "menu, back"
+            goto: menu
+          - goto: invalid
+      escalate-flow:
+        action: escalate
+        branches: []
+      invalid:
+        action: invalid
+        branches:
+          - goto: menu
+      end:
+        action: farewell
+        branches: []
+
+  ping-pong:
+    entry_step: ping
+    triggers: "ping"
+    steps:
+      ping:
+        action: pong
+        branches: []
+
+bots:
+  support-bot:
+    flows:
+      - id: faq-support
+        priority: 10
+      - id: ping-pong
+        priority: 5
+    settings:
+      queue_delay: 1500
+      simulate_typing: true
+      typing_delay: 1000
+      read_receipts: true
+      ignore_groups: true
+      ignored_senders:
+        - "status@broadcast"
+      admin_numbers:
+        - "9999999999"
+
+  sales-bot:
+    flows:
+      - id: faq-support
+        priority: 10
+    settings:
+      queue_delay: 1000
+      ignore_groups: false
+      ignored_senders: []

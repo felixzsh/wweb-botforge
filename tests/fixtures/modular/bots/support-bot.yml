@@ -1,0 +1,7 @@
+flows:
+  - id: faq
+    priority: 10
+settings:
+  queue_delay: 1500
+  simulate_typing: true
+  ignore_groups: true

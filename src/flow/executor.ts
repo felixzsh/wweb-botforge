@@ -245,7 +245,6 @@ export class FlowExecutor {
       botId: bot.id,
       botName: bot.id,
       webhookName,
-      webhookPattern: '',
       metadata: message.metadata || {},
     }
   }

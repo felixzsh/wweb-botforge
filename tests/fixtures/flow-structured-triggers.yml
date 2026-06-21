@@ -1,0 +1,17 @@
+bots:
+  test-bot:
+    flows:
+      - id: fancy-flow
+actions:
+  greet:
+    reply: "Hello!"
+flows:
+  fancy-flow:
+    entry_step: start
+    triggers:
+      - phrases: "hola, hello, hi"
+        fuzzy_threshold: 0.4
+    steps:
+      start:
+        action: greet
+        branches: []
