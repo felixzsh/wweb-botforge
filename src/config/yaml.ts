@@ -3,7 +3,7 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { ConfigFile, BotConfig } from '../bot/types'
+import { ConfigFile, BotConfig, ActionConfig, FlowConfig } from '../bot/types'
 import { getLogger } from '../utils/logger'
 
 let configPath: string
@@ -45,6 +45,54 @@ async function processIncludes(content: string, baseDir: string): Promise<string
   return processedLines.join('\n')
 }
 
+async function loadActionsFromDir(dirPath: string): Promise<Record<string, ActionConfig>> {
+  const actions: Record<string, ActionConfig> = {}
+
+  if (!fsSync.existsSync(dirPath)) {
+    return actions
+  }
+
+  const entries = await fs.readdir(dirPath)
+  const files = entries.filter(file => file.endsWith('.yml') || file.endsWith('.yaml'))
+
+  for (const file of files) {
+    const id = path.basename(file, path.extname(file))
+    const filePath = path.join(dirPath, file)
+    const content = await fs.readFile(filePath, 'utf8')
+    const parsed = yaml.load(content) as ActionConfig
+
+    if (parsed && typeof parsed === 'object') {
+      actions[id] = parsed
+    }
+  }
+
+  return actions
+}
+
+async function loadFlowsFromDir(dirPath: string): Promise<Record<string, FlowConfig>> {
+  const flows: Record<string, FlowConfig> = {}
+
+  if (!fsSync.existsSync(dirPath)) {
+    return flows
+  }
+
+  const entries = await fs.readdir(dirPath)
+  const files = entries.filter(file => file.endsWith('.yml') || file.endsWith('.yaml'))
+
+  for (const file of files) {
+    const id = path.basename(file, path.extname(file))
+    const filePath = path.join(dirPath, file)
+    const content = await fs.readFile(filePath, 'utf8')
+    const parsed = yaml.load(content) as FlowConfig
+
+    if (parsed && typeof parsed === 'object' && parsed.steps) {
+      flows[id] = parsed
+    }
+  }
+
+  return flows
+}
+
 export async function loadConfig(customPath?: string): Promise<ConfigFile> {
   const targetPath = customPath || getConfigPath()
   const logger = getLogger()
@@ -57,6 +105,13 @@ export async function loadConfig(customPath?: string): Promise<ConfigFile> {
     if (!config.bots || !Array.isArray(config.bots)) {
       throw new Error('Configuration must contain a "bots" array')
     }
+
+    const baseDir = path.dirname(targetPath)
+    const actionsFromDir = await loadActionsFromDir(path.join(baseDir, 'actions'))
+    const flowsFromDir = await loadFlowsFromDir(path.join(baseDir, 'flows'))
+
+    config.actions = { ...actionsFromDir, ...config.actions }
+    config.flows = { ...flowsFromDir, ...config.flows }
 
     return config
   } catch (error) {

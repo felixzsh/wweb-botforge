@@ -1,12 +1,20 @@
+import * as path from 'path'
 import { Bot, ConfigFile, BotConfig } from '../bot/types'
 import { mapBotsFromConfig } from '../bot/mapper'
+import { mapActionCatalog } from '../action/catalog'
+import { mapFlowCatalog } from '../flow/mapper'
+import { ActionCatalog } from '../action/types'
+import { FlowCatalog } from '../flow/types'
 import { AutoResponseService } from './auto-response'
 import { WebhookService } from './webhook'
 import { CooldownService } from './cooldown'
 import { OutboxService } from './outbox'
 import { InboxService } from './inbox'
+import { FlowStateService } from './flow-state'
+import { FlowExecutor } from './flow-executor'
 import { SessionManager } from '../whatsapp/session'
 import { setGlobalConfig } from '../whatsapp/client'
+import { getConfigPath } from '../config/yaml'
 import { getLogger } from '../utils/logger'
 
 export class BotFleet {
@@ -17,6 +25,10 @@ export class BotFleet {
   private outboxService: OutboxService
   private inboxService: InboxService
   private sessionManager: SessionManager
+  private actionCatalog: ActionCatalog = new Map()
+  private flowCatalog: FlowCatalog = new Map()
+  private flowStateService?: FlowStateService
+  private flowExecutor?: FlowExecutor
   private isRunning: boolean = false
 
   constructor(outboxService: OutboxService) {
@@ -39,6 +51,23 @@ export class BotFleet {
     }
 
     try {
+      this.actionCatalog = mapActionCatalog(configFile.actions || {})
+      this.flowCatalog = mapFlowCatalog(configFile.flows || {})
+
+      const configDir = path.dirname(getConfigPath())
+      const flowStateDbPath = path.join(configDir, 'flows.db')
+      this.flowStateService = new FlowStateService(flowStateDbPath)
+
+      const flowStateTimeout = configFile.global?.sessionTimeout ?? 300
+      this.flowExecutor = new FlowExecutor(
+        this.actionCatalog,
+        this.flowCatalog,
+        this.flowStateService,
+        this.outboxService,
+        flowStateTimeout
+      )
+      this.inboxService.setFlowExecutor(this.flowExecutor)
+
       if (configFile.bots.length === 0) {
         this.logger.warn('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.')
         return this.bots
@@ -79,6 +108,7 @@ export class BotFleet {
     try {
       await this.outboxService.shutdown()
       await this.sessionManager.removeAllChannels()
+      this.flowStateService?.close()
       this.bots.clear()
 
       this.isRunning = false

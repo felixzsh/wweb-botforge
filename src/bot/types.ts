@@ -1,8 +1,14 @@
+export interface BehaviorRef {
+  flowId: string
+  priority: number
+}
+
 export interface Bot {
   id: string
   name: string
   phone?: string
   settings: BotSettings
+  behaviors: BehaviorRef[]
   autoResponses: AutoResponse[]
   webhooks: Webhook[]
   channel?: MessageChannel
@@ -73,6 +79,7 @@ export interface BotConfig {
   id: string
   name: string
   phone?: string
+  behaviors?: BehaviorConfig[]
   auto_responses?: AutoResponseConfig[]
   webhooks?: WebhookConfig[]
   settings?: BotSettingsConfig
@@ -86,6 +93,45 @@ export interface BotSettingsConfig {
   ignore_groups?: boolean
   ignored_senders?: string[]
   admin_numbers?: string[]
+}
+
+export interface WebhookActionConfig {
+  name?: string
+  url: string
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH'
+  headers?: Record<string, string>
+  timeout?: number
+  retry?: number
+}
+
+export interface ActionConfig {
+  reply?: string
+  webhook?: WebhookActionConfig
+}
+
+export interface FlowBranchConfig {
+  when?: string | string[]
+  fuzzy_threshold?: number
+  goto: string
+}
+
+export interface FlowStepConfig {
+  triggers?: string | string[] | Array<{ phrases: string | string[]; fuzzy_threshold?: number }>
+  action: string
+  branches?: FlowBranchConfig[]
+}
+
+export interface FlowConfig {
+  name?: string
+  entry: string
+  timeout?: number
+  fallback_step?: string
+  steps: Record<string, FlowStepConfig>
+}
+
+export interface BehaviorConfig {
+  flow: string
+  priority?: number
 }
 
 export interface AutoResponseConfig {
@@ -117,7 +163,10 @@ export interface ConfigFile {
     logLevel?: 'info' | 'debug' | 'warn' | 'error'
     apiPort?: number
     apiEnabled?: boolean
+    sessionTimeout?: number
   }
+  actions?: Record<string, ActionConfig>
+  flows?: Record<string, FlowConfig>
   bots: BotConfig[]
 }
 

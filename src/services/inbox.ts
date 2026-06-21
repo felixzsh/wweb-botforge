@@ -2,6 +2,7 @@ import { Bot, IncomingMessage, AutoResponse } from '../bot/types'
 import { AutoResponseService } from './auto-response'
 import { WebhookService } from './webhook'
 import { CooldownService } from './cooldown'
+import { FlowExecutor } from './flow-executor'
 import { getLogger } from '../utils/logger'
 
 export type InboxCallback = (bot: Bot, message: IncomingMessage, response?: string) => void
@@ -11,10 +12,12 @@ export class InboxService {
   private handlers: Map<string, InboxCallback> = new Map()
   private autoResponseService: AutoResponseService
   private webhookService: WebhookService
+  private flowExecutor?: FlowExecutor
 
-  constructor(cooldownService: CooldownService) {
+  constructor(cooldownService: CooldownService, flowExecutor?: FlowExecutor) {
     this.autoResponseService = new AutoResponseService(cooldownService)
     this.webhookService = new WebhookService(cooldownService)
+    this.flowExecutor = flowExecutor
   }
 
   private get logger() {
@@ -46,6 +49,10 @@ export class InboxService {
     this.handlers.set(botId, handler)
   }
 
+  setFlowExecutor(flowExecutor: FlowExecutor): void {
+    this.flowExecutor = flowExecutor
+  }
+
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
     this.logger.info(`📨 Message received for bot "${bot.name}": ${message.content.substring(0, 50)}...`)
 
@@ -53,6 +60,13 @@ export class InboxService {
       if (this.isSenderIgnored(bot, message.from)) {
         this.logger.debug(`🚫 Ignoring message from "${message.from}" for bot "${bot.name}" (sender in ignored list)`)
         return
+      }
+
+      if (this.flowExecutor) {
+        const handledByFlow = await this.flowExecutor.handleMessage(bot, message)
+        if (handledByFlow) {
+          return
+        }
       }
 
       if (!this.autoResponseService.shouldProcessMessage(bot, message)) {

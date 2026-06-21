@@ -1,4 +1,6 @@
+import * as fs from 'fs'
 import * as path from 'path'
+import * as os from 'os'
 import { loadConfig } from '../../src/config/yaml'
 import { mapConfigToBot } from '../../src/bot/mapper'
 import { ConfigFile, BotConfig } from '../../src/bot/types'
@@ -95,6 +97,63 @@ describe('YAML Configuration Loading Integration Tests', () => {
         expect(soporteBotConfig!.phone).toBe('521234567890')
         expect(soporteBotConfig!.auto_responses!.length).toBeGreaterThanOrEqual(1)
         expect(soporteBotConfig!.webhooks).toHaveLength(2)
+      })
+    })
+
+    describe('Configuration with Actions and Flows Directories', () => {
+      let tempDir: string
+
+      afterEach(() => {
+        if (tempDir && fs.existsSync(tempDir)) {
+          fs.rmSync(tempDir, { recursive: true, force: true })
+        }
+      })
+
+      it('should load actions and flows from adjacent directories', async () => {
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-config-'))
+
+        const configPath = path.join(tempDir, 'config.yml')
+        const actionsDir = path.join(tempDir, 'actions')
+        const flowsDir = path.join(tempDir, 'flows')
+
+        fs.mkdirSync(actionsDir)
+        fs.mkdirSync(flowsDir)
+
+        fs.writeFileSync(configPath, `
+global:
+  sessionTimeout: 120
+bots:
+  - id: test-bot
+    name: Test Bot
+    behaviors:
+      - flow: faq-menu
+    auto_responses: []
+    webhooks: []
+`)
+
+        fs.writeFileSync(path.join(actionsDir, 'greet.yml'), `
+reply: "Hello! Choose an option"
+`)
+
+        fs.writeFileSync(path.join(flowsDir, 'faq-menu.yml'), `
+name: FAQ Menu
+entry: menu
+steps:
+  menu:
+    triggers: "menu, hello"
+    action: greet
+    branches: []
+`)
+
+        const config = await loadConfig(configPath)
+
+        expect(config.actions).toBeDefined()
+        expect(config.actions?.greet).toBeDefined()
+        expect(config.actions?.greet.reply).toBe('Hello! Choose an option')
+
+        expect(config.flows).toBeDefined()
+        expect(config.flows?.['faq-menu']).toBeDefined()
+        expect(config.flows?.['faq-menu'].entry).toBe('menu')
       })
     })
 

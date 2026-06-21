@@ -1,4 +1,4 @@
-import { Bot, BotSettings, AutoResponse, Webhook, MessageChannel } from './types'
+import { Bot, BotSettings, AutoResponse, Webhook, MessageChannel, BehaviorRef } from './types'
 import { validateBotId, validateBotName } from './validation'
 import { matchFuzzy } from './fuzzy'
 
@@ -7,6 +7,7 @@ export function createBot(props: {
   name: string
   phone?: string
   settings: BotSettings
+  behaviors?: BehaviorRef[]
   autoResponses: AutoResponse[]
   webhooks: Webhook[]
 }): Bot {
@@ -18,6 +19,7 @@ export function createBot(props: {
     name: props.name,
     phone: props.phone,
     settings: props.settings,
+    behaviors: props.behaviors || [],
     autoResponses: props.autoResponses,
     webhooks: props.webhooks,
   }
