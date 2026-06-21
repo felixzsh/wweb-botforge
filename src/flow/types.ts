@@ -10,7 +10,6 @@ export interface FlowBranch {
 }
 
 export interface FlowStep {
-  triggers?: FuzzyTrigger[]
   action: string
   branches: FlowBranch[]
 }
@@ -18,7 +17,8 @@ export interface FlowStep {
 export interface FlowDef {
   id: string
   name: string
-  entry: string
+  entryStep: string
+  triggers?: FuzzyTrigger[]
   timeout?: number
   fallbackStep?: string
   steps: Record<string, FlowStep>

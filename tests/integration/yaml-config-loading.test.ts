@@ -68,10 +68,10 @@ reply: "Hello! Choose an option"
 
         fs.writeFileSync(path.join(flowsDir, 'faq-menu.yml'), `
 name: FAQ Menu
-entry: menu
+entry_step: menu
+triggers: "menu, hello"
 steps:
   menu:
-    triggers: "menu, hello"
     action: greet
     branches: []
 `)
@@ -84,7 +84,7 @@ steps:
 
         expect(config.flows).toBeDefined()
         expect(config.flows?.['faq-menu']).toBeDefined()
-        expect(config.flows?.['faq-menu'].entry).toBe('menu')
+        expect(config.flows?.['faq-menu'].entry_step).toBe('menu')
       })
     })
   })

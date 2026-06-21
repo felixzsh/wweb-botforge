@@ -90,14 +90,14 @@ export interface FlowBranchConfig {
 }
 
 export interface FlowStepConfig {
-  triggers?: string | string[] | Array<{ phrases: string | string[]; fuzzy_threshold?: number }>
   action: string
   branches?: FlowBranchConfig[]
 }
 
 export interface FlowConfig {
   name?: string
-  entry: string
+  entry_step: string
+  triggers?: string | string[] | Array<{ phrases: string | string[]; fuzzy_threshold?: number }>
   timeout?: number
   fallback_step?: string
   steps: Record<string, FlowStepConfig>

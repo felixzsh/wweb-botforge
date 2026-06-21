@@ -70,12 +70,12 @@ flows:
   # FAQ support flow with navigation menu
   faq-support:
     name: "FAQ Support"
-    entry: menu
+    entry_step: menu
+    triggers: "menu, hola, hello, hi, help, start"
     timeout: 300                   # Session TTL (seconds) — flow dies after inactivity
     fallback_step: invalid         # Where to go if user sends an unexpected response
     steps:
       menu:
-        triggers: "menu, hola, hello, hi, help, start"
         action: menu
         branches:
           - when: "1, hour, schedule, time, hours"
@@ -147,10 +147,10 @@ flows:
   # Minimal single-step flow (replaces simple auto-responses)
   ping-pong:
     name: "Ping Pong"
-    entry: ping
+    entry_step: ping
+    triggers: "ping"
     steps:
       ping:
-        triggers: "ping"
         action: pong
         branches: []
 

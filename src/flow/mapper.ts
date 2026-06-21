@@ -12,13 +12,13 @@ export function mapFlowCatalog(config: Record<string, FlowConfig>): FlowCatalog 
 }
 
 function mapFlow(id: string, config: FlowConfig): FlowDef {
-  if (!config.steps[config.entry]) {
-    throw new Error(`Flow "${id}" entry step "${config.entry}" not found`)
+  if (!config.steps[config.entry_step]) {
+    throw new Error(`Flow "${id}" entry step "${config.entry_step}" not found`)
   }
 
   const steps: Record<string, FlowStep> = {}
   for (const [stepId, stepConfig] of Object.entries(config.steps)) {
-    steps[stepId] = mapStep(stepId, stepConfig)
+    steps[stepId] = mapStep(stepConfig)
   }
 
   if (config.fallback_step && !steps[config.fallback_step]) {
@@ -28,16 +28,16 @@ function mapFlow(id: string, config: FlowConfig): FlowDef {
   return {
     id,
     name: config.name ?? id,
-    entry: config.entry,
+    entryStep: config.entry_step,
+    triggers: config.triggers ? mapTriggers(config.triggers) : undefined,
     timeout: config.timeout,
     fallbackStep: config.fallback_step,
     steps,
   }
 }
 
-function mapStep(id: string, config: FlowStepConfig): FlowStep {
+function mapStep(config: FlowStepConfig): FlowStep {
   return {
-    triggers: config.triggers ? mapTriggers(config.triggers) : undefined,
     action: config.action,
     branches: (config.branches || []).map(mapBranch),
   }

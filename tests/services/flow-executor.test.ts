@@ -43,12 +43,12 @@ describe('FlowExecutor', () => {
     const flows: Record<string, FlowConfig> = {
       'faq-menu': {
         name: 'FAQ Menu',
-        entry: 'menu',
+        entry_step: 'menu',
+        triggers: 'menu, hola',
         timeout: 300,
         fallback_step: 'invalid',
         steps: {
           menu: {
-            triggers: 'menu, hola',
             action: 'greet',
             branches: [
               { when: '1, hours', goto: 'hours' },

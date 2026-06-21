@@ -1,6 +1,6 @@
 import { Bot, IncomingMessage, WebhookPayload } from '../bot/types'
 import { ActionCatalog, ActionExecutionContext } from '../action/types'
-import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FlowState } from './types'
+import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FlowState, FuzzyTrigger } from './types'
 import { executeAction, getAction } from '../action/executor'
 import { resolveVars } from '../action/template'
 import { FlowStateService } from './state'
@@ -79,13 +79,13 @@ export class FlowExecutor {
         continue
       }
 
-      const entryStep = flow.steps[flow.entry]
+      const entryStep = flow.steps[flow.entryStep]
       if (!entryStep) {
-        this.logger.warn(`Entry step "${flow.entry}" for flow "${flow.id}" not found`)
+        this.logger.warn(`Entry step "${flow.entryStep}" for flow "${flow.id}" not found`)
         continue
       }
 
-      if (!this.matchesTriggers(entryStep, message.content)) {
+      if (!this.matchesFlowTriggers(flow, message.content)) {
         continue
       }
 
@@ -99,7 +99,7 @@ export class FlowExecutor {
         this.flowStateService.destroyBySenderBot(message.from, bot.id)
       } else {
         const timeout = flow.timeout ?? this.defaultTimeout
-        this.flowStateService.create(message.from, bot.id, flow.id, flow.entry, timeout)
+        this.flowStateService.create(message.from, bot.id, flow.id, flow.entryStep, timeout)
       }
 
       return true
@@ -226,12 +226,12 @@ export class FlowExecutor {
     return defaultBranch || null
   }
 
-  private matchesTriggers(step: FlowStep, message: string): boolean {
-    if (!step.triggers || step.triggers.length === 0) {
+  private matchesFlowTriggers(flow: FlowDef, message: string): boolean {
+    if (!flow.triggers || flow.triggers.length === 0) {
       return false
     }
 
-    return step.triggers.some(trigger => {
+    return flow.triggers.some(trigger => {
       const threshold = trigger.fuzzyThreshold ?? 0.6
       return matchFuzzy(trigger.phrases, message, threshold) !== null
     })
