@@ -16,7 +16,6 @@ export interface FlowStep {
 
 export interface FlowDef {
   id: string
-  name: string
   entryStep: string
   triggers?: FuzzyTrigger[]
   timeout?: number

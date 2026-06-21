@@ -8,7 +8,6 @@ export function createBotsRouter(bots: Map<string, Bot>): Router {
     try {
       const botList = Array.from(bots.values()).map(bot => ({
         id: bot.id,
-        name: bot.name,
         phone: bot.phone,
         flowsCount: bot.flows.length,
         settings: bot.settings,
@@ -39,7 +38,6 @@ export function createBotsRouter(bots: Map<string, Bot>): Router {
       const bot = bots.get(botId)!
       res.json({
         id: bot.id,
-        name: bot.name,
         phone: bot.phone,
         flows: bot.flows,
         settings: bot.settings,

@@ -102,8 +102,8 @@ export async function loadConfig(customPath?: string): Promise<ConfigFile> {
     const processedContent = await processIncludes(rawContent, path.dirname(targetPath))
     const config = yaml.load(processedContent) as ConfigFile
 
-    if (!config.bots || !Array.isArray(config.bots)) {
-      throw new Error('Configuration must contain a "bots" array')
+    if (!config.bots || typeof config.bots !== 'object') {
+      throw new Error('Configuration must contain a "bots" object')
     }
 
     const baseDir = path.dirname(targetPath)
@@ -141,7 +141,7 @@ export async function saveConfig(config: ConfigFile, customPath?: string): Promi
   }
 }
 
-export async function addBotConfig(botConfig: BotConfig, customPath?: string): Promise<void> {
+export async function addBotConfig(id: string, botConfig: BotConfig, customPath?: string): Promise<void> {
   const logger = getLogger()
 
   try {
@@ -149,22 +149,18 @@ export async function addBotConfig(botConfig: BotConfig, customPath?: string): P
     try {
       existingConfig = await loadConfig(customPath)
     } catch {
-      existingConfig = { bots: [] }
+      existingConfig = { bots: {} }
     }
 
     if (!existingConfig.bots) {
-      existingConfig.bots = []
+      existingConfig.bots = {}
     }
 
-    const existingBotIndex = existingConfig.bots.findIndex(
-      (bot: BotConfig) => bot.id === botConfig.id
-    )
-
-    if (existingBotIndex >= 0) {
-      throw new Error(`Bot with ID "${botConfig.id}" already exists. Use updateBotConfig to modify it.`)
+    if (existingConfig.bots[id]) {
+      throw new Error(`Bot with ID "${id}" already exists. Use updateBotConfig to modify it.`)
     }
 
-    existingConfig.bots.push(botConfig)
+    existingConfig.bots[id] = botConfig
 
     await saveConfig(existingConfig, customPath)
   } catch (error) {
@@ -172,7 +168,7 @@ export async function addBotConfig(botConfig: BotConfig, customPath?: string): P
   }
 }
 
-export async function updateBotConfig(botConfig: BotConfig, customPath?: string): Promise<void> {
+export async function updateBotConfig(id: string, botConfig: BotConfig, customPath?: string): Promise<void> {
   try {
     let existingConfig: ConfigFile
     try {
@@ -182,18 +178,14 @@ export async function updateBotConfig(botConfig: BotConfig, customPath?: string)
     }
 
     if (!existingConfig.bots) {
-      existingConfig.bots = []
+      existingConfig.bots = {}
     }
 
-    const existingBotIndex = existingConfig.bots.findIndex(
-      (bot: BotConfig) => bot.id === botConfig.id
-    )
-
-    if (existingBotIndex < 0) {
-      throw new Error(`Bot with ID "${botConfig.id}" not found. Use addBotConfig to create it.`)
+    if (!existingConfig.bots[id]) {
+      throw new Error(`Bot with ID "${id}" not found. Use addBotConfig to create it.`)
     }
 
-    existingConfig.bots[existingBotIndex] = botConfig
+    existingConfig.bots[id] = botConfig
 
     await saveConfig(existingConfig, customPath)
   } catch (error) {

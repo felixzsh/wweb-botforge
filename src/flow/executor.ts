@@ -75,7 +75,7 @@ export class FlowExecutor {
     for (const flowRef of flowRefs) {
       const flow = this.flowCatalog.get(flowRef.id)
       if (!flow) {
-        this.logger.warn(`Flow "${flowRef.id}" referenced by bot "${bot.name}" not found`)
+        this.logger.warn(`Flow "${flowRef.id}" referenced by bot "${bot.id}" not found`)
         continue
       }
 
@@ -139,7 +139,7 @@ export class FlowExecutor {
   ): Promise<boolean> {
     const context: ActionExecutionContext = {
       botId: bot.id,
-      botName: bot.name,
+      botName: bot.id,
       sender: message.from,
       message: message.content,
       variables,
@@ -176,7 +176,7 @@ export class FlowExecutor {
           retries: result.webhook.retries,
         })
       } catch (error) {
-        this.logger.error(`Failed to trigger webhook action for bot "${bot.name}":`, error)
+        this.logger.error(`Failed to trigger webhook action for bot "${bot.id}":`, error)
       }
     }
 
@@ -243,7 +243,7 @@ export class FlowExecutor {
       message: message.content,
       timestamp: message.timestamp.toISOString(),
       botId: bot.id,
-      botName: bot.name,
+      botName: bot.id,
       webhookName,
       webhookPattern: '',
       metadata: message.metadata || {},

@@ -31,7 +31,7 @@ export class OutboxService {
 
   setupBotQueue(bot: Bot): void {
     if (!bot.channel) {
-      throw new Error(`Bot "${bot.name}" does not have a registered channel`)
+      throw new Error(`Bot "${bot.id}" does not have a registered channel`)
     }
 
     const botId = bot.id
@@ -42,7 +42,7 @@ export class OutboxService {
       await bot.channel!.send(message)
     })
 
-    this.logger.info(`📋 Configured message queue for bot "${bot.name}": delay=${bot.settings.queueDelay}ms`)
+    this.logger.info(`📋 Configured message queue for bot "${bot.id}": delay=${bot.settings.queueDelay}ms`)
   }
 
   enqueue(

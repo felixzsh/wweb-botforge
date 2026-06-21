@@ -5,7 +5,6 @@ describe('FlowMapper', () => {
   it('should map a simple flow with triggers and branches', () => {
     const config: Record<string, FlowConfig> = {
       'faq-menu': {
-        name: 'FAQ Menu',
         entry_step: 'menu',
         triggers: 'menu, hola',
         timeout: 300,
@@ -43,7 +42,6 @@ describe('FlowMapper', () => {
     const flow = catalog.get('faq-menu')
 
     expect(flow).toBeDefined()
-    expect(flow?.name).toBe('FAQ Menu')
     expect(flow?.entryStep).toBe('menu')
     expect(flow?.triggers?.[0].phrases).toEqual(['menu', 'hola'])
     expect(flow?.timeout).toBe(300)

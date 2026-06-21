@@ -69,7 +69,6 @@ actions:
 flows:
   # FAQ support flow with navigation menu
   faq-support:
-    name: "FAQ Support"
     entry_step: menu
     triggers: "menu, hola, hello, hi, help, start"
     timeout: 300                   # Session TTL (seconds) — flow dies after inactivity
@@ -146,7 +145,6 @@ flows:
 
   # Minimal single-step flow (replaces simple auto-responses)
   ping-pong:
-    name: "Ping Pong"
     entry_step: ping
     triggers: "ping"
     steps:
@@ -154,11 +152,10 @@ flows:
         action: pong
         branches: []
 
-# Bot definitions
+# Bot definitions — keys are the bot IDs, consistently with actions and flows
 bots:
   # Support bot using the faq-support flow
-  - id: support-bot-001
-    name: "Customer Support"
+  support-bot:
     phone: "1234567890"  # Will be filled after WhatsApp authentication
 
     # Flows reference flow IDs from the flow catalog
@@ -178,9 +175,8 @@ bots:
       ignored_senders:              # Senders to ignore entirely
         - "status@broadcast"        # WhatsApp status broadcasts
 
-  # Sales bot reusing the same faq-support flow plus its own
-  - id: sales-bot-002
-    name: "Sales Assistant"
+  # Sales bot reusing the same faq-support flow
+  sales-bot:
     phone: "1234567891"
 
     flows:
@@ -202,10 +198,13 @@ bots:
 # Inline definitions in this file take precedence over directory files.
 
 # Notes:
-# - Bot IDs are auto-generated but you can customize them
+# - Actions, flows, and bots all use the same map format: key = ID, value = definition
+# - Bot IDs are the keys in the bots map; they're auto-generated but you can customize them
+# - IDs can only contain lowercase letters, numbers, and hyphens (no start/end hyphens, no consecutive)
 # - Phone numbers are filled after WhatsApp QR code authentication
 # - Triggers use comma-separated phrases with fuzzy matching (no regex needed)
 # - fuzzy_threshold: 0.3=strict, 0.6=moderate (default), 0.9=loose
 # - Action cooldowns prevent spam (per sender per action)
 # - Flow sessions automatically expire after timeout seconds of inactivity
 # - fallback_step handles unexpected user responses without breaking the flow
+# - Action reply templates support {{sender}}, {{message}}, {{bot.id}}, {{variables.name}}

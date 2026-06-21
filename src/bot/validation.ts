@@ -5,16 +5,19 @@ export function validateBotId(id: string): void {
   if (!/^[a-z0-9-]+$/.test(id)) {
     throw new Error('Bot ID can only contain lowercase letters, numbers and hyphens')
   }
+  if (/^[-]/.test(id)) {
+    throw new Error('Bot ID cannot start with a hyphen')
+  }
+  if (/[-]$/.test(id)) {
+    throw new Error('Bot ID cannot end with a hyphen')
+  }
+  if (/--/.test(id)) {
+    throw new Error('Bot ID cannot contain consecutive hyphens')
+  }
 }
 
 export function validatePhoneNumber(phone: string): boolean {
   return /^\d{10,15}$/.test(phone)
-}
-
-export function validateBotName(name: string): void {
-  if (!name || name.trim().length === 0) {
-    throw new Error('Bot name cannot be empty')
-  }
 }
 
 export function validatePriority(priority: number): void {

@@ -12,13 +12,11 @@ describe('Bot', () => {
     it('should create a Bot with all properties', () => {
       const bot = createBot({
         id: 'test-bot',
-        name: 'Test Bot',
         phone: '1234567890',
         settings,
       })
 
       expect(bot.id).toBe('test-bot')
-      expect(bot.name).toBe('Test Bot')
       expect(bot.phone).toBe('1234567890')
       expect(bot.settings).toBe(settings)
     })
@@ -26,7 +24,6 @@ describe('Bot', () => {
     it('should create a Bot without phone', () => {
       const bot = createBot({
         id: 'test-bot',
-        name: 'Test Bot',
         settings,
       })
 
@@ -36,7 +33,6 @@ describe('Bot', () => {
     it('should create a Bot with flows', () => {
       const bot = createBot({
         id: 'test-bot',
-        name: 'Test Bot',
         settings,
         flows: [{ id: 'faq-menu', priority: 1 }],
       })
@@ -45,31 +41,10 @@ describe('Bot', () => {
       expect(bot.flows[0].id).toBe('faq-menu')
     })
 
-    it('should throw error if name is empty', () => {
-      expect(() =>
-        createBot({
-          id: 'test-bot',
-          name: '',
-          settings,
-        })
-      ).toThrow('Bot name cannot be empty')
-    })
-
-    it('should throw error if name is only whitespace', () => {
-      expect(() =>
-        createBot({
-          id: 'test-bot',
-          name: '   ',
-          settings,
-        })
-      ).toThrow('Bot name cannot be empty')
-    })
-
     it('should throw error for invalid bot ID', () => {
       expect(() =>
         createBot({
           id: 'ab',
-          name: 'Test Bot',
           settings,
         })
       ).toThrow('Bot ID must be at least 3 characters long')
@@ -94,7 +69,6 @@ describe('Bot', () => {
     it('should register a channel to the bot', () => {
       const bot = createBot({
         id: 'test-bot',
-        name: 'Test Bot',
         settings,
       })
 

@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { Bot, ConfigFile, BotConfig } from './types'
+import { Bot, ConfigFile } from './types'
 import { mapBotsFromConfig } from './mapper'
 import { mapActionCatalog } from '../action/catalog'
 import { mapFlowCatalog } from '../flow/mapper'
@@ -63,7 +63,7 @@ export class BotFleet {
 
       this.inboxService = new InboxService(this.flowExecutor)
 
-      if (configFile.bots.length === 0) {
+      if (Object.keys(configFile.bots).length === 0) {
         this.logger.warn('No bots configured.')
         return this.bots
       }
@@ -116,7 +116,7 @@ export class BotFleet {
 
   private async initializeBot(bot: Bot): Promise<void> {
     try {
-      this.logger.info(`Initializing bot: ${bot.name} (${bot.id})`)
+      this.logger.info(`Initializing bot: ${bot.id} (${bot.id})`)
 
       this.bots.set(bot.id, bot)
 
@@ -130,37 +130,37 @@ export class BotFleet {
 
       await bot.channel.connect()
 
-      this.logger.info(`Bot "${bot.name}" initialized and ready`)
+      this.logger.info(`Bot "${bot.id}" initialized and ready`)
 
     } catch (error) {
-      this.logger.error(`Failed to initialize bot "${bot.name}":`, error)
+      this.logger.error(`Failed to initialize bot "${bot.id}":`, error)
       throw error
     }
   }
 
   private setupBotEventHandlers(bot: Bot): void {
     if (!bot.channel) {
-      throw new Error(`Bot "${bot.name}" does not have a registered channel`)
+      throw new Error(`Bot "${bot.id}" does not have a registered channel`)
     }
 
     bot.channel.onReady(() => {
-      this.logger.info(`Bot "${bot.name}" is ready!`)
+      this.logger.info(`Bot "${bot.id}" is ready!`)
     })
 
     bot.channel.onDisconnected((reason: string) => {
-      this.logger.warn(`Bot "${bot.name}" disconnected:`, reason)
+      this.logger.warn(`Bot "${bot.id}" disconnected:`, reason)
     })
 
     bot.channel.onAuthFailure((error: Error) => {
-      this.logger.error(`Bot "${bot.name}" authentication failed:`, error.message)
+      this.logger.error(`Bot "${bot.id}" authentication failed:`, error.message)
     })
 
     bot.channel.onConnectionError((error: Error) => {
-      this.logger.error(`Bot "${bot.name}" connection error:`, error.message)
+      this.logger.error(`Bot "${bot.id}" connection error:`, error.message)
     })
 
     bot.channel.onStateChange((state: string) => {
-      this.logger.info(`Bot "${bot.name}" state changed to:`, state)
+      this.logger.info(`Bot "${bot.id}" state changed to:`, state)
     })
   }
 
@@ -192,7 +192,7 @@ export class BotFleet {
 
       return {
         id: bot.id,
-        name: bot.name,
+        name: bot.id,
         flowsCount: bot.flows.length,
         queue: {
           size: queueStatus.queueSize,

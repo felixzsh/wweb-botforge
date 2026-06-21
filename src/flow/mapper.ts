@@ -27,7 +27,6 @@ function mapFlow(id: string, config: FlowConfig): FlowDef {
 
   return {
     id,
-    name: config.name ?? id,
     entryStep: config.entry_step,
     triggers: config.triggers ? mapTriggers(config.triggers) : undefined,
     timeout: config.timeout,

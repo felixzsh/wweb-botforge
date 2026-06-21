@@ -15,20 +15,18 @@ describe('YAML Configuration Loading Integration Tests', () => {
 
         expect(config).toBeDefined()
         expect(config.bots).toBeDefined()
-        expect(config.bots).toHaveLength(1)
-        expect(config.bots[0].id).toBe('minimal-bot')
-        expect(config.bots[0].name).toBe('Minimal Bot')
+        expect(Object.keys(config.bots)).toHaveLength(1)
+        expect(config.bots['minimal-bot']).toBeDefined()
       })
 
       it('should map minimal bot to domain', async () => {
         const fixturePath = path.join(__dirname, '../fixtures/minimal-bot.yml')
 
         const config = await loadConfig(fixturePath)
-        const bot = mapConfigToBot(config.bots[0])
+        const bot = mapConfigToBot('minimal-bot', config.bots['minimal-bot'])
 
         expect(bot).toBeDefined()
         expect(bot.id).toBe('minimal-bot')
-        expect(bot.name).toBe('Minimal Bot')
         expect(bot.phone).toBeUndefined()
       })
     })
@@ -56,8 +54,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
 global:
   sessionTimeout: 120
 bots:
-  - id: test-bot
-    name: Test Bot
+  test-bot:
     flows:
       - id: faq-menu
 `)
@@ -67,7 +64,6 @@ reply: "Hello! Choose an option"
 `)
 
         fs.writeFileSync(path.join(flowsDir, 'faq-menu.yml'), `
-name: FAQ Menu
 entry_step: menu
 triggers: "menu, hello"
 steps:
@@ -90,11 +86,11 @@ steps:
   })
 
   describe('Error Handling', () => {
-    it('should throw error when bots array is missing', async () => {
+    it('should throw error when bots object is missing', async () => {
       const fixturePath = path.join(__dirname, '../fixtures/missing-bots.yml')
 
       await expect(loadConfig(fixturePath)).rejects.toThrow(
-        'Configuration must contain a "bots" array'
+        'Configuration must contain a "bots" object'
       )
     })
 
@@ -102,67 +98,44 @@ steps:
       const fixturePath = path.join(__dirname, '../fixtures/invalid-bot-id.yml')
 
       const config = await loadConfig(fixturePath)
+      const [id, botConfig] = Object.entries(config.bots)[0]
 
-      expect(() => mapConfigToBot(config.bots[0])).toThrow(
+      expect(() => mapConfigToBot(id, botConfig)).toThrow(
         'Bot ID must be at least 3 characters long'
       )
-    })
-
-    it('should throw error when bot name is missing', async () => {
-      const fixturePath = path.join(__dirname, '../fixtures/bot-missing-name.yml')
-
-      const config = await loadConfig(fixturePath)
-
-      expect(() => mapConfigToBot(config.bots[0])).toThrow()
     })
 
     it('should throw error when phone number format is invalid', async () => {
       const fixturePath = path.join(__dirname, '../fixtures/invalid-phone.yml')
 
       const config = await loadConfig(fixturePath)
+      const [id, botConfig] = Object.entries(config.bots)[0]
 
-      expect(() => mapConfigToBot(config.bots[0])).toThrow(
+      expect(() => mapConfigToBot(id, botConfig)).toThrow(
         'Invalid phone number format'
       )
     })
 
     it('should throw error when typing delay is negative', () => {
-      const invalidConfig: BotConfig = {
-        id: 'test-bot',
-        name: 'Test Bot',
+      expect(() => mapConfigToBot('test-bot', <BotConfig>{
         settings: {
           typing_delay: -100,
         },
-      }
-
-      expect(() => mapConfigToBot(invalidConfig)).toThrow(
-        'Typing delay must be non-negative'
-      )
+      })).toThrow('Typing delay must be non-negative')
     })
 
     it('should throw error when queue delay is negative', () => {
-      const invalidConfig: BotConfig = {
-        id: 'test-bot',
-        name: 'Test Bot',
+      expect(() => mapConfigToBot('test-bot', <BotConfig>{
         settings: {
           queue_delay: -500,
         },
-      }
-
-      expect(() => mapConfigToBot(invalidConfig)).toThrow(
-        'Queue delay must be non-negative'
-      )
+      })).toThrow('Queue delay must be non-negative')
     })
   })
 
   describe('Configuration Variants', () => {
     it('should handle configuration with default settings when not provided', () => {
-      const config: BotConfig = {
-        id: 'test-bot',
-        name: 'Test Bot',
-      }
-
-      const bot = mapConfigToBot(config)
+      const bot = mapConfigToBot('test-bot', {})
 
       expect(bot.settings.simulateTyping).toBe(true)
       expect(bot.settings.typingDelay).toBe(1000)
@@ -172,9 +145,7 @@ steps:
     })
 
     it('should handle configuration with custom settings', () => {
-      const config: BotConfig = {
-        id: 'test-bot',
-        name: 'Test Bot',
+      const bot = mapConfigToBot('test-bot', <BotConfig>{
         settings: {
           simulate_typing: false,
           typing_delay: 500,
@@ -184,9 +155,7 @@ steps:
           ignored_senders: ['1234567890', '0987654321'],
           admin_numbers: ['1111111111'],
         },
-      }
-
-      const bot = mapConfigToBot(config)
+      })
 
       expect(bot.settings.simulateTyping).toBe(false)
       expect(bot.settings.typingDelay).toBe(500)

@@ -5,7 +5,6 @@ export interface FlowRef {
 
 export interface Bot {
   id: string
-  name: string
   phone?: string
   settings: BotSettings
   flows: FlowRef[]
@@ -50,8 +49,6 @@ export interface MessageChannel {
 }
 
 export interface BotConfig {
-  id: string
-  name: string
   phone?: string
   flows?: FlowRefConfig[]
   settings?: BotSettingsConfig
@@ -95,7 +92,6 @@ export interface FlowStepConfig {
 }
 
 export interface FlowConfig {
-  name?: string
   entry_step: string
   triggers?: string | string[] | Array<{ phrases: string | string[]; fuzzy_threshold?: number }>
   timeout?: number
@@ -118,7 +114,7 @@ export interface ConfigFile {
   }
   actions?: Record<string, ActionConfig>
   flows?: Record<string, FlowConfig>
-  bots: BotConfig[]
+  bots: Record<string, BotConfig>
 }
 
 export interface WebhookPayload {

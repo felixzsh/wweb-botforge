@@ -63,8 +63,6 @@ export async function runCreateBot(configPath?: string) {
     })
 
     const botConfig: BotConfig = {
-      id: botId,
-      name: botName,
       phone: phoneNumber,
       settings: {
         queue_delay: 1000,
@@ -73,9 +71,9 @@ export async function runCreateBot(configPath?: string) {
       },
     }
 
-    await addBotConfig(botConfig, configPath)
+    await addBotConfig(botId, botConfig, configPath)
 
-    console.log(`\n➕ Added new bot: ${botConfig.name} (${botConfig.id})`)
+    console.log(`\n➕ Added new bot: ${botName} (${botId})`)
     console.log(`\n📁 Bot configuration saved to ${getConfigPath()}`)
     console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`)
     console.log('\nTo start using your bot, run: npm start')

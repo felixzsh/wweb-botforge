@@ -42,7 +42,6 @@ describe('FlowExecutor', () => {
 
     const flows: Record<string, FlowConfig> = {
       'faq-menu': {
-        name: 'FAQ Menu',
         entry_step: 'menu',
         triggers: 'menu, hola',
         timeout: 300,
@@ -104,7 +103,6 @@ describe('FlowExecutor', () => {
 
     bot = {
       id: 'support-bot',
-      name: 'Support Bot',
       settings: {
         simulateTyping: false,
         typingDelay: 0,

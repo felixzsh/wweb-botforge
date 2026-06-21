@@ -1,7 +1,6 @@
 import {
   validateBotId,
   validatePhoneNumber,
-  validateBotName,
   validatePriority,
   validateTypingDelay,
   validateQueueDelay,
@@ -25,6 +24,18 @@ describe('Validation', () => {
       expect(() => validateBotId('Test-Bot')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
       expect(() => validateBotId('bot@name')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
     })
+
+    it('should throw if ID starts with hyphen', () => {
+      expect(() => validateBotId('-test')).toThrow('Bot ID cannot start with a hyphen')
+    })
+
+    it('should throw if ID ends with hyphen', () => {
+      expect(() => validateBotId('test-')).toThrow('Bot ID cannot end with a hyphen')
+    })
+
+    it('should throw if ID has consecutive hyphens', () => {
+      expect(() => validateBotId('test--bot')).toThrow('Bot ID cannot contain consecutive hyphens')
+    })
   })
 
   describe('validatePhoneNumber', () => {
@@ -38,18 +49,6 @@ describe('Validation', () => {
       expect(validatePhoneNumber('12345')).toBe(false)
       expect(validatePhoneNumber('+521234567890')).toBe(false)
       expect(validatePhoneNumber('invalid')).toBe(false)
-    })
-  })
-
-  describe('validateBotName', () => {
-    it('should pass for valid bot name', () => {
-      expect(() => validateBotName('Test Bot')).not.toThrow()
-      expect(() => validateBotName('MyBot')).not.toThrow()
-    })
-
-    it('should throw for empty name', () => {
-      expect(() => validateBotName('')).toThrow('Bot name cannot be empty')
-      expect(() => validateBotName('   ')).toThrow('Bot name cannot be empty')
     })
   })
 

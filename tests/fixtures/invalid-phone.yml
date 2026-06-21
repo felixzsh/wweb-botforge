@@ -1,5 +1,3 @@
 bots:
-  - id: test-bot
-    name: "Bot with invalid phone"
+  test-bot:
     phone: "123"
-    settings: {}

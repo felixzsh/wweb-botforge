@@ -1,19 +1,16 @@
 import { Bot, BotSettings, FlowRef, MessageChannel } from './types'
-import { validateBotId, validateBotName } from './validation'
+import { validateBotId } from './validation'
 
 export function createBot(props: {
   id: string
-  name: string
   phone?: string
   settings: BotSettings
   flows?: FlowRef[]
 }): Bot {
   validateBotId(props.id)
-  validateBotName(props.name)
 
   return {
     id: props.id,
-    name: props.name,
     phone: props.phone,
     settings: props.settings,
     flows: props.flows || [],
