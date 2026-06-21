@@ -27,7 +27,6 @@ describe('YAML Configuration Loading Integration Tests', () => {
 
         expect(bot).toBeDefined()
         expect(bot.id).toBe('minimal-bot')
-        expect(bot.phone).toBeUndefined()
       })
     })
 
@@ -105,19 +104,8 @@ steps:
       )
     })
 
-    it('should throw error when phone number format is invalid', async () => {
-      const fixturePath = path.join(__dirname, '../fixtures/invalid-phone.yml')
-
-      const config = await loadConfig(fixturePath)
-      const [id, botConfig] = Object.entries(config.bots)[0]
-
-      expect(() => mapConfigToBot(id, botConfig)).toThrow(
-        'Invalid phone number format'
-      )
-    })
-
     it('should throw error when typing delay is negative', () => {
-      expect(() => mapConfigToBot('test-bot', <BotConfig>{
+      expect(() => mapConfigToBot('test-bot', {
         settings: {
           typing_delay: -100,
         },
@@ -125,7 +113,7 @@ steps:
     })
 
     it('should throw error when queue delay is negative', () => {
-      expect(() => mapConfigToBot('test-bot', <BotConfig>{
+      expect(() => mapConfigToBot('test-bot', {
         settings: {
           queue_delay: -500,
         },

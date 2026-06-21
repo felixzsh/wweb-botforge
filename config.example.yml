@@ -156,8 +156,6 @@ flows:
 bots:
   # Support bot using the faq-support flow
   support-bot:
-    phone: "1234567890"  # Will be filled after WhatsApp authentication
-
     # Flows reference flow IDs from the flow catalog
     # Higher priority flows are checked first for entry triggers
     flows:
@@ -177,8 +175,6 @@ bots:
 
   # Sales bot reusing the same faq-support flow
   sales-bot:
-    phone: "1234567891"
-
     flows:
       - id: faq-support             # Same flow as support bot — reusable
         priority: 10

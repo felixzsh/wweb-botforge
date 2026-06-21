@@ -16,10 +16,6 @@ export function validateBotId(id: string): void {
   }
 }
 
-export function validatePhoneNumber(phone: string): boolean {
-  return /^\d{10,15}$/.test(phone)
-}
-
 export function validatePriority(priority: number): void {
   if (priority < 0) {
     throw new Error('Priority must be non-negative')

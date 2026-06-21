@@ -1,6 +1,5 @@
 import {
   validateBotId,
-  validatePhoneNumber,
   validatePriority,
   validateTypingDelay,
   validateQueueDelay,
@@ -35,20 +34,6 @@ describe('Validation', () => {
 
     it('should throw if ID has consecutive hyphens', () => {
       expect(() => validateBotId('test--bot')).toThrow('Bot ID cannot contain consecutive hyphens')
-    })
-  })
-
-  describe('validatePhoneNumber', () => {
-    it('should return true for valid phone numbers', () => {
-      expect(validatePhoneNumber('1234567890')).toBe(true)
-      expect(validatePhoneNumber('521234567890')).toBe(true)
-      expect(validatePhoneNumber('123456789012345')).toBe(true)
-    })
-
-    it('should return false for invalid phone numbers', () => {
-      expect(validatePhoneNumber('12345')).toBe(false)
-      expect(validatePhoneNumber('+521234567890')).toBe(false)
-      expect(validatePhoneNumber('invalid')).toBe(false)
     })
   })
 

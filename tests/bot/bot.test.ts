@@ -9,25 +9,14 @@ describe('Bot', () => {
   })
 
   describe('createBot', () => {
-    it('should create a Bot with all properties', () => {
+    it('should create a Bot with id and settings', () => {
       const bot = createBot({
         id: 'test-bot',
-        phone: '1234567890',
         settings,
       })
 
       expect(bot.id).toBe('test-bot')
-      expect(bot.phone).toBe('1234567890')
       expect(bot.settings).toBe(settings)
-    })
-
-    it('should create a Bot without phone', () => {
-      const bot = createBot({
-        id: 'test-bot',
-        settings,
-      })
-
-      expect(bot.phone).toBeUndefined()
     })
 
     it('should create a Bot with flows', () => {
@@ -82,6 +71,7 @@ describe('Bot', () => {
         onStateChange: jest.fn(),
         connect: jest.fn(),
         disconnect: jest.fn(),
+        getPhone: jest.fn(),
       }
 
       registerChannel(bot, mockChannel)

@@ -1,5 +1,5 @@
 import { Client, LocalAuth } from 'whatsapp-web.js'
-import { IncomingMessage, OutgoingMessage, MessageChannel, ConfigFile } from '../bot/types'
+import { IncomingMessage, OutgoingMessage, MessageChannel, ConfigFile, Bot } from '../bot/types'
 import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './types'
 import { getLogger } from '../utils/logger'
 
@@ -55,6 +55,7 @@ export class WhatsAppChannel implements MessageChannel {
   private connectionErrorHandlers: ConnectionErrorHandler[] = []
   private stateChangeHandlers: StateChangeHandler[] = []
   private isConnected: boolean = false
+  private phoneNumber?: string
 
   constructor(clientId: string) {
     this.client = new Client(getClientOptions(clientId))
@@ -68,6 +69,9 @@ export class WhatsAppChannel implements MessageChannel {
   private setupEventListeners(): void {
     this.client.on('ready', () => {
       this.isConnected = true
+      if (this.client.info?.wid) {
+        this.phoneNumber = widToPhoneNumber(this.client.info.wid._serialized)
+      }
       this.readyHandlers.forEach(handler => handler())
     })
 
@@ -164,6 +168,10 @@ export class WhatsAppChannel implements MessageChannel {
 
   onStateChange(handler: StateChangeHandler): void {
     this.stateChangeHandlers.push(handler)
+  }
+
+  getPhone(): string | undefined {
+    return this.phoneNumber
   }
 }
 

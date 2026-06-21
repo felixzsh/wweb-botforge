@@ -63,7 +63,6 @@ export async function runCreateBot(configPath?: string) {
     })
 
     const botConfig: BotConfig = {
-      phone: phoneNumber,
       settings: {
         queue_delay: 1000,
         ignore_groups: true,
@@ -74,6 +73,7 @@ export async function runCreateBot(configPath?: string) {
     await addBotConfig(botId, botConfig, configPath)
 
     console.log(`\n➕ Added new bot: ${botName} (${botId})`)
+    console.log(`📱 Connected to WhatsApp with phone: ${phoneNumber}`)
     console.log(`\n📁 Bot configuration saved to ${getConfigPath()}`)
     console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`)
     console.log('\nTo start using your bot, run: npm start')

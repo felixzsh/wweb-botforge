@@ -145,6 +145,10 @@ export class BotFleet {
 
     bot.channel.onReady(() => {
       this.logger.info(`Bot "${bot.id}" is ready!`)
+      const phone = bot.channel!.getPhone()
+      if (phone) {
+        bot.phone = phone
+      }
     })
 
     bot.channel.onDisconnected((reason: string) => {

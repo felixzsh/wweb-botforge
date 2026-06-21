@@ -46,10 +46,10 @@ export interface MessageChannel {
   onStateChange(handler: (newState: string) => void | Promise<void>): void
   connect(): Promise<void>
   disconnect(): Promise<void>
+  getPhone(): string | undefined
 }
 
 export interface BotConfig {
-  phone?: string
   flows?: FlowRefConfig[]
   settings?: BotSettingsConfig
 }

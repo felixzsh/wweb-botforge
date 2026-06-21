@@ -44,15 +44,6 @@ describe('Mapper', () => {
       const bot = mapConfigToBot('test-bot', {})
 
       expect(bot.id).toBe('test-bot')
-      expect(bot.phone).toBeUndefined()
-    })
-
-    it('should map bot with phone number', () => {
-      const bot = mapConfigToBot('support-bot', {
-        phone: '1234567890',
-      })
-
-      expect(bot.phone).toBe('1234567890')
     })
 
     it('should map bot with flows', () => {
@@ -66,8 +57,7 @@ describe('Mapper', () => {
     })
 
     it('should map complete bot configuration', () => {
-      const bot = mapConfigToBot('complete-bot', <BotConfig>{
-        phone: '1234567890',
+      const bot = mapConfigToBot('complete-bot', {
         flows: [{ id: 'faq-menu', priority: 10 }],
         settings: {
           simulate_typing: true,
@@ -81,7 +71,6 @@ describe('Mapper', () => {
       })
 
       expect(bot.id).toBe('complete-bot')
-      expect(bot.phone).toBe('1234567890')
       expect(bot.flows).toHaveLength(1)
       expect(bot.settings.ignoreGroups).toBe(false)
     })

@@ -81,11 +81,6 @@ export function normalizePhoneNumber(phoneNumber: string): string {
   return phoneNumber.replace(/\D/g, '')
 }
 
-export function isValidPhoneNumber(phoneNumber: string): boolean {
-  const regex = /^\+[1-9]\d{1,14}$/
-  return regex.test(phoneNumber)
-}
-
 export function extractPhoneNumberFromWid(wid: string): string {
   const match = wid.match(/^(\d+)@/)
   return match ? match[1] : wid

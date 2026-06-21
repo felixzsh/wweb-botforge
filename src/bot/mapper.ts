@@ -2,7 +2,6 @@ import { Bot, BotSettings, FlowRef, BotConfig, BotSettingsConfig, FlowRefConfig 
 import { createBot, createDefaultSettings } from './bot'
 import {
   validateBotId,
-  validatePhoneNumber,
   validatePriority,
   validateTypingDelay,
   validateQueueDelay,
@@ -10,18 +9,12 @@ import {
 
 export function mapConfigToBot(id: string, config: BotConfig): Bot {
   validateBotId(id)
-  if (config.phone) {
-    if (!validatePhoneNumber(config.phone)) {
-      throw new Error('Invalid phone number format')
-    }
-  }
 
   const settings = config.settings ? mapSettings(config.settings) : createDefaultSettings()
   const flows = (config.flows || []).map(mapFlowRef)
 
   return createBot({
     id,
-    phone: config.phone,
     settings,
     flows,
   })
