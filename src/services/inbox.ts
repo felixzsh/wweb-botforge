@@ -2,11 +2,7 @@ import { Bot, IncomingMessage } from '../bot/types'
 import { FlowExecutor } from './flow-executor'
 import { getLogger } from '../utils/logger'
 
-export type InboxCallback = (bot: Bot, message: IncomingMessage, response?: string) => void
-
 export class InboxService {
-  private bots: Map<string, Bot> = new Map()
-  private handlers: Map<string, InboxCallback> = new Map()
   private flowExecutor: FlowExecutor
 
   constructor(flowExecutor: FlowExecutor) {
@@ -22,8 +18,6 @@ export class InboxService {
       throw new Error(`Bot "${bot.name}" does not have a registered channel`)
     }
 
-    this.bots.set(bot.id, bot)
-
     bot.channel.onMessage((message: IncomingMessage) => {
       this.handleIncomingMessage(bot, message)
     })
@@ -31,15 +25,6 @@ export class InboxService {
     bot.channel.onReady(() => {
       this.logger.info(`Bot "${bot.name}" (${bot.id}) is ready and listening for messages`)
     })
-  }
-
-  unregisterBot(botId: string): void {
-    this.bots.delete(botId)
-    this.handlers.delete(botId)
-  }
-
-  registerMessageHandler(botId: string, handler: InboxCallback): void {
-    this.handlers.set(botId, handler)
   }
 
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
@@ -62,26 +47,9 @@ export class InboxService {
 
       await this.flowExecutor.handleMessage(bot, message)
 
-      const customHandler = this.handlers.get(bot.id)
-      if (customHandler) {
-        customHandler(bot, message)
-      }
-
     } catch (error) {
       this.logger.error(`Error handling message for bot "${bot.name}":`, error)
     }
-  }
-
-  getRegisteredBots(): Bot[] {
-    return Array.from(this.bots.values())
-  }
-
-  isBotRegistered(botId: string): boolean {
-    return this.bots.has(botId)
-  }
-
-  getBot(botId: string): Bot | undefined {
-    return this.bots.get(botId)
   }
 
   private isSenderIgnored(bot: Bot, sender: string): boolean {

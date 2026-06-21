@@ -229,7 +229,4 @@ export class BotFleet {
     return this.bots
   }
 
-  getInboxService(): InboxService | undefined {
-    return this.inboxService
-  }
 }
