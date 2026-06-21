@@ -115,8 +115,6 @@ describe('FlowExecutor', () => {
         adminNumbers: [],
       },
       flows: [{ id: 'faq-menu', priority: 1 }],
-      autoResponses: [],
-      webhooks: [],
     }
   })
 

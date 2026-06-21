@@ -1,6 +1,5 @@
-import { Bot, BotSettings, AutoResponse, Webhook, MessageChannel, FlowRef } from './types'
+import { Bot, BotSettings, FlowRef, MessageChannel } from './types'
 import { validateBotId, validateBotName } from './validation'
-import { matchFuzzy } from './fuzzy'
 
 export function createBot(props: {
   id: string
@@ -8,8 +7,6 @@ export function createBot(props: {
   phone?: string
   settings: BotSettings
   flows?: FlowRef[]
-  autoResponses: AutoResponse[]
-  webhooks: Webhook[]
 }): Bot {
   validateBotId(props.id)
   validateBotName(props.name)
@@ -20,29 +17,12 @@ export function createBot(props: {
     phone: props.phone,
     settings: props.settings,
     flows: props.flows || [],
-    autoResponses: props.autoResponses,
-    webhooks: props.webhooks,
   }
 }
 
 export function registerChannel(bot: Bot, channel: MessageChannel): Bot {
   bot.channel = channel
   return bot
-}
-
-export function findMatchingAutoResponse(bot: Bot, message: string): AutoResponse | null {
-  const sorted = [...bot.autoResponses].sort((a, b) => b.priority - a.priority)
-  return sorted.find(response => matchFuzzy(response.fuzzySegments, message, response.fuzzyThreshold)) || null
-}
-
-export function findMatchingWebhook(bot: Bot, message: string): Webhook | null {
-  const sorted = [...bot.webhooks].sort((a, b) => b.priority - a.priority)
-  return sorted.find(webhook => matchFuzzy(webhook.fuzzySegments, message, webhook.fuzzyThreshold)) || null
-}
-
-export function findMatchingWebhooks(bot: Bot, message: string): Webhook[] {
-  const sorted = [...bot.webhooks].sort((a, b) => b.priority - a.priority)
-  return sorted.filter(webhook => matchFuzzy(webhook.fuzzySegments, message, webhook.fuzzyThreshold))
 }
 
 export function createDefaultSettings(): BotSettings {

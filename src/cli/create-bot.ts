@@ -66,8 +66,6 @@ export async function runCreateBot(configPath?: string) {
       id: botId,
       name: botName,
       phone: phoneNumber,
-      auto_responses: [],
-      webhooks: [],
       settings: {
         queue_delay: 1000,
         ignore_groups: true,

@@ -1,13 +1,10 @@
-import { Bot, BotSettings, AutoResponse, Webhook, FlowRef, BotConfig, BotSettingsConfig, FlowRefConfig } from './types'
+import { Bot, BotSettings, FlowRef, BotConfig, BotSettingsConfig, FlowRefConfig } from './types'
 import { createBot, createDefaultSettings } from './bot'
 import {
   validateBotId,
   validateBotName,
   validatePhoneNumber,
   validatePriority,
-  validateResponse,
-  validateWebhookUrl,
-  validateWebhookName,
   validateTypingDelay,
   validateQueueDelay,
 } from './validation'
@@ -23,8 +20,6 @@ export function mapConfigToBot(config: BotConfig): Bot {
 
   const settings = config.settings ? mapSettings(config.settings) : createDefaultSettings()
   const flows = (config.flows || []).map(mapFlowRef)
-  const autoResponses = (config.auto_responses || []).map(mapAutoResponse)
-  const webhooks = (config.webhooks || []).map(mapWebhook)
 
   return createBot({
     id: config.id,
@@ -32,8 +27,6 @@ export function mapConfigToBot(config: BotConfig): Bot {
     phone: config.phone,
     settings,
     flows,
-    autoResponses,
-    webhooks,
   })
 }
 
@@ -64,82 +57,6 @@ export function mapSettings(config: BotSettingsConfig): BotSettings {
     ignoreGroups: config.ignore_groups ?? true,
     ignoredSenders: config.ignored_senders || [],
     adminNumbers: config.admin_numbers || [],
-  }
-}
-
-export function mapAutoResponse(config: {
-  pattern: string
-  response: string
-  case_insensitive?: boolean
-  fuzzy_threshold?: number
-  priority?: number
-  cooldown?: number
-  response_options?: Record<string, any>
-}): AutoResponse {
-  validateResponse(config.response)
-  if (config.priority !== undefined) {
-    validatePriority(config.priority)
-  }
-
-  const segments = config.pattern
-    .split(',')
-    .map(s => s.trim())
-    .filter(s => s.length > 0)
-
-  if (segments.length === 0) {
-    throw new Error('Auto-response pattern must contain at least one phrase')
-  }
-
-  return {
-    fuzzySegments: segments,
-    patternString: config.pattern,
-    response: config.response,
-    priority: config.priority ?? 1,
-    cooldown: config.cooldown,
-    fuzzyThreshold: config.fuzzy_threshold ?? 0.6,
-    responseOptions: config.response_options,
-  }
-}
-
-export function mapWebhook(config: {
-  name: string
-  pattern: string
-  url: string
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH'
-  headers?: Record<string, string>
-  timeout?: number
-  retry?: number
-  fuzzy_threshold?: number
-  priority?: number
-  cooldown?: number
-}): Webhook {
-  validateWebhookName(config.name)
-  validateWebhookUrl(config.url)
-  if (config.priority !== undefined) {
-    validatePriority(config.priority)
-  }
-
-  const segments = config.pattern
-    .split(',')
-    .map(s => s.trim())
-    .filter(s => s.length > 0)
-
-  if (segments.length === 0) {
-    throw new Error('Webhook pattern must contain at least one phrase')
-  }
-
-  return {
-    name: config.name,
-    fuzzySegments: segments,
-    patternString: config.pattern,
-    url: config.url,
-    method: config.method ?? 'POST',
-    headers: config.headers ?? {},
-    timeout: config.timeout ?? 5000,
-    retries: config.retry ?? 3,
-    priority: config.priority ?? 1,
-    fuzzyThreshold: config.fuzzy_threshold ?? 0.6,
-    cooldown: config.cooldown,
   }
 }
 

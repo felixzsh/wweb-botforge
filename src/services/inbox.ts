@@ -1,7 +1,4 @@
-import { Bot, IncomingMessage, AutoResponse } from '../bot/types'
-import { AutoResponseService } from './auto-response'
-import { WebhookService } from './webhook'
-import { CooldownService } from './cooldown'
+import { Bot, IncomingMessage } from '../bot/types'
 import { FlowExecutor } from './flow-executor'
 import { getLogger } from '../utils/logger'
 
@@ -10,13 +7,9 @@ export type InboxCallback = (bot: Bot, message: IncomingMessage, response?: stri
 export class InboxService {
   private bots: Map<string, Bot> = new Map()
   private handlers: Map<string, InboxCallback> = new Map()
-  private autoResponseService: AutoResponseService
-  private webhookService: WebhookService
-  private flowExecutor?: FlowExecutor
+  private flowExecutor: FlowExecutor
 
-  constructor(cooldownService: CooldownService, flowExecutor?: FlowExecutor) {
-    this.autoResponseService = new AutoResponseService(cooldownService)
-    this.webhookService = new WebhookService(cooldownService)
+  constructor(flowExecutor: FlowExecutor) {
     this.flowExecutor = flowExecutor
   }
 
@@ -36,7 +29,7 @@ export class InboxService {
     })
 
     bot.channel.onReady(() => {
-      this.logger.info(`🤖 Bot "${bot.name}" (${bot.id}) is ready and listening for messages`)
+      this.logger.info(`Bot "${bot.name}" (${bot.id}) is ready and listening for messages`)
     })
   }
 
@@ -49,52 +42,33 @@ export class InboxService {
     this.handlers.set(botId, handler)
   }
 
-  setFlowExecutor(flowExecutor: FlowExecutor): void {
-    this.flowExecutor = flowExecutor
-  }
-
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
-    this.logger.info(`📨 Message received for bot "${bot.name}": ${message.content.substring(0, 50)}...`)
+    this.logger.info(`Message received for bot "${bot.name}": ${message.content.substring(0, 50)}...`)
 
     try {
+      if (message.metadata?.fromMe) {
+        return
+      }
+
       if (this.isSenderIgnored(bot, message.from)) {
-        this.logger.debug(`🚫 Ignoring message from "${message.from}" for bot "${bot.name}" (sender in ignored list)`)
+        this.logger.debug(`Ignoring message from "${message.from}" for bot "${bot.name}" (sender in ignored list)`)
         return
       }
 
-      if (this.flowExecutor) {
-        const handledByFlow = await this.flowExecutor.handleMessage(bot, message)
-        if (handledByFlow) {
-          return
-        }
-      }
-
-      if (!this.autoResponseService.shouldProcessMessage(bot, message)) {
+      if (bot.settings.ignoreGroups && this.isGroupMessage(message.from)) {
+        this.logger.debug(`Ignoring group message for bot "${bot.name}"`)
         return
       }
 
-      const autoResponse = this.autoResponseService.processMessage(bot, message)
-
-      if (autoResponse) {
-        this.autoResponseService.sendAutoResponse(
-          { enqueue: () => '' },
-          bot,
-          message,
-          autoResponse
-        )
-      }
-
-      this.webhookService.processWebhooks(bot, message).catch(error => {
-        this.logger.error(`❌ Error processing webhooks for bot "${bot.name}":`, error)
-      })
+      await this.flowExecutor.handleMessage(bot, message)
 
       const customHandler = this.handlers.get(bot.id)
       if (customHandler) {
-        customHandler(bot, message, autoResponse?.response)
+        customHandler(bot, message)
       }
 
     } catch (error) {
-      this.logger.error(`❌ Error handling message for bot "${bot.name}":`, error)
+      this.logger.error(`Error handling message for bot "${bot.name}":`, error)
     }
   }
 
@@ -114,7 +88,7 @@ export class InboxService {
     return bot.settings.ignoredSenders.includes(sender)
   }
 
-  getAutoResponseService(): AutoResponseService {
-    return this.autoResponseService
+  private isGroupMessage(from: string): boolean {
+    return from.includes('g.us')
   }
 }

@@ -9,8 +9,6 @@ export interface Bot {
   phone?: string
   settings: BotSettings
   flows: FlowRef[]
-  autoResponses: AutoResponse[]
-  webhooks: Webhook[]
   channel?: MessageChannel
 }
 
@@ -22,30 +20,6 @@ export interface BotSettings {
   ignoreGroups: boolean
   ignoredSenders: string[]
   adminNumbers: string[]
-}
-
-export interface AutoResponse {
-  fuzzySegments: string[]
-  patternString: string
-  response: string
-  priority: number
-  cooldown?: number
-  fuzzyThreshold: number
-  responseOptions?: Record<string, any>
-}
-
-export interface Webhook {
-  name: string
-  fuzzySegments: string[]
-  patternString: string
-  url: string
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH'
-  headers: Record<string, string>
-  timeout: number
-  retries: number
-  priority: number
-  fuzzyThreshold: number
-  cooldown?: number
 }
 
 export interface IncomingMessage {
@@ -80,8 +54,6 @@ export interface BotConfig {
   name: string
   phone?: string
   flows?: FlowRefConfig[]
-  auto_responses?: AutoResponseConfig[]
-  webhooks?: WebhookConfig[]
   settings?: BotSettingsConfig
 }
 
@@ -136,29 +108,6 @@ export interface FlowRefConfig {
   priority?: number
 }
 
-export interface AutoResponseConfig {
-  pattern: string
-  response: string
-  case_insensitive?: boolean
-  fuzzy_threshold?: number
-  priority?: number
-  cooldown?: number
-  response_options?: Record<string, any>
-}
-
-export interface WebhookConfig {
-  name: string
-  pattern: string
-  url: string
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH'
-  headers?: Record<string, string>
-  timeout?: number
-  retry?: number
-  fuzzy_threshold?: number
-  priority?: number
-  cooldown?: number
-}
-
 export interface ConfigFile {
   global?: {
     chromiumPath?: string
@@ -179,6 +128,6 @@ export interface WebhookPayload {
   botId: string
   botName: string
   webhookName: string
-  webhookPattern: string
+  webhookPattern?: string
   metadata: Record<string, any>
 }

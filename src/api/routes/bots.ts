@@ -10,8 +10,7 @@ export function createBotsRouter(bots: Map<string, Bot>): Router {
         id: bot.id,
         name: bot.name,
         phone: bot.phone,
-        autoResponsesCount: bot.autoResponses.length,
-        webhooksCount: bot.webhooks.length,
+        flowsCount: bot.flows.length,
         settings: bot.settings,
       }))
 
@@ -42,8 +41,7 @@ export function createBotsRouter(bots: Map<string, Bot>): Router {
         id: bot.id,
         name: bot.name,
         phone: bot.phone,
-        autoResponses: bot.autoResponses,
-        webhooks: bot.webhooks,
+        flows: bot.flows,
         settings: bot.settings,
       })
     } catch (error) {

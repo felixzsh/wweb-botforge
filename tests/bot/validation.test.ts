@@ -3,13 +3,8 @@ import {
   validatePhoneNumber,
   validateBotName,
   validatePriority,
-  validateResponse,
-  validateWebhookUrl,
-  validateWebhookName,
   validateTypingDelay,
   validateQueueDelay,
-  validateMessageContent,
-  validateRecipient,
 } from '../../src/bot/validation'
 
 describe('Validation', () => {
@@ -70,39 +65,6 @@ describe('Validation', () => {
     })
   })
 
-  describe('validateResponse', () => {
-    it('should pass for valid response', () => {
-      expect(() => validateResponse('Hello!')).not.toThrow()
-    })
-
-    it('should throw for empty response', () => {
-      expect(() => validateResponse('')).toThrow('Response cannot be empty')
-      expect(() => validateResponse('   ')).toThrow('Response cannot be empty')
-    })
-  })
-
-  describe('validateWebhookUrl', () => {
-    it('should pass for valid URL', () => {
-      expect(() => validateWebhookUrl('https://example.com')).not.toThrow()
-    })
-
-    it('should throw for empty URL', () => {
-      expect(() => validateWebhookUrl('')).toThrow('Webhook URL cannot be empty')
-      expect(() => validateWebhookUrl('   ')).toThrow('Webhook URL cannot be empty')
-    })
-  })
-
-  describe('validateWebhookName', () => {
-    it('should pass for valid name', () => {
-      expect(() => validateWebhookName('my-webhook')).not.toThrow()
-    })
-
-    it('should throw for empty name', () => {
-      expect(() => validateWebhookName('')).toThrow('Webhook name cannot be empty')
-      expect(() => validateWebhookName('   ')).toThrow('Webhook name cannot be empty')
-    })
-  })
-
   describe('validateTypingDelay', () => {
     it('should pass for valid delay', () => {
       expect(() => validateTypingDelay(0)).not.toThrow()
@@ -122,28 +84,6 @@ describe('Validation', () => {
 
     it('should throw for negative delay', () => {
       expect(() => validateQueueDelay(-1)).toThrow('Queue delay must be non-negative')
-    })
-  })
-
-  describe('validateMessageContent', () => {
-    it('should pass for valid content', () => {
-      expect(() => validateMessageContent('Hello!')).not.toThrow()
-    })
-
-    it('should throw for empty content', () => {
-      expect(() => validateMessageContent('')).toThrow('Message content cannot be empty')
-      expect(() => validateMessageContent('   ')).toThrow('Message content cannot be empty')
-    })
-  })
-
-  describe('validateRecipient', () => {
-    it('should pass for valid recipient', () => {
-      expect(() => validateRecipient('1234567890')).not.toThrow()
-    })
-
-    it('should throw for empty recipient', () => {
-      expect(() => validateRecipient('')).toThrow('Recipient (to) cannot be empty')
-      expect(() => validateRecipient('   ')).toThrow('Recipient (to) cannot be empty')
     })
   })
 })

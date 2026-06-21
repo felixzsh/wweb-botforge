@@ -5,8 +5,6 @@ import { mapActionCatalog } from '../action/catalog'
 import { mapFlowCatalog } from '../flow/mapper'
 import { ActionCatalog } from '../action/types'
 import { FlowCatalog } from '../flow/types'
-import { AutoResponseService } from './auto-response'
-import { WebhookService } from './webhook'
 import { CooldownService } from './cooldown'
 import { OutboxService } from './outbox'
 import { InboxService } from './inbox'
@@ -19,11 +17,9 @@ import { getLogger } from '../utils/logger'
 
 export class BotFleet {
   private bots: Map<string, Bot> = new Map()
-  private autoResponseService: AutoResponseService
-  private webhookService: WebhookService
   private cooldownService: CooldownService
   private outboxService: OutboxService
-  private inboxService: InboxService
+  private inboxService?: InboxService
   private sessionManager: SessionManager
   private actionCatalog: ActionCatalog = new Map()
   private flowCatalog: FlowCatalog = new Map()
@@ -35,9 +31,6 @@ export class BotFleet {
     this.sessionManager = SessionManager.getInstance()
     this.outboxService = outboxService
     this.cooldownService = new CooldownService()
-    this.autoResponseService = new AutoResponseService(this.cooldownService)
-    this.webhookService = new WebhookService(this.cooldownService)
-    this.inboxService = new InboxService(this.cooldownService)
   }
 
   private get logger() {
@@ -46,7 +39,7 @@ export class BotFleet {
 
   async start(configFile: ConfigFile): Promise<Map<string, Bot>> {
     if (this.isRunning) {
-      this.logger.info('🤖 Bot Fleet Launcher is already running')
+      this.logger.info('Bot Fleet Launcher is already running')
       return this.bots
     }
 
@@ -67,10 +60,11 @@ export class BotFleet {
         flowStateTimeout,
         this.cooldownService
       )
-      this.inboxService.setFlowExecutor(this.flowExecutor)
+
+      this.inboxService = new InboxService(this.flowExecutor)
 
       if (configFile.bots.length === 0) {
-        this.logger.warn('⚠️  No bots configured. Use "npx botforge create-bot" to create your first bot.')
+        this.logger.warn('No bots configured.')
         return this.bots
       }
 
@@ -80,21 +74,21 @@ export class BotFleet {
         await this.initializeBot(bot)
 
         if (loadedBots.length > 1) {
-          this.logger.info('⏳ Waiting 3 seconds before initializing next bot...')
+          this.logger.info('Waiting 3 seconds before initializing next bot...')
           await this.delay(3000)
         }
       }
 
       this.isRunning = true
-      this.logger.info(`🎉 WWeb BotForge started successfully with ${this.bots.size} bot(s)!`)
-      this.logger.info('💬 Bots are now listening for messages...')
+      this.logger.info(`WWeb BotForge started successfully with ${this.bots.size} bot(s)!`)
+      this.logger.info('Bots are now listening for messages...')
 
       this.setupGracefulShutdown()
 
       return this.bots
 
     } catch (error) {
-      this.logger.error('❌ Failed to start Bot Fleet Launcher:', error)
+      this.logger.error('Failed to start Bot Fleet Launcher:', error)
       throw error
     }
   }
@@ -104,7 +98,7 @@ export class BotFleet {
       return
     }
 
-    this.logger.info('🛑 Stopping WWeb BotForge...')
+    this.logger.info('Stopping WWeb BotForge...')
 
     try {
       await this.outboxService.shutdown()
@@ -113,16 +107,16 @@ export class BotFleet {
       this.bots.clear()
 
       this.isRunning = false
-      this.logger.info('✅ WWeb BotForge stopped successfully')
+      this.logger.info('WWeb BotForge stopped successfully')
     } catch (error) {
-      this.logger.error('❌ Error stopping Bot Fleet:', error)
+      this.logger.error('Error stopping Bot Fleet:', error)
       throw error
     }
   }
 
   private async initializeBot(bot: Bot): Promise<void> {
     try {
-      this.logger.info(`🤖 Initializing bot: ${bot.name} (${bot.id})`)
+      this.logger.info(`Initializing bot: ${bot.name} (${bot.id})`)
 
       this.bots.set(bot.id, bot)
 
@@ -130,16 +124,16 @@ export class BotFleet {
       bot.channel = channel
 
       this.outboxService.setupBotQueue(bot)
-      this.inboxService.registerBot(bot)
+      this.inboxService!.registerBot(bot)
 
       this.setupBotEventHandlers(bot)
 
       await bot.channel.connect()
 
-      this.logger.info(`✅ Bot "${bot.name}" initialized and ready`)
+      this.logger.info(`Bot "${bot.name}" initialized and ready`)
 
     } catch (error) {
-      this.logger.error(`❌ Failed to initialize bot "${bot.name}":`, error)
+      this.logger.error(`Failed to initialize bot "${bot.name}":`, error)
       throw error
     }
   }
@@ -150,29 +144,29 @@ export class BotFleet {
     }
 
     bot.channel.onReady(() => {
-      this.logger.info(`✅ Bot "${bot.name}" is ready!`)
+      this.logger.info(`Bot "${bot.name}" is ready!`)
     })
 
     bot.channel.onDisconnected((reason: string) => {
-      this.logger.warn(`⚠️  Bot "${bot.name}" disconnected:`, reason)
+      this.logger.warn(`Bot "${bot.name}" disconnected:`, reason)
     })
 
     bot.channel.onAuthFailure((error: Error) => {
-      this.logger.error(`❌ Bot "${bot.name}" authentication failed:`, error.message)
+      this.logger.error(`Bot "${bot.name}" authentication failed:`, error.message)
     })
 
     bot.channel.onConnectionError((error: Error) => {
-      this.logger.error(`❌ Bot "${bot.name}" connection error:`, error.message)
+      this.logger.error(`Bot "${bot.name}" connection error:`, error.message)
     })
 
     bot.channel.onStateChange((state: string) => {
-      this.logger.info(`ℹ️  Bot "${bot.name}" state changed to:`, state)
+      this.logger.info(`Bot "${bot.name}" state changed to:`, state)
     })
   }
 
   private setupGracefulShutdown(): void {
     const shutdown = async () => {
-      this.logger.info('\n🛑 Received shutdown signal...')
+      this.logger.info('\nReceived shutdown signal...')
       await this.stop()
       process.exit(0)
     }
@@ -182,12 +176,12 @@ export class BotFleet {
     process.on('SIGUSR2', shutdown)
 
     process.on('uncaughtException', (error) => {
-      this.logger.error('❌ Uncaught Exception:', error)
+      this.logger.error('Uncaught Exception:', error)
       this.stop().finally(() => process.exit(1))
     })
 
     process.on('unhandledRejection', (reason, promise) => {
-      this.logger.error('❌ Unhandled Rejection at:', promise, 'reason:', reason)
+      this.logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
       this.stop().finally(() => process.exit(1))
     })
   }
@@ -199,8 +193,7 @@ export class BotFleet {
       return {
         id: bot.id,
         name: bot.name,
-        autoResponsesCount: bot.autoResponses.length,
-        webhooksCount: bot.webhooks.length,
+        flowsCount: bot.flows.length,
         queue: {
           size: queueStatus.queueSize,
           delayMs: queueStatus.delayMs,
@@ -236,7 +229,7 @@ export class BotFleet {
     return this.bots
   }
 
-  getInboxService(): InboxService {
+  getInboxService(): InboxService | undefined {
     return this.inboxService
   }
 }
