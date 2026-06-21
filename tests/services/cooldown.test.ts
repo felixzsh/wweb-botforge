@@ -1,4 +1,4 @@
-import { CooldownService } from '../../src/services/cooldown'
+import { CooldownService } from '../../src/action/cooldown'
 
 describe('CooldownService', () => {
   let cooldownService: CooldownService

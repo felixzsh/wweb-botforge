@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { FlowStateService } from '../../src/services/flow-state'
+import { FlowStateService } from '../../src/flow/state'
 
 describe('FlowStateService', () => {
   let dbPath: string
