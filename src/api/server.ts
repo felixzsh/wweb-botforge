@@ -75,8 +75,8 @@ export class ApiServer {
   async start(): Promise<void> {
     return new Promise((resolve) => {
       this.server = this.app.listen(this.port, () => {
-        this.logger.info(`🚀 API Server started on port ${this.port}`)
-        this.logger.info(`📖 API Documentation: http://localhost:${this.port}`)
+        this.logger.info(`API Server started on port ${this.port}`)
+        this.logger.info(`API Documentation: http://localhost:${this.port}`)
         resolve()
       })
     })
@@ -86,11 +86,11 @@ export class ApiServer {
     return new Promise((resolve) => {
       if (this.server) {
         this.server.close(() => {
-          this.logger.info('🛑 API Server stopped')
+          this.logger.info('API Server stopped')
           resolve()
         })
       } else {
-        this.logger.info('🛑 API Server stopped')
+        this.logger.info('API Server stopped')
         resolve()
       }
     })

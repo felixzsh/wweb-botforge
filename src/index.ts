@@ -53,7 +53,7 @@ async function startBots(configPath?: string) {
   }
 
   const logger = getLogger()
-  logger.info('🤖 WWeb BotForge - Starting bots...')
+  logger.info('WWeb BotForge - Starting bots...')
 
   const outboxService = new OutboxService()
   const fleet = new BotFleet(outboxService)

@@ -4,7 +4,7 @@ phone: "1234567890"
 
 auto_responses:
   - pattern: "^(hello|hi|hey|good morning|good afternoon)$"
-    response: "Hello! 👋 Welcome to our support chat. How can I help you today?"
+    response: "Hello! Welcome to our support chat. How can I help you today?"
     case_insensitive: true
     priority: 1
     cooldown: 30
@@ -16,12 +16,12 @@ auto_responses:
     cooldown: 60
 
   - pattern: "\\b(hours|time|open|schedule)\\b"
-    response: "🕒 Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
+    response: "Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
     case_insensitive: true
     priority: 1
 
   - pattern: "\\b(thank|thanks|gracias)\\b"
-    response: "You're welcome! 😊 Is there anything else I can help you with?"
+    response: "You're welcome! Is there anything else I can help you with?"
     case_insensitive: true
     priority: 1
 

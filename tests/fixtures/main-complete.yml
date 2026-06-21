@@ -11,7 +11,7 @@ bots:
 
     auto_responses:
       - pattern: "^(hello|hi|hey|good morning|good afternoon)$"
-        response: "Hello! 👋 Welcome to our support chat. How can I help you today?"
+        response: "Hello! Welcome to our support chat. How can I help you today?"
         case_insensitive: true
         priority: 1
         cooldown: 30
@@ -23,12 +23,12 @@ bots:
         cooldown: 60
 
       - pattern: "\\b(hours|time|open|schedule)\\b"
-        response: "🕒 Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
+        response: "Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
         case_insensitive: true
         priority: 1
 
       - pattern: "\\b(thank|thanks|gracias)\\b"
-        response: "You're welcome! 😊 Is there anything else I can help you with?"
+        response: "You're welcome! Is there anything else I can help you with?"
         case_insensitive: true
         priority: 1
 
@@ -77,17 +77,17 @@ bots:
 
     auto_responses:
       - pattern: "^(hi|hello|hey)$"
-        response: "Hi there! 🚀 I'm your sales assistant. Ready to help you find the perfect solution?"
+        response: "Hi there! I'm your sales assistant. Ready to help you find the perfect solution?"
         case_insensitive: true
         priority: 1
 
       - pattern: "\\b(demo|trial|test|try)\\b"
-        response: "Great! I'd love to show you a demo. 📅 When would be a good time for you?"
+        response: "Great! I'd love to show you a demo. When would be a good time for you?"
         case_insensitive: true
         priority: 2
 
       - pattern: "\\b(price|cost|pricing|fee)\\b"
-        response: "Our pricing starts at $29/month for the basic plan. 💰 Would you like me to send you a detailed pricing guide?"
+        response: "Our pricing starts at $29/month for the basic plan. Would you like me to send you a detailed pricing guide?"
         case_insensitive: true
         priority: 2
 

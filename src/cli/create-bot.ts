@@ -7,7 +7,7 @@ import { addBotConfig, getConfigPath, setConfigPath } from '../config/yaml'
 
 export async function runCreateBot(configPath?: string) {
   if (configPath) setConfigPath(configPath)
-  console.log('🤖 Welcome to WWeb BotForge!')
+  console.log('Welcome to WWeb BotForge!')
   console.log('Let\'s create a new WhatsApp bot...\n')
 
   try {
@@ -28,29 +28,29 @@ export async function runCreateBot(configPath?: string) {
     const botName = answers.botName.trim()
     const botId = generateBotId(botName)
 
-    console.log(`\n✅ Generated bot ID: ${botId}`)
-    console.log(`📝 Bot name: ${botName}`)
+    console.log(`\nGenerated bot ID: ${botId}`)
+    console.log(`Bot name: ${botName}`)
 
     const initializer = new WhatsAppInitializer(botId)
     let phoneNumber: string | undefined
 
     initializer.onQRCode((qr: string) => {
-      console.log('\n📱 Scan this QR code with WhatsApp to link your account:')
+      console.log('\nScan this QR code with WhatsApp to link your account:')
       qrcode.generate(qr, { small: true })
     })
 
     initializer.onAuthSuccess((phone: string) => {
-      console.log('\n✅ WhatsApp account linked successfully!')
-      console.log(`📱 Connected to WhatsApp with phone: ${phone}`)
+      console.log('\nWhatsApp account linked successfully!')
+      console.log(`Connected to WhatsApp with phone: ${phone}`)
       phoneNumber = phone
     })
 
     initializer.onAuthFailure((error: Error) => {
-      console.error('\n❌ Authentication failed:', error.message)
+      console.error('\nAuthentication failed:', error.message)
       process.exit(1)
     })
 
-    console.log('\n🔗 Initializing WhatsApp Web client...')
+    console.log('\nInitializing WhatsApp Web client...')
     await initializer.initialize()
 
     await new Promise<void>((resolve) => {
@@ -72,17 +72,17 @@ export async function runCreateBot(configPath?: string) {
 
     await addBotConfig(botId, botConfig, configPath)
 
-    console.log(`\n➕ Added new bot: ${botName} (${botId})`)
-    console.log(`📱 Connected to WhatsApp with phone: ${phoneNumber}`)
-    console.log(`\n📁 Bot configuration saved to ${getConfigPath()}`)
-    console.log(`\n🎉 Your bot "${botName}" (${botId}) is now ready to use!`)
+    console.log(`\nAdded new bot: ${botName} (${botId})`)
+    console.log(`Connected to WhatsApp with phone: ${phoneNumber}`)
+    console.log(`\nBot configuration saved to ${getConfigPath()}`)
+    console.log(`\nYour bot "${botName}" (${botId}) is now ready to use!`)
     console.log('\nTo start using your bot, run: npm start')
 
     await initializer.destroy()
     process.exit(0)
 
   } catch (error) {
-    console.error('\n❌ Error creating bot:', error)
+    console.error('\nError creating bot:', error)
     process.exit(1)
   }
 }

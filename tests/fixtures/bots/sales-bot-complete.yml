@@ -4,17 +4,17 @@ phone: "1234567891"
 
 auto_responses:
   - pattern: "^(hi|hello|hey)$"
-    response: "Hi there! 🚀 I'm your sales assistant. Ready to help you find the perfect solution?"
+    response: "Hi there! I'm your sales assistant. Ready to help you find the perfect solution?"
     case_insensitive: true
     priority: 1
 
   - pattern: "\\b(demo|trial|test|try)\\b"
-    response: "Great! I'd love to show you a demo. 📅 When would be a good time for you?"
+    response: "Great! I'd love to show you a demo. When would be a good time for you?"
     case_insensitive: true
     priority: 2
 
   - pattern: "\\b(price|cost|pricing|fee)\\b"
-    response: "Our pricing starts at $29/month for the basic plan. 💰 Would you like me to send you a detailed pricing guide?"
+    response: "Our pricing starts at $29/month for the basic plan. Would you like me to send you a detailed pricing guide?"
     case_insensitive: true
     priority: 2
 

@@ -10,17 +10,17 @@ A scalable and maintainable structure following Domain-Driven Design (DDD) princ
 botforge/
 ├── src/
 │   ├── core/
-│   │   ├── domain/           # ❌ Núcleo del dominio
+│   │   ├── domain/           # Core domain
 │   │   │   ├── entities/
 │   │   │   ├── value-objects/
 │   │   │   └── interfaces/
-│   │   ├── application/      # ⚙️ Lógica de aplicación
-│   │   └── infrastructure/   # 🔌 Implementaciones concretas
-│   ├── cli/                 # 🖥️ Comandos CLI
-│   └── api/                 # 🌐 REST API (futuro)
+│   │   ├── application/      # Application logic
+│   │   └── infrastructure/   # Concrete implementations
+│   ├── cli/                 # CLI commands
+│   └── api/                 # REST API (future)
 ├── config/
-│   └── main.yml            # 📄 Configuración principal
-├── .wwebjs_auth/           # 💾 Sesiones de WhatsApp
+│   └── main.yml            # Main configuration
+├── .wwebjs_auth/           # WhatsApp sessions
 └── tests/
 ```
 

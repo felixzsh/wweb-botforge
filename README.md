@@ -9,16 +9,16 @@
 
 WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
 
-## ✨ What Can You Do?
+## What Can You Do?
 
-- 🤖 **Multiple Bots**: Run several WhatsApp bots from one server
-- 📝 **YAML Configuration**: Define bot behavior in simple YAML files
-- 💬 **Auto-Responses**: Set up instant replies using fuzzy matching — no regex needed
-- 🔗 **Webhooks**: Connect to your existing apps in any language
-- 🌐 **REST API**: Send messages programmatically (optional)
-- 🚀 **Systemd Service**: Run as a proper system service with auto-restart
+- **Multiple Bots**: Run several WhatsApp bots from one server
+- **YAML Configuration**: Define bot behavior in simple YAML files
+- **Auto-Responses**: Set up instant replies using fuzzy matching — no regex needed
+- **Webhooks**: Connect to your existing apps in any language
+- **REST API**: Send messages programmatically (optional)
+- **Systemd Service**: Run as a proper system service with auto-restart
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -65,7 +65,7 @@ systemctl --user enable wweb-botforge
 
 Your bot is now running as a system service! Send messages to test it.
 
-## 🔧 Configuration Guide
+## Configuration Guide
 
 ### Global Configuration
 
@@ -197,7 +197,7 @@ settings:
   ignored_senders: []
 ```
 
-## 🛠️ Service Management
+## Service Management
 
 Once installed and configured, manage your bot service:
 
@@ -218,7 +218,7 @@ systemctl --user stop wweb-botforge
 systemctl --user disable wweb-botforge
 ```
 
-## 📖 Examples
+## Examples
 
 ### Simple FAQ Bot
 
@@ -254,7 +254,7 @@ bots:
     # ... notification config
 ```
 
-## 🤝 Use Cases
+## Use Cases
 
 - **Customer Support**: Auto-respond to common questions
 - **E-commerce**: Handle product inquiries and basic orders
@@ -276,7 +276,7 @@ bots:
 ```
 
 
-## ❓ Troubleshooting
+## Troubleshooting
 
 **Service not starting?**
 - Check if `xvfb` is installed: `which xvfb`
@@ -297,14 +297,13 @@ bots:
 - Check logs for timeout/connection errors
 - Verify webhook URL and headers
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WWeb BotForge wouldn't be possible without this foundational work.
 
-**Made with ❤️ for the no-code bot community**

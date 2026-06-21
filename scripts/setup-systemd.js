@@ -8,7 +8,7 @@ const os = require('os');
 function setupSystemd() {
   try {
     if (os.platform() !== 'linux') {
-      console.log('⚠️  Systemd setup is only available on Linux');
+      console.log('Systemd setup is only available on Linux');
       return;
     }
 
@@ -30,17 +30,17 @@ function setupSystemd() {
     // For Node path, use 'which node' in both cases, but log a warning for dev
     const nodePath = execSync('which node', { encoding: 'utf8' }).trim();
     if (!isProduction) {
-      console.log('🔧 Development mode detected: Using local paths for testing');
+      console.log('Development mode detected: Using local paths for testing');
       console.log(`   Install dir: ${installDir}`);
       console.log(`   Node path: ${nodePath}`);
       console.log('   Note: Ensure dist/cli/index.js exists (run build first)');
     }
 
-    console.log('🔧 Setting up WWeb BotForge systemd service...');
+    console.log('Setting up WWeb BotForge systemd service...');
     
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir, { recursive: true });
-      console.log(`✅ Created config directory: ${configDir}`);
+      console.log(`Created config directory: ${configDir}`);
     }
 
     // Create example config file only if config.yml doesn't exist
@@ -55,15 +55,15 @@ function setupSystemd() {
         .map(line => line.trim() ? `# ${line}` : line)
         .join('\n');
       fs.writeFileSync(targetConfigPath, commentedContent);
-      console.log(`✅ Created example config file: ${targetConfigPath}`);
-      console.log(`   📝 Uncomment and edit this file to configure your bots`);
+      console.log(`Created example config file: ${targetConfigPath}`);
+      console.log(`   Uncomment and edit this file to configure your bots`);
     } else if (fs.existsSync(targetConfigPath)) {
-      console.log(`ℹ️  Config file already exists: ${targetConfigPath}`);
+      console.log(`Config file already exists: ${targetConfigPath}`);
     }
 
     if (!fs.existsSync(systemdUserDir)) {
       fs.mkdirSync(systemdUserDir, { recursive: true });
-      console.log(`✅ Created systemd user directory: ${systemdUserDir}`);
+      console.log(`Created systemd user directory: ${systemdUserDir}`);
     }
 
     const templatePath = path.join(__dirname, '..', 'systemd', 'wweb-botforge.service.template');
@@ -77,13 +77,13 @@ function setupSystemd() {
 
     const servicePath = path.join(systemdUserDir, 'wweb-botforge.service');
     fs.writeFileSync(servicePath, serviceContent);
-    console.log(`✅ Created service file: ${servicePath}`);
+    console.log(`Created service file: ${servicePath}`);
 
     execSync('systemctl --user daemon-reload', { stdio: 'inherit' });
-    console.log('✅ Reloaded systemd daemon\n');
+    console.log('Reloaded systemd daemon\n');
 
   } catch (error) {
-    console.error('❌ Error setting up systemd service:', error.message);
+    console.error('Error setting up systemd service:', error.message);
     throw error;
   }
 }

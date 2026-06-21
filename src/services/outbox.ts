@@ -22,7 +22,7 @@ export class OutboxService {
 
   setBotDelay(botId: string, delayMs: number): void {
     this.delays.set(botId, delayMs)
-    this.logger.info(`📋 Queue delay for bot "${botId}" set to ${delayMs}ms`)
+    this.logger.info(`Queue delay for bot "${botId}" set to ${delayMs}ms`)
   }
 
   setBotSendCallback(botId: string, callback: SendMessageCallback): void {
@@ -42,7 +42,7 @@ export class OutboxService {
       await bot.channel!.send(message)
     })
 
-    this.logger.info(`📋 Configured message queue for bot "${bot.id}": delay=${bot.settings.queueDelay}ms`)
+    this.logger.info(`Configured message queue for bot "${bot.id}": delay=${bot.settings.queueDelay}ms`)
   }
 
   enqueue(
@@ -53,7 +53,7 @@ export class OutboxService {
   ): string {
     const messageId = `${botId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    this.logger.debug(`📨 Queueing message for bot "${botId}" with metadata:`, metadata)
+    this.logger.debug(`Queueing message for bot "${botId}" with metadata:`, metadata)
 
     const outgoingMessage: OutgoingMessage = {
       to,
@@ -76,7 +76,7 @@ export class OutboxService {
 
     botQueue.push(queuedMessage)
 
-    this.logger.info(`📨 Message queued for bot "${botId}": ${messageId} (queue size: ${botQueue.length})`)
+    this.logger.info(`Message queued for bot "${botId}": ${messageId} (queue size: ${botQueue.length})`)
 
     if (!this.processing.get(botId)) {
       this.startProcessing(botId)
@@ -91,7 +91,7 @@ export class OutboxService {
     }
 
     this.processing.set(botId, true)
-    this.logger.info(`▶️  Started processing queue for bot "${botId}"`)
+    this.logger.info(`Started processing queue for bot "${botId}"`)
 
     const botQueue = this.queues.get(botId)
     if (!botQueue) {
@@ -104,26 +104,26 @@ export class OutboxService {
       const delay = this.delays.get(botId) || 2000
 
       try {
-        this.logger.debug(`⏳ Waiting ${delay}ms before sending message ${messageData.id} from bot "${botId}"...`)
+        this.logger.debug(`Waiting ${delay}ms before sending message ${messageData.id} from bot "${botId}"...`)
         await this.delay(delay)
 
-        this.logger.info(`📤 Processing queued message: ${messageData.id} from bot "${botId}"`)
+        this.logger.info(`Processing queued message: ${messageData.id} from bot "${botId}"`)
 
         const callback = this.sendCallbacks.get(botId)
         if (callback) {
           await callback(botId, messageData.message)
-          this.logger.info(`✅ Queued message sent successfully: ${messageData.id}`)
+          this.logger.info(`Queued message sent successfully: ${messageData.id}`)
         } else {
-          this.logger.error(`❌ No send callback configured for bot "${botId}"`)
+          this.logger.error(`No send callback configured for bot "${botId}"`)
         }
 
       } catch (error) {
-        this.logger.error(`❌ Error sending queued message ${messageData.id} from bot "${botId}":`, error)
+        this.logger.error(`Error sending queued message ${messageData.id} from bot "${botId}":`, error)
       }
     }
 
     this.processing.set(botId, false)
-    this.logger.info(`⏸️  Queue processing completed for bot "${botId}"`)
+    this.logger.info(`Queue processing completed for bot "${botId}"`)
   }
 
   getBotQueueStatus(botId: string): any {
@@ -147,7 +147,7 @@ export class OutboxService {
 
   clearBotQueue(botId: string): void {
     this.queues.delete(botId)
-    this.logger.info(`🗑️  Queue cleared for bot "${botId}"`)
+    this.logger.info(`Queue cleared for bot "${botId}"`)
   }
 
   getAllQueuesStatus(): any {
@@ -165,7 +165,7 @@ export class OutboxService {
   }
 
   async shutdown(): Promise<void> {
-    this.logger.info('🛑 Shutting down outbox service...')
+    this.logger.info('Shutting down outbox service...')
 
     for (const [botId] of this.processing.entries()) {
       this.processing.set(botId, false)
@@ -175,7 +175,7 @@ export class OutboxService {
     this.delays.clear()
     this.sendCallbacks.clear()
 
-    this.logger.info('✅ Outbox service shut down')
+    this.logger.info('Outbox service shut down')
   }
 
   private delay(ms: number): Promise<void> {

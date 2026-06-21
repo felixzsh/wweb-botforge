@@ -135,7 +135,7 @@ export class WhatsAppChannel implements MessageChannel {
     }
 
     const whatsappMsg = toWhatsAppFormat(message)
-    this.logger.debug('📤 WhatsApp send options:', JSON.stringify(whatsappMsg.options, null, 2))
+    this.logger.debug('WhatsApp send options:', JSON.stringify(whatsappMsg.options, null, 2))
 
     const result = await this.client.sendMessage(
       whatsappMsg.to,

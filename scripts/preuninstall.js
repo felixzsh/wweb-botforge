@@ -15,14 +15,14 @@ function uninstallService() {
 
     if (!fs.existsSync(servicePath)) return;
 
-    console.log('\n🗑️  Uninstalling WWeb BotForge service...\n');
+    console.log('\nUninstalling WWeb BotForge service...\n');
 
     // Stop service first to prevent hanging
-    console.log('🛑 Stopping service...');
+    console.log('Stopping service...');
     try {
       execSync('systemctl --user stop wweb-botforge 2>/dev/null', { stdio: 'inherit', timeout: 10000 });
     } catch (error) {
-      console.log('⚠️  Service may not be running or failed to stop gracefully');
+      console.log('Service may not be running or failed to stop gracefully');
     }
 
     // Disable service
@@ -32,16 +32,16 @@ function uninstallService() {
 
     // Eliminar archivo .service
     fs.unlinkSync(servicePath);
-    console.log('✅ Service removed');
+    console.log('Service removed');
 
     // Recargar systemd
     execSync('systemctl --user daemon-reload', { stdio: 'ignore' });
     
-    console.log(`\n💾 Configuration kept at: ${configDir}`);
+    console.log(`\nConfiguration kept at: ${configDir}`);
     console.log(`   To remove: rm -rf ${configDir}\n`);
 
   } catch (error) {
-    console.error('⚠️  Cleanup warning:', error.message);
+    console.error('Cleanup warning:', error.message);
   }
 }
 
