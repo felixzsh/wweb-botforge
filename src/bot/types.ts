@@ -1,5 +1,5 @@
-export interface BehaviorRef {
-  flowId: string
+export interface FlowRef {
+  id: string
   priority: number
 }
 
@@ -8,7 +8,7 @@ export interface Bot {
   name: string
   phone?: string
   settings: BotSettings
-  behaviors: BehaviorRef[]
+  flows: FlowRef[]
   autoResponses: AutoResponse[]
   webhooks: Webhook[]
   channel?: MessageChannel
@@ -79,7 +79,7 @@ export interface BotConfig {
   id: string
   name: string
   phone?: string
-  behaviors?: BehaviorConfig[]
+  flows?: FlowRefConfig[]
   auto_responses?: AutoResponseConfig[]
   webhooks?: WebhookConfig[]
   settings?: BotSettingsConfig
@@ -131,8 +131,8 @@ export interface FlowConfig {
   steps: Record<string, FlowStepConfig>
 }
 
-export interface BehaviorConfig {
-  flow: string
+export interface FlowRefConfig {
+  id: string
   priority?: number
 }
 

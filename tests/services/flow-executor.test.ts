@@ -114,7 +114,7 @@ describe('FlowExecutor', () => {
         ignoredSenders: [],
         adminNumbers: [],
       },
-      behaviors: [{ flowId: 'faq-menu', priority: 1 }],
+      flows: [{ id: 'faq-menu', priority: 1 }],
       autoResponses: [],
       webhooks: [],
     }

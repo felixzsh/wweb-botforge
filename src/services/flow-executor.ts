@@ -70,12 +70,12 @@ export class FlowExecutor {
   }
 
   private async handleNewMessage(bot: Bot, message: IncomingMessage): Promise<boolean> {
-    const behaviors = [...bot.behaviors].sort((a, b) => b.priority - a.priority)
+    const flowRefs = [...bot.flows].sort((a, b) => b.priority - a.priority)
 
-    for (const behavior of behaviors) {
-      const flow = this.flowCatalog.get(behavior.flowId)
+    for (const flowRef of flowRefs) {
+      const flow = this.flowCatalog.get(flowRef.id)
       if (!flow) {
-        this.logger.warn(`Flow "${behavior.flowId}" referenced by bot "${bot.name}" not found`)
+        this.logger.warn(`Flow "${flowRef.id}" referenced by bot "${bot.name}" not found`)
         continue
       }
 

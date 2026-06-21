@@ -1,4 +1,4 @@
-import { Bot, BotSettings, AutoResponse, Webhook, BehaviorRef, BotConfig, BotSettingsConfig, BehaviorConfig } from './types'
+import { Bot, BotSettings, AutoResponse, Webhook, FlowRef, BotConfig, BotSettingsConfig, FlowRefConfig } from './types'
 import { createBot, createDefaultSettings } from './bot'
 import {
   validateBotId,
@@ -22,7 +22,7 @@ export function mapConfigToBot(config: BotConfig): Bot {
   }
 
   const settings = config.settings ? mapSettings(config.settings) : createDefaultSettings()
-  const behaviors = (config.behaviors || []).map(mapBehavior)
+  const flows = (config.flows || []).map(mapFlowRef)
   const autoResponses = (config.auto_responses || []).map(mapAutoResponse)
   const webhooks = (config.webhooks || []).map(mapWebhook)
 
@@ -31,19 +31,19 @@ export function mapConfigToBot(config: BotConfig): Bot {
     name: config.name,
     phone: config.phone,
     settings,
-    behaviors,
+    flows,
     autoResponses,
     webhooks,
   })
 }
 
-export function mapBehavior(config: BehaviorConfig): BehaviorRef {
+export function mapFlowRef(config: FlowRefConfig): FlowRef {
   if (config.priority !== undefined) {
     validatePriority(config.priority)
   }
 
   return {
-    flowId: config.flow,
+    id: config.id,
     priority: config.priority ?? 1,
   }
 }

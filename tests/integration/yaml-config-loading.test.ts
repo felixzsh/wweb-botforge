@@ -125,8 +125,8 @@ global:
 bots:
   - id: test-bot
     name: Test Bot
-    behaviors:
-      - flow: faq-menu
+    flows:
+      - id: faq-menu
     auto_responses: []
     webhooks: []
 `)
