@@ -13,8 +13,8 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 
 - **Multiple Bots**: Run several WhatsApp bots from one server
 - **YAML Configuration**: Define bot behavior in simple YAML files
-- **Auto-Responses**: Set up instant replies using fuzzy matching — no regex needed
-- **Webhooks**: Connect to your existing apps in any language
+- **Actions & Flows**: Build conversation state machines with fuzzy-matched triggers
+- **Webhooks**: Connect to your existing apps via HTTP
 - **REST API**: Send messages programmatically (optional)
 - **Systemd Service**: Run as a proper system service with auto-restart
 
@@ -51,7 +51,7 @@ The command will:
 
 ### 3. Configure Your Bot
 
-The `create-bot` command creates a bot entry with default settings but no defined behavior. Your bot won't respond to messages until you configure auto-responses, webhooks, and other settings by editing `~/.config/wweb-botforge/config.yml`. See the Configuration Guide below for detailed instructions on how to add auto-responses, webhooks, and customize your bot's behavior.
+The `create-bot` command creates a bot entry with default settings but no defined behavior. Your bot won't respond to messages until you define actions, flows, and assign them to your bot by editing `~/.config/wweb-botforge/config.yml`. See the Configuration Guide below.
 
 ### 4. Setup & Start as System Service
 
@@ -79,123 +79,147 @@ global:
   logLevel: "info"                  # Global log level
 ```
 
-### Bot Structure
+### Architecture
 
-Each bot in your `config.yml` can have:
+BotForge uses three catalogs — **Actions**, **Flows**, and **Bots** — all defined in a single YAML map:
 
-- **`id`**: Unique identifier (auto-generated)
-- **`name`**: Display name
-- **`phone`**: Phone number (auto-filled after WhatsApp authentication)
-- **`auto_responses`**: Instant replies using fuzzy matching
-- **`webhooks`**: HTTP requests to external services
-- **`settings`**: Bot behavior options
+- **Actions**: Reusable behaviors — text replies, webhook calls, cooldowns. Not tied to any specific bot.
+- **Flows**: Multi-step conversation state machines that reference actions. Each step has one action and optional branches that transition based on fuzzy-matched user replies.
+- **Bots**: WhatsApp numbers that reference flows (by priority) and have per-bot settings.
 
-### Auto-Responses
-
-Auto-responses use **fuzzy matching** against comma-separated phrases. The bot will match messages that are similar to any of the configured phrases — no regex knowledge needed.
-
-```yaml
-auto_responses:
-  - pattern: "hello, hi, hey, good morning"
-    response: "Hello! How can I help you?"
-    fuzzy_threshold: 0.6   # optional, 0=exact, 1=very loose (default: 0.6)
-    priority: 1            # optional, higher = checked first (default: 1)
-    cooldown: 30           # optional, cooldown in seconds per sender (default: none)
+```
+Actions (what to do) → Flows (when and how) → Bots (who does it)
 ```
 
-- **`pattern`**: Comma-separated phrases. Each phrase is fuzzy-matched independently against incoming messages.
-- **`fuzzy_threshold`**: How strict the match is. `0.3` = very strict (exact words), `0.6` = moderate (typos and variations ok), `0.9` = very loose.
+### Actions
 
+Actions are the building blocks. Each action can have a `reply` (text response), a `webhook` (HTTP call to external services), and optional `cooldown` / `cooldown_reply`.
 
-### Webhooks
-
-Webhooks allow your bot to send HTTP requests to external services when messages match specific phrases. This enables integration with APIs, notification systems, and other services.
-
-**Features:**
-- **Outbound HTTP requests**: Bot makes POST/PUT/GET requests to configured URLs
-- **Fuzzy matching**: Same fuzzy matching as auto-responses, comma-separated phrases
-- **Cooldown support**: Same cooldown system as auto-responses
-- **Retry logic**: Automatic retries with exponential backoff
-- **Custom headers**: Authentication and custom headers
-- **Timeout control**: Configurable request timeouts
-- **Multiple webhooks**: Multiple webhooks can trigger for the same message
-
-**Configuration:**
+Replies support template variables:
+- `{{sender}}` — the sender's phone number
+- `{{message}}` — the incoming message text
+- `{{bot.id}}` — the bot's ID
+- `{{variables.name}}` — flow session variables
 
 ```yaml
-webhooks:
-  - name: "order-webhook"
-    pattern: "new order, nuevo pedido, compra"
-    url: "https://api.example.com/orders"
-    method: "POST"
-    fuzzy_threshold: 0.5
-    headers:
-      Authorization: "Bearer your-token"
-      Content-Type: "application/json"
-    timeout: 5000      # 5 seconds
-    retry: 3          # Retry up to 3 times
-    priority: 1       # Higher priority = checked first
-    cooldown: 60      # 60 seconds cooldown per sender
+actions:
+  greet:
+    reply: "Hello! How can I help you?"
+
+  escalate:
+    reply: "Connecting you to a human agent."
+    webhook:
+      name: escalate-human
+      url: "https://api.example.com/support/escalate"
+      method: POST
+      headers:
+        Authorization: "Bearer your-api-token"
+      timeout: 10000
+      retry: 3
+    cooldown: 120
+    cooldown_reply: "You already requested a human agent. Please wait."
+
+  lead-notify:
+    webhook:
+      name: lead-capture
+      url: "https://crm.example.com/leads"
+      method: POST
+      headers:
+        X-API-Key: "your-crm-key"
 ```
 
-**Webhook Payload:**
-
-When triggered, the webhook sends a JSON payload:
+When a webhook fires, it sends a JSON payload:
 
 ```json
 {
   "sender": "521234567890",
-  "message": "Tengo un nuevo pedido",
+  "message": "I'm interested in your product",
   "timestamp": "2025-01-09T01:45:00Z",
-  "botId": "bot-1",
-  "botName": "My Bot",
-  "webhookName": "order-webhook",
-  "webhookPattern": "new order, nuevo pedido, compra",
+  "botId": "support-bot",
+  "botName": "support-bot",
+  "webhookName": "lead-capture",
   "metadata": {}
 }
 ```
 
-### Cooldown Protection
+### Flows
 
-To prevent spam attacks, you can set a `cooldown` (in seconds) for each auto-response or webhook pattern. This creates a cooldown period per sender-pattern combination, preventing the same sender from triggering the same pattern repeatedly within the specified time.
-
-- **Applies to both auto-responses and webhooks**: Works the same way for message replies and HTTP requests
-- **Per sender-pattern**: Different senders can trigger the same pattern simultaneously
-- **Independent patterns**: A sender can trigger different patterns without waiting
-- **Automatic cleanup**: Expired cooldowns are cleaned up automatically to prevent memory leaks
-
-Example with auto-responses:
+Flows define multi-step conversations. Each flow has an `entry_step`, optional `triggers` (comma-separated phrases for fuzzy-matching the user's first message), `steps` with branches, and an optional `fallback_step` for unexpected responses.
 
 ```yaml
-auto_responses:
-  - pattern: "help, support, assist"
-    response: "How can I help you?"
-    cooldown: 60  # 1 minute cooldown per sender for this pattern
+flows:
+  faq-support:
+    entry_step: menu
+    triggers: "menu, hola, hello, help, start"
+    timeout: 300
+    fallback_step: invalid
+    steps:
+      menu:
+        action: menu
+        branches:
+          - when: "1, hours, schedule"
+            goto: hours
+          - when: "2, catalog, products"
+            goto: catalog
+          - when: "3, human, agent"
+            goto: escalate
+          - goto: invalid
+      hours:
+        action: hours
+        branches:
+          - when: "menu, back"
+            goto: menu
+          - goto: invalid
+      end:
+        action: farewell
+        branches: []           # empty = terminal step, session ends
 
-  - pattern: "price, cost, pricing"
-    response: "Check our pricing at example.com/pricing"
-    cooldown: 300  # 5 minutes cooldown
+  ping-pong:
+    entry_step: ping
+    triggers: "ping"
+    steps:
+      ping:
+        action: pong
+        branches: []
 ```
 
-Example with webhooks:
+- **`triggers`** — comma-separated phrases. Fuzzy-matched against incoming messages to enter the flow.
+- **`fuzzy_threshold`** — controls strictness. `0.3` = strict, `0.6` = moderate (default), `0.9` = loose.
+- **`timeout`** — seconds of inactivity before the session expires. Defaults to global `sessionTimeout`.
+- **`fallback_step`** — where to redirect if no branch matches. Without one, mismatched messages are silently ignored.
+- **`branches: []`** — empty branches mean the flow ends after that step (terminal).
+
+### Cooldowns
+
+Set a `cooldown` (seconds) on any action to prevent the same sender from triggering it repeatedly. Optionally provide a `cooldown_reply` that gets sent instead of the normal reply during the cooldown period.
 
 ```yaml
-webhooks:
-  - name: "order-webhook"
-    pattern: "new order, nuevo pedido"
-    url: "https://api.example.com/orders"
-    method: "POST"
-    cooldown: 120  # 2 minutes cooldown per sender for this webhook
+actions:
+  escalate:
+    reply: "Connecting you to an agent."
+    webhook:
+      name: escalate-human
+      url: "https://api.example.com/support/escalate"
+    cooldown: 120
+    cooldown_reply: "You already requested an agent. Please wait."
 ```
+
+Cooldowns are per-sender, per-action — different senders are tracked independently.
 
 ### Bot Settings
 
 ```yaml
 settings:
-  queue_delay: 1000
-  ignore_groups: false
-  ignored_senders: []
+  queue_delay: 1000        # ms between outgoing messages
+  simulate_typing: true    # show typing indicator before replies
+  typing_delay: 1000       # ms to simulate typing before sending
+  read_receipts: true      # mark messages as read
+  ignore_groups: true      # skip group messages
+  ignored_senders:         # skip messages from these senders
+    - "status@broadcast"
 ```
+
+See [`config.example.yml`](config.example.yml) for a full working configuration.
 
 ## Service Management
 
@@ -218,64 +242,6 @@ systemctl --user stop wweb-botforge
 systemctl --user disable wweb-botforge
 ```
 
-## Examples
-
-### Simple FAQ Bot
-
-```yaml
-bots:
-  - id: support-bot
-    name: "Support Bot"
-    auto_responses:
-      - pattern: "hours, time, schedule, open"
-        response: "We're open Mon-Fri 9am-6pm, Sat 10am-2pm"
-
-      - pattern: "price, cost, pricing"
-        response: "Check our pricing at website.com/pricing"
-
-      - pattern: "contact, email, phone, call"
-        response: "Email us at support@example.com or call +1-555-1234"
-```
-
-### Multi-Bot Setup
-
-```yaml
-bots:
-  - id: sales-bot
-    name: "Sales Assistant"
-    # ... sales config
-
-  - id: support-bot
-    name: "Customer Support"
-    # ... support config
-
-  - id: notifications-bot
-    name: "Alert Bot"
-    # ... notification config
-```
-
-## Use Cases
-
-- **Customer Support**: Auto-respond to common questions
-- **E-commerce**: Handle product inquiries and basic orders
-- **Notifications**: Send alerts from your systems
-- **Lead Generation**: Capture and route inquiries
-- **Internal Tools**: Team communication bots
-- **Business Automation**: Streamline repetitive tasks
-- **AI Integration**: Connect to ChatGPT, Claude, etc.
-
-### Using Includes
-
-Organize large configs:
-
-```yaml
-# config.yml
-bots:
-  - !include bots/support.yml
-  - !include bots/sales.yml
-```
-
-
 ## Troubleshooting
 
 **Service not starting?**
@@ -289,7 +255,7 @@ bots:
 
 **Messages not responding?**
 - Check bot status in logs
-- Verify phrase patterns in config
+- Verify flow triggers are correctly set in config
 - Test with exact phrases first, then tune `fuzzy_threshold`
 
 **Webhook not working?**

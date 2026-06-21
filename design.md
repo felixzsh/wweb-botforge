@@ -61,19 +61,19 @@ botforge/
 ```yaml
 # config/main.yml
 bots:
-  - id: soporte-bot
-    name: "Bot de Soporte"
-    auto_responses:
-      - pattern: "^hola$"
-        response: "¡Hola!"
-        priority: 1
-    webhooks: []
+  support-bot:
+    name: "Support Bot"
+    flows:
+      - id: faq
+        priority: 10
     settings:
       simulate_typing: true
 
-  - id: ventas-bot
-    name: "Bot de Ventas"
-    # ... more config
+  sales-bot:
+    name: "Sales Bot"
+    flows:
+      - id: sales-flow
+        priority: 5
 ```
 
 Result: `YamlLoader.loadMainConfig()` returns a `RawConfig` with `bots` array containing the two bot objects directly.
@@ -82,19 +82,17 @@ Result: `YamlLoader.loadMainConfig()` returns a `RawConfig` with `bots` array co
 ```yaml
 # config/main.yml
 bots:
-  - !include bots/soporte-bot.yml
-  - !include bots/ventas-bot.yml
+  - !include bots/support-bot.yml
+  - !include bots/sales-bot.yml
 ```
 
 ```yaml
-# config/bots/soporte-bot.yml
-id: soporte-bot
-name: "Bot de Soporte"
-auto_responses:
-  - pattern: "^hola$"
-    response: "¡Hola!"
-    priority: 1
-webhooks: []
+# config/bots/support-bot.yml
+id: support-bot
+name: "Support Bot"
+flows:
+  - id: faq
+    priority: 10
 settings:
   simulate_typing: true
 ```
