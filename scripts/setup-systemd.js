@@ -66,7 +66,7 @@ function setupSystemd() {
       console.log(`Created systemd user directory: ${systemdUserDir}`);
     }
 
-    const templatePath = path.join(__dirname, '..', 'systemd', 'wweb-botforge.service.template');
+    const templatePath = path.join(__dirname, '..', 'service', 'wweb-botforge.service.template');
     let serviceContent = fs.readFileSync(templatePath, 'utf8');
 
     serviceContent = serviceContent
