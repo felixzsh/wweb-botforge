@@ -1,7 +1,7 @@
 import { executeAction } from '../../src/action/executor'
 import { mapActionCatalog } from '../../src/action/catalog'
 import { ActionExecutionContext } from '../../src/action/types'
-import { ActionConfig } from '../../src/bot/types'
+import { ActionConfig } from '../../src/config/types'
 
 describe('executeAction', () => {
   const context: ActionExecutionContext = {

@@ -3,12 +3,13 @@ import * as path from 'path'
 import * as os from 'os'
 import { FlowExecutor } from '../../src/flow/executor'
 import { FlowStateService } from '../../src/flow/state'
-import { OutboxService } from '../../src/services/outbox'
+import { OutboxService } from '../../src/messaging/outbox'
 import { CooldownService } from '../../src/action/cooldown'
 import { mapActionCatalog } from '../../src/action/catalog'
 import { mapFlowCatalog } from '../../src/flow/mapper'
-import { Bot, IncomingMessage } from '../../src/bot/types'
-import { ActionConfig, FlowConfig } from '../../src/bot/types'
+import { Bot } from '../../src/bot/types'
+import { IncomingMessage } from '../../src/messaging/types'
+import { ActionConfig, FlowConfig } from '../../src/config/types'
 
 describe('FlowExecutor', () => {
   let dbPath: string

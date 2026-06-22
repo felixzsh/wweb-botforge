@@ -1,5 +1,5 @@
 import { mapFlowCatalog } from '../../src/flow/mapper'
-import { FlowConfig } from '../../src/bot/types'
+import { FlowConfig } from '../../src/config/types'
 
 describe('FlowMapper', () => {
   it('should map a simple flow with triggers and branches', () => {

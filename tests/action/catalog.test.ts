@@ -1,5 +1,5 @@
 import { mapActionCatalog, resolveAction } from '../../src/action/catalog'
-import { ActionConfig } from '../../src/bot/types'
+import { ActionConfig } from '../../src/config/types'
 
 describe('ActionCatalog', () => {
   describe('mapActionCatalog', () => {
