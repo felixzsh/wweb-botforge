@@ -68,4 +68,43 @@ describe('FlowStateService', () => {
     expect(deleted).toBe(1)
     expect(service.count()).toBe(1)
   })
+
+  it('should silently ignore updateStep for non-existent id', () => {
+    expect(() => {
+      service.updateStep('non-existent-id', 'menu')
+    }).not.toThrow()
+  })
+
+  it('should not expire state with timeout of 0', () => {
+    const now = Date.now()
+    service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 0, now)
+
+    const found = service.findActive('521234567890', 'bot-1', now + 999999)
+    expect(found).not.toBeNull()
+    expect(found?.stepId).toBe('menu')
+  })
+
+  it('should update step keeping existing variables when no variables provided', () => {
+    const now = Date.now()
+    const state = service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 300, now)
+
+    service.updateStep(state.id, 'hours')
+
+    const found = service.findActive('521234567890', 'bot-1')
+    expect(found?.stepId).toBe('hours')
+    expect(found?.variables).toEqual({})
+  })
+
+  it('should handle empty string variables in database', () => {
+    const now = Date.now()
+    service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 300, now)
+
+    ;(service as any).db.prepare(
+      'UPDATE flow_states SET variables = ? WHERE sender = ? AND bot_id = ?'
+    ).run('', '521234567890', 'bot-1')
+
+    const found = service.findActive('521234567890', 'bot-1')
+    expect(found).not.toBeNull()
+    expect(found?.variables).toEqual({})
+  })
 })

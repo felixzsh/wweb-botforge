@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { loadConfig } from '../../src/config/yaml'
+import { loadConfig, saveConfig, addBotConfig, updateBotConfig, setConfigPath, getConfigPath } from '../../src/config/yaml'
 import { mapConfigToBot, mapBotsFromConfig, mapSettings, mapActionCatalog, mapFlowCatalog } from '../../src/config/mapper'
 import { BotConfig } from '../../src/config/schema'
 
@@ -523,6 +523,247 @@ steps:
       expect(config.flows).toBeDefined()
       expect(config.flows?.['faq-menu']).toBeDefined()
       expect(config.flows?.['faq-menu'].entry_step).toBe('menu')
+    })
+  })
+
+  describe('Config path management', () => {
+    afterEach(() => {
+      setConfigPath('')
+    })
+
+    it('should return default config path when no custom path set', () => {
+      const result = getConfigPath()
+      expect(result).toContain('.config')
+      expect(result).toContain('wweb-botforge')
+      expect(result).toContain('config.yml')
+    })
+
+    it('should return custom path after setConfigPath', () => {
+      setConfigPath('/tmp/custom-config.yml')
+      expect(getConfigPath()).toBe('/tmp/custom-config.yml')
+    })
+
+    it('should use custom path in loadConfig', async () => {
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-path-'))
+      const configPath = path.join(tempDir, 'my-config.yml')
+
+      fs.writeFileSync(configPath, 'bots:\n  test-bot:\n    flows:\n      - id: faq')
+
+      const config = await loadConfig(configPath)
+      expect(config.bots['test-bot']).toBeDefined()
+
+      fs.rmSync(tempDir, { recursive: true, force: true })
+    })
+  })
+
+  describe('YAML include processing', () => {
+    let tempDir: string
+
+    afterEach(() => {
+      if (tempDir && fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it('should process !include for flow refs inside bot', async () => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-include-'))
+
+      const flowsDir = path.join(tempDir, 'flows')
+      fs.mkdirSync(flowsDir)
+
+      fs.writeFileSync(path.join(tempDir, 'config.yml'), `bots:
+  my-bot:
+    flows:
+      - !include flows/faq-ref.yml`)
+
+      fs.writeFileSync(path.join(flowsDir, 'faq-ref.yml'), `id: faq-support
+priority: 5`)
+
+      const config = await loadConfig(path.join(tempDir, 'config.yml'))
+
+      expect(config.bots['my-bot'].flows).toHaveLength(1)
+      expect(config.bots['my-bot'].flows![0].id).toBe('faq-support')
+      expect(config.bots['my-bot'].flows![0].priority).toBe(5)
+    })
+
+    it('should process !include for flow branches', async () => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-include-branch-'))
+
+      const branchesDir = path.join(tempDir, 'branches')
+      fs.mkdirSync(branchesDir)
+
+      fs.writeFileSync(path.join(tempDir, 'config.yml'), `bots:
+  test-bot:
+    flows:
+      - id: demo
+flows:
+  demo:
+    entry_step: start
+    triggers: hi
+    steps:
+      start:
+        action: greet
+        branches:
+          - !include branches/hours.yml`)
+
+      fs.writeFileSync(path.join(branchesDir, 'hours.yml'), `when: hours
+goto: show-hours`)
+
+      const config = await loadConfig(path.join(tempDir, 'config.yml'))
+
+      expect(config.flows?.demo.steps.start.branches).toHaveLength(1)
+      expect(config.flows!.demo.steps.start.branches![0].goto).toBe('show-hours')
+    })
+  })
+
+  describe('Save and write config', () => {
+    let tempDir: string
+
+    afterEach(() => {
+      if (tempDir && fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it('should save config to file', async () => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-save-'))
+      const configPath = path.join(tempDir, 'config.yml')
+
+      const config = {
+        global: { logLevel: 'info' as const },
+        bots: {
+          'test-bot': {
+            flows: [{ id: 'faq', priority: 5 }],
+          },
+        },
+      }
+
+      await saveConfig(config, configPath)
+      expect(fs.existsSync(configPath)).toBe(true)
+
+      const loaded = await loadConfig(configPath)
+      expect(loaded.bots['test-bot']).toBeDefined()
+      expect(loaded.global?.logLevel).toBe('info')
+    })
+
+    it('should create directory structure when saving', async () => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-save-dir-'))
+      const deepPath = path.join(tempDir, 'sub', 'dir', 'config.yml')
+
+      await saveConfig({ bots: { test: {} } }, deepPath)
+      expect(fs.existsSync(deepPath)).toBe(true)
+    })
+
+    it('should throw when save fails', async () => {
+      const readOnlyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-readonly-'))
+      try {
+        fs.chmodSync(readOnlyDir, 0o444)
+        const writePath = path.join(readOnlyDir, 'config.yml')
+        await expect(saveConfig({ bots: { test: {} } }, writePath)).rejects.toThrow(
+          'Failed to write configuration'
+        )
+      } finally {
+        fs.chmodSync(readOnlyDir, 0o755)
+      }
+    })
+  })
+
+  describe('Add bot config', () => {
+    let tempDir: string
+    let configPath: string
+
+    beforeEach(() => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-addbot-'))
+      configPath = path.join(tempDir, 'config.yml')
+    })
+
+    afterEach(() => {
+      if (tempDir && fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it('should add a new bot to existing config', async () => {
+      await saveConfig({
+        bots: { existing: {} },
+      }, configPath)
+
+      await addBotConfig('new-bot', { flows: [{ id: 'faq' }] }, configPath)
+
+      const config = await loadConfig(configPath)
+      expect(config.bots['existing']).toBeDefined()
+      expect(config.bots['new-bot']).toBeDefined()
+      expect(config.bots['new-bot'].flows![0].id).toBe('faq')
+    })
+
+    it('should create config file when it does not exist', async () => {
+      await addBotConfig('first-bot', {}, configPath)
+
+      const config = await loadConfig(configPath)
+      expect(config.bots['first-bot']).toBeDefined()
+    })
+
+    it('should throw when adding duplicate bot', async () => {
+      await saveConfig({ bots: { dup: {} } }, configPath)
+
+      await expect(addBotConfig('dup', {}, configPath)).rejects.toThrow(
+        'Bot with ID "dup" already exists'
+      )
+    })
+
+    it('should add bot with settings', async () => {
+      await addBotConfig('configured', {
+        settings: {
+          simulate_typing: false,
+          typing_delay: 500,
+        },
+      }, configPath)
+
+      const config = await loadConfig(configPath)
+      expect(config.bots['configured'].settings?.simulate_typing).toBe(false)
+      expect(config.bots['configured'].settings?.typing_delay).toBe(500)
+    })
+  })
+
+  describe('Update bot config', () => {
+    let tempDir: string
+    let configPath: string
+
+    beforeEach(() => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-upd-'))
+      configPath = path.join(tempDir, 'config.yml')
+    })
+
+    afterEach(() => {
+      if (tempDir && fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true })
+      }
+    })
+
+    it('should update existing bot', async () => {
+      await saveConfig({ bots: { target: { flows: [{ id: 'old' }] } } }, configPath)
+
+      await updateBotConfig('target', { flows: [{ id: 'new', priority: 99 }] }, configPath)
+
+      const config = await loadConfig(configPath)
+      expect(config.bots['target'].flows![0].id).toBe('new')
+      expect(config.bots['target'].flows![0].priority).toBe(99)
+    })
+
+    it('should throw when updating non-existent bot', async () => {
+      await saveConfig({ bots: { existing: {} } }, configPath)
+
+      await expect(updateBotConfig('ghost', {}, configPath)).rejects.toThrow(
+        'Bot with ID "ghost" not found'
+      )
+    })
+
+    it('should throw when config file does not exist', async () => {
+      const missingPath = path.join(tempDir, 'nonexistent.yml')
+
+      await expect(updateBotConfig('bot', {}, missingPath)).rejects.toThrow(
+        'Configuration file does not exist'
+      )
     })
   })
 })

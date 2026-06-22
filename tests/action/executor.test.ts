@@ -55,6 +55,17 @@ describe('executeAction', () => {
     expect(result.webhook?.url).toBe('https://api.example.com/escalate')
   })
 
+  it('should resolve missing variable as empty string', () => {
+    const config: Record<string, ActionConfig> = {
+      greet: { reply: 'Hello {{variables.unknown}}!' },
+    }
+    const catalog = mapActionCatalog(config)
+
+    const result = executeAction(catalog, 'greet', context)
+
+    expect(result.reply).toBe('Hello !')
+  })
+
   it('should throw for unknown action', () => {
     const catalog = mapActionCatalog({})
 

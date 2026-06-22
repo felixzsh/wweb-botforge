@@ -54,15 +54,50 @@ describe('CooldownService', () => {
   })
 
   describe('cleanupExpiredCooldowns', () => {
-    it('should remove expired cooldowns after cleanup', async () => {
+    it('should remove cooldowns older than max age', () => {
+      const past = Date.now() - 60 * 60 * 1000 - 1000
+      jest.spyOn(Date, 'now').mockReturnValueOnce(past)
+
       cooldownService.setCooldown('1234567890', 'pattern1')
-      const statusBefore = cooldownService.getCooldownStatus('1234567890', 'pattern1')
-      expect(statusBefore.lastTrigger).toBeDefined()
-      
-      cooldownService.clearAllCooldowns()
+
+      jest.spyOn(Date, 'now').mockReturnValueOnce(past + 60 * 60 * 1000 + 2000)
+
       cooldownService.cleanupExpiredCooldowns()
-      
-      expect(cooldownService.isOnCooldown('1234567890', 'pattern1', 1000)).toBe(false)
+
+      expect(cooldownService.isOnCooldown('1234567890', 'pattern1', 60000)).toBe(false)
+    })
+
+    it('should clean up sender entry when all its keys expire', () => {
+      const past = Date.now() - 60 * 60 * 1000 - 1000
+      jest.spyOn(Date, 'now').mockReturnValueOnce(past)
+
+      cooldownService.setCooldown('1234567890', 'pattern1')
+
+      jest.spyOn(Date, 'now').mockReturnValueOnce(past + 60 * 60 * 1000 + 2000)
+
+      cooldownService.cleanupExpiredCooldowns()
+
+      const status = cooldownService.getCooldownStatus('1234567890', 'pattern1')
+      expect(status.lastTrigger).toBeUndefined()
+    })
+
+    it('should only remove expired keys and keep non-expired ones', () => {
+      const past = Date.now() - 60 * 60 * 1000 - 1000
+      jest.spyOn(Date, 'now').mockReturnValueOnce(past)
+
+      cooldownService.setCooldown('1234567890', 'expired-key')
+
+      const present = Date.now()
+      jest.spyOn(Date, 'now').mockReturnValueOnce(present)
+
+      cooldownService.setCooldown('1234567890', 'active-key')
+
+      jest.spyOn(Date, 'now').mockReturnValueOnce(past + 60 * 60 * 1000 + 2000)
+
+      cooldownService.cleanupExpiredCooldowns()
+
+      expect(cooldownService.isOnCooldown('1234567890', 'expired-key', 60000)).toBe(false)
+      expect(cooldownService.isOnCooldown('1234567890', 'active-key', 60000)).toBe(true)
     })
   })
 

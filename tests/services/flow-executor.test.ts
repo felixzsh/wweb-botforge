@@ -38,6 +38,10 @@ describe('FlowExecutor', () => {
       invalid: { reply: 'Invalid option' },
       farewell: { reply: 'Goodbye!' },
       escalate: { reply: 'Escalating to human.', cooldown: 30, cooldown_reply: 'Please wait, action on cooldown.' },
+      cool_reply: { reply: 'Done!', cooldown: 30 },
+      webhook_greet: { reply: 'Webhook sent', webhook: { url: 'https://example.com/hook', retry: 1 } },
+      webhook_fail: { reply: 'Failed webhook', webhook: { url: 'https://example.com/fail', retry: 1 } },
+      webhook_only: { webhook: { url: 'https://example.com/hook-only', retry: 1 } },
     }
 
     const flows: Record<string, FlowConfig> = {
@@ -86,6 +90,116 @@ describe('FlowExecutor', () => {
           },
           end: {
             action: 'farewell',
+            branches: [],
+          },
+        },
+      },
+      'no-fallback': {
+        entry_step: 'menu',
+        triggers: 'ping',
+        steps: {
+          menu: {
+            action: 'greet',
+            branches: [
+              { when: 'pong', goto: 'end' },
+            ],
+          },
+          end: {
+            action: 'farewell',
+            branches: [],
+          },
+        },
+      },
+      'has-fallback': {
+        entry_step: 'menu',
+        triggers: 'fb',
+        fallback_step: 'fallback',
+        steps: {
+          menu: {
+            action: 'greet',
+            branches: [
+              { when: 'correct', goto: 'done' },
+            ],
+          },
+          fallback: {
+            action: 'invalid',
+            branches: [
+              { goto: 'menu' },
+            ],
+          },
+          done: {
+            action: 'farewell',
+            branches: [],
+          },
+        },
+      },
+      'terminal-flow': {
+        entry_step: 'done',
+        triggers: 'end',
+        steps: {
+          done: {
+            action: 'farewell',
+            branches: [],
+          },
+        },
+      },
+      'broken-branch': {
+        entry_step: 'menu',
+        triggers: 'broken',
+        steps: {
+          menu: {
+            action: 'greet',
+            branches: [
+              { when: 'go', goto: 'missing-step' },
+            ],
+          },
+        },
+      },
+      'cooldown-simple': {
+        entry_step: 'start',
+        triggers: 'fire',
+        steps: {
+          start: {
+            action: 'cool_reply',
+            branches: [],
+          },
+        },
+      },
+      'webhook-flow': {
+        entry_step: 'start',
+        triggers: 'wh',
+        steps: {
+          start: {
+            action: 'webhook_greet',
+            branches: [],
+          },
+        },
+      },
+      'webhook-fail': {
+        entry_step: 'start',
+        triggers: 'whfail',
+        steps: {
+          start: {
+            action: 'webhook_fail',
+            branches: [],
+          },
+        },
+      },
+      'webhook-only': {
+        entry_step: 'start',
+        triggers: 'who',
+        steps: {
+          start: {
+            action: 'webhook_only',
+            branches: [],
+          },
+        },
+      },
+      'no-triggers': {
+        entry_step: 'start',
+        steps: {
+          start: {
+            action: 'greet',
             branches: [],
           },
         },
@@ -233,6 +347,237 @@ describe('FlowExecutor', () => {
 
       expect(handled).toBe(true)
       expect(sentMessages[4].content).toContain('Menu:')
+    })
+
+    it('should return false when action on cooldown without cooldown_reply', async () => {
+      bot.flows = [{ id: 'cooldown-simple', priority: 1 }]
+
+      const first = await executor.handleMessage(bot, makeMessage('fire'))
+      expect(first).toBe(true)
+      expect(sentMessages[0].content).toBe('Done!')
+
+      const second = await executor.handleMessage(bot, makeMessage('fire'))
+      expect(second).toBe(false)
+      expect(sentMessages).toHaveLength(1)
+    })
+
+    it('should skip cooldown checks when no cooldownService set', async () => {
+      const noCooldown = new FlowExecutor(
+        new Map(),
+        new Map(),
+        flowStateService,
+        outboxService,
+        300
+      )
+      ;(noCooldown as any).actionCatalog = (executor as any).actionCatalog
+      ;(noCooldown as any).flowCatalog = (executor as any).flowCatalog
+
+      bot.flows = [{ id: 'cooldown-simple', priority: 1 }]
+
+      const first = await noCooldown.handleMessage(bot, makeMessage('fire'))
+      expect(first).toBe(true)
+      expect(sentMessages[0].content).toBe('Done!')
+
+      const second = await noCooldown.handleMessage(bot, makeMessage('fire'))
+      expect(second).toBe(true)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should destroy session and return false when active flow not in catalog', async () => {
+      flowStateService.create('521234567890', 'support-bot', 'ghost-flow', 'menu', 300)
+
+      const handled = await executor.handleMessage(bot, makeMessage('anything'))
+
+      expect(handled).toBe(false)
+      expect(flowStateService.findActive('521234567890', 'support-bot')).toBeNull()
+    })
+
+    it('should destroy session when active step not in flow', async () => {
+      flowStateService.create('521234567890', 'support-bot', 'faq-menu', 'phantom-step', 300)
+
+      const handled = await executor.handleMessage(bot, makeMessage('anything'))
+
+      expect(handled).toBe(false)
+      expect(flowStateService.findActive('521234567890', 'support-bot')).toBeNull()
+    })
+
+    it('should return true when no branch matches without fallback', async () => {
+      bot.flows = [{ id: 'no-fallback', priority: 1 }]
+
+      await executor.handleMessage(bot, makeMessage('ping'))
+      expect(sentMessages[0]).toBeDefined()
+
+      const handled = await executor.handleMessage(bot, makeMessage('xyzzy'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages).toHaveLength(1)
+    })
+
+    it('should warn when bot references non-existent flow', async () => {
+      bot.flows = [
+        { id: 'non-existent-flow', priority: 10 },
+        { id: 'faq-menu', priority: 1 },
+      ]
+
+      const handled = await executor.handleMessage(bot, makeMessage('menu'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[0].content).toContain('Menu:')
+    })
+
+    it('should warn when flow entry step is not found', async () => {
+      const catalog = (executor as any).flowCatalog
+      catalog.set('bad-entry', {
+        id: 'bad-entry',
+        entryStep: 'phantom',
+        triggers: [{ phrases: ['bad'] }],
+        steps: { start: { action: 'greet', branches: [] } },
+      })
+
+      bot.flows = [{ id: 'bad-entry', priority: 10 }]
+      const handled = await executor.handleMessage(bot, makeMessage('bad'))
+
+      expect(handled).toBe(false)
+    })
+
+    it('should use fallback when no branch matches and no default branch', async () => {
+      bot.flows = [{ id: 'has-fallback', priority: 1 }]
+
+      await executor.handleMessage(bot, makeMessage('fb'))
+      expect(sentMessages[0]).toBeDefined()
+
+      const handled = await executor.handleMessage(bot, makeMessage('xyzzy'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[1].content).toBe('Invalid option')
+
+      const session = flowStateService.findActive('521234567890', 'support-bot')
+      expect(session?.stepId).toBe('fallback')
+    })
+
+    it('should handle fallback step pointing to missing step', async () => {
+      const catalog = (executor as any).flowCatalog
+      catalog.set('bad-fallback', {
+        id: 'bad-fallback',
+        entryStep: 'start',
+        triggers: [{ phrases: ['testfall'] }],
+        fallbackStep: 'nope',
+        steps: {
+          start: {
+            action: 'greet',
+            branches: [{ when: 'other', goto: 'end' }],
+          },
+          end: { action: 'farewell', branches: [] },
+        },
+      })
+
+      bot.flows = [{ id: 'bad-fallback', priority: 1 }]
+
+      await executor.handleMessage(bot, makeMessage('testfall'))
+      expect(sentMessages[0]).toBeDefined()
+
+      const handled = await executor.handleMessage(bot, makeMessage('xyzzy'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages).toHaveLength(1)
+    })
+
+    it('should handle entry step with no branches (terminal)', async () => {
+      bot.flows = [{ id: 'terminal-flow', priority: 1 }]
+
+      const handled = await executor.handleMessage(bot, makeMessage('end'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[0].content).toBe('Goodbye!')
+      expect(flowStateService.findActive('521234567890', 'support-bot')).toBeNull()
+    })
+
+    it('should destroy session when transition targets non-existent step', async () => {
+      bot.flows = [{ id: 'broken-branch', priority: 1 }]
+
+      await executor.handleMessage(bot, makeMessage('broken'))
+      expect(sentMessages).toHaveLength(1)
+
+      const handled = await executor.handleMessage(bot, makeMessage('go'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages).toHaveLength(1)
+      expect(flowStateService.findActive('521234567890', 'support-bot')).toBeNull()
+    })
+
+    it('should not match flow without triggers', async () => {
+      bot.flows = [{ id: 'no-triggers', priority: 1 }]
+
+      const handled = await executor.handleMessage(bot, makeMessage('anything'))
+
+      expect(handled).toBe(false)
+    })
+  })
+
+  describe('webhook actions', () => {
+    let fetchMock: jest.Mock
+    let originalFetch: typeof global.fetch
+
+    beforeAll(() => {
+      originalFetch = global.fetch
+    })
+
+    beforeEach(() => {
+      fetchMock = jest.fn()
+      global.fetch = fetchMock as unknown as typeof global.fetch
+    })
+
+    afterEach(() => {
+      global.fetch = originalFetch
+    })
+
+    it('should execute webhook action on entry', async () => {
+      fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
+
+      bot.flows = [{ id: 'webhook-flow', priority: 1 }]
+
+      const handled = await executor.handleMessage(bot, makeMessage('wh'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[0].content).toBe('Webhook sent')
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://example.com/hook',
+        expect.objectContaining({ method: 'POST' })
+      )
+    })
+
+    it('should not throw when webhook request fails', async () => {
+      fetchMock.mockRejectedValue(new Error('Connection refused'))
+
+      bot.flows = [{ id: 'webhook-fail', priority: 1 }]
+
+      const handled = await executor.handleMessage(bot, makeMessage('whfail'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages[0].content).toBe('Failed webhook')
+    })
+
+    it('should execute webhook-only action without reply', async () => {
+      fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
+
+      const defaultExec = new FlowExecutor(
+        (executor as any).actionCatalog,
+        (executor as any).flowCatalog,
+        flowStateService,
+        outboxService
+      )
+
+      bot.flows = [{ id: 'webhook-only', priority: 1 }]
+
+      const handled = await defaultExec.handleMessage(bot, makeMessage('who'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages).toHaveLength(0)
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://example.com/hook-only',
+        expect.objectContaining({ method: 'POST' })
+      )
     })
   })
 })
