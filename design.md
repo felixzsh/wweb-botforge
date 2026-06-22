@@ -20,14 +20,15 @@ injection. No layers of abstraction where a direct call suffices.
 src/
 ├── cli.ts                CLI entry point (Commander.js)
 ├── config/yaml.ts        YAML loader with !include support
-├── utils/logger.ts       Pino-based structured logger
+├── utils/
+│   ├── logger.ts       Pino-based structured logger
+│   └── fuzzy.ts        Fuse.js fuzzy matching wrapper
 ├── bot/
 │   ├── types.ts          Shared domain interfaces (Bot, MessageChannel, ConfigFile, ...)
 │   ├── bot.ts            Pure factories (createBot, createDefaultSettings)
 │   ├── fleet.ts          BotFleet: orchestration root, wiring, lifecycle
 │   ├── mapper.ts         Snake_case config → camelCase domain objects
-│   ├── validation.ts     Inline validation predicates
-│   └── fuzzy.ts          Fuse.js fuzzy matching wrapper
+│   └── validation.ts     Inline validation predicates
 ├── whatsapp/
 │   ├── types.ts          WhatsApp-specific helpers, message adapters
 │   ├── client.ts         WhatsAppChannel (implements MessageChannel) + WhatsAppInitializer

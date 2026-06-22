@@ -7,7 +7,7 @@ import { FlowStateService } from './state'
 import { OutboxService } from '../services/outbox'
 import { CooldownService } from '../action/cooldown'
 import { sendWebhookRequest } from '../action/webhook'
-import { matchFuzzy } from '../bot/fuzzy'
+import { matchFuzzy } from '../utils/fuzzy'
 import { getLogger } from '../utils/logger'
 
 export class FlowExecutor {
