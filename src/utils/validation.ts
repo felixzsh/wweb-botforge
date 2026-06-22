@@ -1,18 +1,18 @@
-export function validateBotId(id: string): void {
+export function validateId(id: string, kind: string): void {
   if (!id || id.length < 3) {
-    throw new Error('Bot ID must be at least 3 characters long')
+    throw new Error(`${kind} ID must be at least 3 characters long`)
   }
   if (!/^[a-z0-9-]+$/.test(id)) {
-    throw new Error('Bot ID can only contain lowercase letters, numbers and hyphens')
+    throw new Error(`${kind} ID can only contain lowercase letters, numbers and hyphens`)
   }
   if (/^[-]/.test(id)) {
-    throw new Error('Bot ID cannot start with a hyphen')
+    throw new Error(`${kind} ID cannot start with a hyphen`)
   }
   if (/[-]$/.test(id)) {
-    throw new Error('Bot ID cannot end with a hyphen')
+    throw new Error(`${kind} ID cannot end with a hyphen`)
   }
   if (/--/.test(id)) {
-    throw new Error('Bot ID cannot contain consecutive hyphens')
+    throw new Error(`${kind} ID cannot contain consecutive hyphens`)
   }
 }
 
@@ -33,5 +33,3 @@ export function validateQueueDelay(delay: number): void {
     throw new Error('Queue delay must be non-negative')
   }
 }
-
-

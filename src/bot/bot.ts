@@ -1,6 +1,6 @@
 import { Bot, BotSettings, FlowRef } from './types'
 import { MessageChannel } from '../messaging/types'
-import { validateBotId } from './validation'
+import { validateId } from '../utils/validation'
 
 export function createBot(props: {
   id: string
@@ -8,7 +8,7 @@ export function createBot(props: {
   settings: BotSettings
   flows?: FlowRef[]
 }): Bot {
-  validateBotId(props.id)
+  validateId(props.id, 'Bot')
 
   return {
     id: props.id,

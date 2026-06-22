@@ -1,15 +1,10 @@
 import { Bot, BotSettings, FlowRef } from './types'
 import { BotConfig, BotSettingsConfig, FlowRefConfig } from '../config/types'
 import { createBot, createDefaultSettings } from './bot'
-import {
-  validateBotId,
-  validatePriority,
-  validateTypingDelay,
-  validateQueueDelay,
-} from './validation'
+import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../utils/validation'
 
 export function mapConfigToBot(id: string, config: BotConfig): Bot {
-  validateBotId(id)
+  validateId(id, 'Bot')
 
   const settings = config.settings ? mapSettings(config.settings) : createDefaultSettings()
   const flows = (config.flows || []).map(mapFlowRef)

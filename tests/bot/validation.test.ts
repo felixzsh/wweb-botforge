@@ -1,39 +1,44 @@
 import {
-  validateBotId,
+  validateId,
   validatePriority,
   validateTypingDelay,
   validateQueueDelay,
-} from '../../src/bot/validation'
+} from '../../src/utils/validation'
 
 describe('Validation', () => {
-  describe('validateBotId', () => {
-    it('should pass for valid bot ID', () => {
-      expect(() => validateBotId('test-bot')).not.toThrow()
-      expect(() => validateBotId('bot123')).not.toThrow()
-      expect(() => validateBotId('my-awesome-bot')).not.toThrow()
+  describe('validateId', () => {
+    it('should pass for valid ID', () => {
+      expect(() => validateId('test-bot', 'Bot')).not.toThrow()
+      expect(() => validateId('bot123', 'Bot')).not.toThrow()
+      expect(() => validateId('my-awesome-bot', 'Bot')).not.toThrow()
     })
 
     it('should throw for ID too short', () => {
-      expect(() => validateBotId('ab')).toThrow('Bot ID must be at least 3 characters long')
-      expect(() => validateBotId('')).toThrow('Bot ID must be at least 3 characters long')
+      expect(() => validateId('ab', 'Bot')).toThrow('Bot ID must be at least 3 characters long')
+      expect(() => validateId('', 'Bot')).toThrow('Bot ID must be at least 3 characters long')
     })
 
     it('should throw for invalid characters', () => {
-      expect(() => validateBotId('test_bot')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
-      expect(() => validateBotId('Test-Bot')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
-      expect(() => validateBotId('bot@name')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
+      expect(() => validateId('test_bot', 'Bot')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
+      expect(() => validateId('Test-Bot', 'Bot')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
+      expect(() => validateId('bot@name', 'Bot')).toThrow('Bot ID can only contain lowercase letters, numbers and hyphens')
     })
 
     it('should throw if ID starts with hyphen', () => {
-      expect(() => validateBotId('-test')).toThrow('Bot ID cannot start with a hyphen')
+      expect(() => validateId('-test', 'Bot')).toThrow('Bot ID cannot start with a hyphen')
     })
 
     it('should throw if ID ends with hyphen', () => {
-      expect(() => validateBotId('test-')).toThrow('Bot ID cannot end with a hyphen')
+      expect(() => validateId('test-', 'Bot')).toThrow('Bot ID cannot end with a hyphen')
     })
 
     it('should throw if ID has consecutive hyphens', () => {
-      expect(() => validateBotId('test--bot')).toThrow('Bot ID cannot contain consecutive hyphens')
+      expect(() => validateId('test--bot', 'Bot')).toThrow('Bot ID cannot contain consecutive hyphens')
+    })
+
+    it('should use the kind argument in error messages', () => {
+      expect(() => validateId('ab', 'Action')).toThrow('Action ID must be at least 3 characters long')
+      expect(() => validateId('Test', 'Flow')).toThrow('Flow ID can only contain lowercase letters, numbers and hyphens')
     })
   })
 

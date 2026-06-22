@@ -24,13 +24,13 @@ src/
 │   └── yaml.ts           YAML loader with !include support
 ├── utils/
 │   ├── logger.ts       Pino-based structured logger
-│   └── fuzzy.ts        Fuse.js fuzzy matching wrapper
+│   ├── fuzzy.ts        Fuse.js fuzzy matching wrapper
+│   └── validation.ts   ID, priority, and delay validators
 ├── bot/
 │   ├── types.ts          Bot domain types (Bot, FlowRef, BotSettings)
 │   ├── bot.ts            Pure factories (createBot, createDefaultSettings)
 │   ├── fleet.ts          BotFleet: orchestration root, wiring, lifecycle
 │   ├── mapper.ts         Snake_case config → camelCase domain objects
-│   └── validation.ts     Inline validation predicates
 ├── whatsapp/
 │   ├── types.ts          WhatsApp-specific helpers, message adapters
 │   ├── client.ts         WhatsAppChannel (implements MessageChannel) + WhatsAppInitializer
