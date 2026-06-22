@@ -1,4 +1,4 @@
-import { MessageChannel } from '../messaging/contracts'
+import { MessageChannel } from '../messages/contracts'
 import { WhatsAppChannel } from './client'
 
 export class SessionManager {

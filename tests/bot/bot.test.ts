@@ -1,5 +1,5 @@
 import { createBot, createDefaultSettings, registerChannel, BotSettings } from '../../src/bot'
-import { MessageChannel } from '../../src/messaging/contracts'
+import { MessageChannel } from '../../src/messages/contracts'
 
 describe('Bot', () => {
   let settings: BotSettings

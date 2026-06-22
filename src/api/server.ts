@@ -1,5 +1,5 @@
 import express, { Router } from 'express'
-import { OutboxService } from '../messaging/outbox'
+import { OutboxService } from '../messages/outbox'
 import { Bot } from '../bot'
 import { createHealthRouter } from './routes/health'
 import { createBotsRouter } from './routes/bots'
