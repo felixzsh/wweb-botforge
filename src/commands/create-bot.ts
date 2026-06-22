@@ -76,7 +76,7 @@ export async function runCreateBot(configPath?: string) {
 
     console.log(`\nAdded bot: ${botId}`)
     console.log(`Connected to WhatsApp with phone: ${phoneNumber}`)
-    console.log(`\nBot configuration saved to ${getConfigPath()}`)
+    console.log(`\nBot configuration saved to bots/${botId}.yml`)
     console.log(`\nYour bot "${botId}" is now ready to use!`)
 
     await initializer.destroy()

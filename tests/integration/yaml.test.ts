@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { loadConfig, saveConfig, addBotConfig, updateBotConfig, setConfigPath, getConfigPath } from '../../src/config/yaml'
+import { loadConfig, saveConfig, setConfigPath, getConfigPath, addBotConfig } from '../../src/config/yaml'
 import { mapConfigToBot, mapBotsFromConfig, mapSettings, mapActionCatalog, mapFlowCatalog } from '../../src/config/mapper'
 import { BotConfig } from '../../src/config/schema'
 
@@ -668,13 +668,15 @@ goto: show-hours`)
     })
   })
 
-  describe('Add bot config', () => {
+  describe('Add bot config (modular)', () => {
     let tempDir: string
     let configPath: string
+    let botsDir: string
 
     beforeEach(() => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-addbot-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-modbot-'))
       configPath = path.join(tempDir, 'config.yml')
+      botsDir = path.join(tempDir, 'bots')
     })
 
     afterEach(() => {
@@ -683,87 +685,86 @@ goto: show-hours`)
       }
     })
 
-    it('should add a new bot to existing config', async () => {
-      await saveConfig({
-        bots: { existing: {} },
-      }, configPath)
+    it('should create bot file in bots/ directory', async () => {
+      await addBotConfig('my-bot', { settings: { queue_delay: 500 } }, configPath)
 
-      await addBotConfig('new-bot', { flows: [{ id: 'faq' }] }, configPath)
+      const botFile = path.join(botsDir, 'my-bot.yml')
+      expect(fs.existsSync(botFile)).toBe(true)
 
-      const config = await loadConfig(configPath)
-      expect(config.bots['existing']).toBeDefined()
-      expect(config.bots['new-bot']).toBeDefined()
-      expect(config.bots['new-bot'].flows![0].id).toBe('faq')
+      const content = fs.readFileSync(botFile, 'utf8')
+      expect(content).toContain('queue_delay: 500')
     })
 
-    it('should create config file when it does not exist', async () => {
-      await addBotConfig('first-bot', {}, configPath)
+    it('should create bots/ directory when it does not exist', async () => {
+      expect(fs.existsSync(botsDir)).toBe(false)
 
-      const config = await loadConfig(configPath)
-      expect(config.bots['first-bot']).toBeDefined()
+      await addBotConfig('new-bot', {}, configPath)
+
+      expect(fs.existsSync(botsDir)).toBe(true)
     })
 
-    it('should throw when adding duplicate bot', async () => {
-      await saveConfig({ bots: { dup: {} } }, configPath)
+    it('should throw when bot ID already exists', async () => {
+      await addBotConfig('dup', {}, configPath)
 
       await expect(addBotConfig('dup', {}, configPath)).rejects.toThrow(
         'Bot with ID "dup" already exists'
       )
     })
 
-    it('should add bot with settings', async () => {
-      await addBotConfig('configured', {
-        settings: {
-          simulate_typing: false,
-          typing_delay: 500,
-        },
+    it('should create minimal config.yml when it does not exist', async () => {
+      expect(fs.existsSync(configPath)).toBe(false)
+
+      await addBotConfig('first-bot', {}, configPath)
+
+      expect(fs.existsSync(configPath)).toBe(true)
+      const content = fs.readFileSync(configPath, 'utf8')
+      expect(content).toContain('global:')
+    })
+
+    it('should not modify existing config.yml', async () => {
+      await saveConfig({
+        global: { sessionTimeout: 999 },
+        bots: { existing: {} },
       }, configPath)
 
+      const originalContent = fs.readFileSync(configPath, 'utf8')
+
+      await addBotConfig('another', {}, configPath)
+
+      const afterContent = fs.readFileSync(configPath, 'utf8')
+      expect(afterContent).toBe(originalContent)
+    })
+
+    it('should load bot via loadConfig after add', async () => {
+      await addBotConfig('loadable', { settings: { ignore_groups: false } }, configPath)
+
       const config = await loadConfig(configPath)
-      expect(config.bots['configured'].settings?.simulate_typing).toBe(false)
-      expect(config.bots['configured'].settings?.typing_delay).toBe(500)
+      expect(config.bots['loadable']).toBeDefined()
+      expect(config.bots['loadable'].settings?.ignore_groups).toBe(false)
+    })
+
+    it('should write bot with flows and settings', async () => {
+      await addBotConfig('full', {
+        flows: [{ id: 'faq', priority: 10 }],
+        settings: { queue_delay: 2000, simulate_typing: false },
+      }, configPath)
+
+      const botFile = path.join(botsDir, 'full.yml')
+      const content = fs.readFileSync(botFile, 'utf8')
+      expect(content).toContain('faq')
+      expect(content).toContain('queue_delay: 2000')
+      expect(content).toContain('simulate_typing:')
+    })
+
+    it('should handle custom config path', async () => {
+      const customPath = path.join(tempDir, 'custom', 'config.yml')
+
+      await addBotConfig('custom-bot', {}, customPath)
+
+      const customBotsDir = path.join(tempDir, 'custom', 'bots')
+      expect(fs.existsSync(path.join(customBotsDir, 'custom-bot.yml'))).toBe(true)
+      expect(fs.existsSync(customPath)).toBe(true)
     })
   })
 
-  describe('Update bot config', () => {
-    let tempDir: string
-    let configPath: string
-
-    beforeEach(() => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-upd-'))
-      configPath = path.join(tempDir, 'config.yml')
-    })
-
-    afterEach(() => {
-      if (tempDir && fs.existsSync(tempDir)) {
-        fs.rmSync(tempDir, { recursive: true, force: true })
-      }
-    })
-
-    it('should update existing bot', async () => {
-      await saveConfig({ bots: { target: { flows: [{ id: 'old' }] } } }, configPath)
-
-      await updateBotConfig('target', { flows: [{ id: 'new', priority: 99 }] }, configPath)
-
-      const config = await loadConfig(configPath)
-      expect(config.bots['target'].flows![0].id).toBe('new')
-      expect(config.bots['target'].flows![0].priority).toBe(99)
-    })
-
-    it('should throw when updating non-existent bot', async () => {
-      await saveConfig({ bots: { existing: {} } }, configPath)
-
-      await expect(updateBotConfig('ghost', {}, configPath)).rejects.toThrow(
-        'Bot with ID "ghost" not found'
-      )
-    })
-
-    it('should throw when config file does not exist', async () => {
-      const missingPath = path.join(tempDir, 'nonexistent.yml')
-
-      await expect(updateBotConfig('bot', {}, missingPath)).rejects.toThrow(
-        'Configuration file does not exist'
-      )
-    })
-  })
 })

@@ -174,45 +174,23 @@ export async function saveConfig(config: ConfigFile, customPath?: string): Promi
 }
 
 export async function addBotConfig(id: string, botConfig: BotConfig, customPath?: string): Promise<void> {
-  const logger = getLogger()
+  const configDir = path.dirname(customPath || getConfigPath())
+  const botsDir = path.join(configDir, 'bots')
+  const botFilePath = path.join(botsDir, `${id}.yml`)
 
-  try {
-    let existingConfig: ConfigFile
-    try {
-      existingConfig = await loadConfig(customPath)
-    } catch {
-      existingConfig = { bots: {} }
-    }
-
-    if (existingConfig.bots[id]) {
-      throw new Error(`Bot with ID "${id}" already exists. Use updateBotConfig to modify it.`)
-    }
-
-    existingConfig.bots[id] = botConfig
-
-    await saveConfig(existingConfig, customPath)
-  } catch (error) {
-    throw new Error(`Failed to add bot configuration: ${error}`)
+  if (!fsSync.existsSync(botsDir)) {
+    await fs.mkdir(botsDir, { recursive: true })
   }
-}
 
-export async function updateBotConfig(id: string, botConfig: BotConfig, customPath?: string): Promise<void> {
-  try {
-    let existingConfig: ConfigFile
-    try {
-      existingConfig = await loadConfig(customPath)
-    } catch {
-      throw new Error('Configuration file does not exist. Cannot update non-existent bot.')
-    }
+  if (fsSync.existsSync(botFilePath)) {
+    throw new Error(`Bot with ID "${id}" already exists at ${botFilePath}`)
+  }
 
-    if (!existingConfig.bots[id]) {
-      throw new Error(`Bot with ID "${id}" not found. Use addBotConfig to create it.`)
-    }
+  const yamlContent = yaml.dump(botConfig, { indent: 2, lineWidth: -1, noRefs: true })
+  await fs.writeFile(botFilePath, yamlContent, 'utf-8')
 
-    existingConfig.bots[id] = botConfig
-
-    await saveConfig(existingConfig, customPath)
-  } catch (error) {
-    throw new Error(`Failed to update bot configuration: ${error}`)
+  const mainConfigPath = customPath || getConfigPath()
+  if (!fsSync.existsSync(mainConfigPath)) {
+    await saveConfig({ global: {}, bots: {} }, mainConfigPath)
   }
 }

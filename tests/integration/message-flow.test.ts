@@ -14,6 +14,7 @@ jest.mock('../../src/config/yaml', () => ({
 jest.mock('../../src/whatsapp/client', () => ({
   WhatsAppChannel: jest.fn().mockImplementation(() => new MockChannel()),
   setGlobalConfig: jest.fn(),
+  getWwebCacheDir: jest.fn(() => mockConfigDir),
 }))
 
 describe('Message flow end-to-end', () => {
