@@ -49,6 +49,7 @@ export class MockChannel implements MessageChannel {
 
   async connect(): Promise<void> {
     this.connected = true
+    this.readyHandlers.forEach(h => h())
   }
 
   async disconnect(): Promise<void> {
