@@ -1,9 +1,16 @@
 import { Client, LocalAuth } from 'whatsapp-web.js'
+import * as path from 'path'
+import * as os from 'os'
 import { IncomingMessage, OutgoingMessage, MessageChannel } from '../messages/contracts'
 import { Bot } from '../bot'
 import { ConfigFile } from '../config/schema'
 import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './whatsapp'
 import { getLogger } from '../helpers/logger'
+
+export function getWwebCacheDir(): string {
+  const cacheHome = process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache')
+  return path.join(cacheHome, 'wweb-botforge')
+}
 
 let globalConfig: ConfigFile['global'] | undefined
 
@@ -35,7 +42,7 @@ export function getClientOptions(clientId: string) {
   return {
     authStrategy: new LocalAuth({
       clientId: clientId,
-      dataPath: '.wwebjs_auth',
+      dataPath: path.join(getWwebCacheDir(), '.wwebjs_auth'),
     }),
     puppeteer: getPuppeteerOptions(),
   }
@@ -182,6 +189,7 @@ export class WhatsAppInitializer {
   private qrHandler?: (qr: string) => void
   private successHandler?: (phoneNumber: string) => void
   private failureHandler?: (error: Error) => void
+  private authSuccessFired: boolean = false
 
   constructor(clientId: string) {
     this.client = new Client(getClientOptions(clientId))
@@ -196,6 +204,8 @@ export class WhatsAppInitializer {
     })
 
     this.client.on('ready', async () => {
+      if (this.authSuccessFired) return
+      this.authSuccessFired = true
       try {
         const info = this.client.info
         const phoneNumber = widToPhoneNumber(info.wid._serialized)

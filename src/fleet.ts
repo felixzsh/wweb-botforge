@@ -10,8 +10,7 @@ import { InboxService } from './messages/inbox'
 import { FlowStateService } from './flow/state'
 import { FlowExecutor } from './flow/executor'
 import { SessionManager } from './whatsapp/session'
-import { setGlobalConfig } from './whatsapp/client'
-import { getConfigPath } from './config/yaml'
+import { setGlobalConfig, getWwebCacheDir } from './whatsapp/client'
 import { getLogger } from './helpers/logger'
 
 export class BotFleet {
@@ -46,8 +45,7 @@ export class BotFleet {
       this.actionCatalog = mapActionCatalog(configFile.actions || {})
       this.flowCatalog = mapFlowCatalog(configFile.flows || {})
 
-      const configDir = path.dirname(getConfigPath())
-      const flowStateDbPath = path.join(configDir, 'flows.db')
+      const flowStateDbPath = path.join(getWwebCacheDir(), 'flows.db')
       this.flowStateService = new FlowStateService(flowStateDbPath)
 
       const flowStateTimeout = configFile.global?.sessionTimeout ?? 300
