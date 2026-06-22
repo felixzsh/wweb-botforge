@@ -8,7 +8,7 @@ import { getLogger } from '../helpers/logger'
 
 let configPath: string
 
-function getDefaultConfigPath(): string {
+export function getDefaultConfigPath(): string {
   const home = process.env.HOME || os.homedir()
   return path.join(home, '.config', 'wweb-botforge', 'config.yml')
 }

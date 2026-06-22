@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import { BotFleet } from './fleet'
 import { OutboxService } from './messages/outbox'
 import { ApiServer } from './api/server'
-import { loadConfig, setConfigPath } from './config/yaml'
+import { loadConfig, setConfigPath, getDefaultConfigPath } from './config/yaml'
 import { setGlobalLogger, getLogger } from './helpers/logger'
 import { setGlobalConfig } from './whatsapp/client'
 import { runCreateBot } from './commands/create-bot'
@@ -21,7 +21,7 @@ program
   .name('botforge')
   .description('CLI tool for creating and managing WhatsApp bots')
   .version(packageJson.version)
-  .option('-c, --config <path>', 'Path to config file (default: ~/.config/wweb-botforge/config.yml)')
+  .option('-c, --config <path>', `Path to config file (default: ${getDefaultConfigPath()})`)
 
 program
   .command('setup')
