@@ -1,5 +1,5 @@
 import pino from 'pino'
-import { ConfigFile } from '../bot/types'
+import { ConfigFile } from '../config/types'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 

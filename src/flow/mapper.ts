@@ -1,5 +1,5 @@
 import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FuzzyTrigger } from './types'
-import { FlowConfig, FlowStepConfig, FlowBranchConfig } from '../bot/types'
+import { FlowConfig, FlowStepConfig, FlowBranchConfig } from '../config/types'
 
 export function mapFlowCatalog(config: Record<string, FlowConfig>): FlowCatalog {
   const catalog: FlowCatalog = new Map()

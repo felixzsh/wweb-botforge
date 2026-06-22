@@ -1,5 +1,6 @@
 import * as path from 'path'
-import { Bot, ConfigFile } from './types'
+import { Bot } from './types'
+import { ConfigFile } from '../config/types'
 import { mapBotsFromConfig } from './mapper'
 import { mapActionCatalog } from '../action/catalog'
 import { mapFlowCatalog } from '../flow/mapper'

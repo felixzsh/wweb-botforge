@@ -1,4 +1,5 @@
-import { Bot, BotSettings, FlowRef, BotConfig, BotSettingsConfig, FlowRefConfig } from './types'
+import { Bot, BotSettings, FlowRef } from './types'
+import { BotConfig, BotSettingsConfig, FlowRefConfig } from '../config/types'
 import { createBot, createDefaultSettings } from './bot'
 import {
   validateBotId,
