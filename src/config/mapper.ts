@@ -1,5 +1,5 @@
 import { Bot, BotSettings, FlowRef, createBot, createDefaultSettings } from '../bot'
-import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../utils/validation'
+import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../helpers/validation'
 import { BotConfig, BotSettingsConfig, FlowRefConfig, ActionConfig, WebhookActionConfig, FlowConfig, FlowStepConfig, FlowBranchConfig } from './schema'
 import { ActionDef, ActionCatalog } from '../action/action'
 import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FuzzyTrigger } from '../flow/flow'

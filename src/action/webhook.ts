@@ -1,4 +1,4 @@
-import { getLogger } from '../utils/logger'
+import { getLogger } from '../helpers/logger'
 
 export interface WebhookCall {
   url: string

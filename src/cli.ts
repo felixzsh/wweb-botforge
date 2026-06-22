@@ -8,7 +8,7 @@ import { BotFleet } from './fleet'
 import { OutboxService } from './messages/outbox'
 import { ApiServer } from './api/server'
 import { loadConfig, setConfigPath } from './config/yaml'
-import { setGlobalLogger, getLogger } from './utils/logger'
+import { setGlobalLogger, getLogger } from './helpers/logger'
 import { setGlobalConfig } from './whatsapp/client'
 import { runCreateBot } from './commands/create-bot'
 

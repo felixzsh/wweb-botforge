@@ -4,7 +4,7 @@ import { Bot } from '../bot'
 import { createHealthRouter } from './routes/health'
 import { createBotsRouter } from './routes/bots'
 import { createMessagesRouter } from './routes/messages'
-import { getLogger } from '../utils/logger'
+import { getLogger } from '../helpers/logger'
 
 export class ApiServer {
   private app: express.Application

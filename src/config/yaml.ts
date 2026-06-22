@@ -4,7 +4,7 @@ import * as fsSync from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 import { ConfigFile, BotConfig, ActionConfig, FlowConfig } from './schema'
-import { getLogger } from '../utils/logger'
+import { getLogger } from '../helpers/logger'
 
 let configPath: string
 

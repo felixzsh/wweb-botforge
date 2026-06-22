@@ -12,7 +12,7 @@ import { FlowExecutor } from './flow/executor'
 import { SessionManager } from './whatsapp/session'
 import { setGlobalConfig } from './whatsapp/client'
 import { getConfigPath } from './config/yaml'
-import { getLogger } from './utils/logger'
+import { getLogger } from './helpers/logger'
 
 export class BotFleet {
   private bots: Map<string, Bot> = new Map()

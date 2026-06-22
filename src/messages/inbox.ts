@@ -1,7 +1,7 @@
 import { Bot } from '../bot'
 import { IncomingMessage } from './contracts'
 import { FlowExecutor } from '../flow/executor'
-import { getLogger } from '../utils/logger'
+import { getLogger } from '../helpers/logger'
 
 export class InboxService {
   private flowExecutor: FlowExecutor

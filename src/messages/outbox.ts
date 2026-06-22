@@ -1,6 +1,6 @@
 import { Bot } from '../bot'
 import { OutgoingMessage } from './contracts'
-import { getLogger } from '../utils/logger'
+import { getLogger } from '../helpers/logger'
 
 export interface QueuedMessage {
   id: string

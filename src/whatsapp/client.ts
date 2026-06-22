@@ -3,7 +3,7 @@ import { IncomingMessage, OutgoingMessage, MessageChannel } from '../messages/co
 import { Bot } from '../bot'
 import { ConfigFile } from '../config/schema'
 import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './whatsapp'
-import { getLogger } from '../utils/logger'
+import { getLogger } from '../helpers/logger'
 
 let globalConfig: ConfigFile['global'] | undefined
 
