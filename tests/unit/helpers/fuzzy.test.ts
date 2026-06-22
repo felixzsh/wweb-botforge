@@ -1,4 +1,4 @@
-import { matchFuzzy } from '../../src/helpers/fuzzy'
+import { matchFuzzy } from '../../../src/helpers/fuzzy'
 
 describe('matchFuzzy', () => {
   it('should return null for empty segments array', () => {

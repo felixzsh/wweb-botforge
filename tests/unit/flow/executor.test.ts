@@ -1,14 +1,14 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { FlowExecutor } from '../../src/flow/executor'
-import { FlowStateService } from '../../src/flow/state'
-import { OutboxService } from '../../src/messages/outbox'
-import { CooldownService } from '../../src/action/cooldown'
-import { mapActionCatalog, mapFlowCatalog } from '../../src/config/mapper'
-import { Bot } from '../../src/bot'
-import { IncomingMessage } from '../../src/messages/contracts'
-import { ActionConfig, FlowConfig } from '../../src/config/schema'
+import { FlowExecutor } from '../../../src/flow/executor'
+import { FlowStateService } from '../../../src/flow/state'
+import { OutboxService } from '../../../src/messages/outbox'
+import { CooldownService } from '../../../src/action/cooldown'
+import { mapActionCatalog, mapFlowCatalog } from '../../../src/config/mapper'
+import { Bot } from '../../../src/bot'
+import { IncomingMessage } from '../../../src/messages/contracts'
+import { ActionConfig, FlowConfig } from '../../../src/config/schema'
 
 describe('FlowExecutor', () => {
   let dbPath: string

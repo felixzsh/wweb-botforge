@@ -18,7 +18,8 @@
     "testEnvironment": "node",
     "roots": [
       "<rootDir>/src",
-      "<rootDir>/tests"
+      "<rootDir>/tests/unit",
+      "<rootDir>/tests/integration"
     ],
     "testMatch": [
       "**/__tests__/**/*.test.ts",

@@ -3,7 +3,7 @@ import {
   validatePriority,
   validateTypingDelay,
   validateQueueDelay,
-} from '../../src/helpers/validation'
+} from '../../../src/helpers/validation'
 
 describe('Validation', () => {
   describe('validateId', () => {
