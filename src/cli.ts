@@ -12,6 +12,7 @@ import { setGlobalLogger, getLogger } from './helpers/logger'
 import { setGlobalConfig } from './whatsapp/client'
 import { runCreateBot } from './commands/create-bot'
 import { runGuide } from './commands/guide'
+import { runValidate } from './commands/validate'
 
 const packageJsonPath = path.join(__dirname, '..', 'package.json')
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
@@ -41,6 +42,11 @@ program
   .command('guide')
   .description('Show AI agent configuration guide')
   .action(() => runGuide())
+
+program
+  .command('validate')
+  .description('Validate bot configuration')
+  .action(() => runValidate(program.opts().config))
 
 program
   .command('start')
