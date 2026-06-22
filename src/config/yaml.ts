@@ -184,10 +184,6 @@ export async function addBotConfig(id: string, botConfig: BotConfig, customPath?
       existingConfig = { bots: {} }
     }
 
-    if (!existingConfig.bots) {
-      existingConfig.bots = {}
-    }
-
     if (existingConfig.bots[id]) {
       throw new Error(`Bot with ID "${id}" already exists. Use updateBotConfig to modify it.`)
     }
@@ -207,10 +203,6 @@ export async function updateBotConfig(id: string, botConfig: BotConfig, customPa
       existingConfig = await loadConfig(customPath)
     } catch {
       throw new Error('Configuration file does not exist. Cannot update non-existent bot.')
-    }
-
-    if (!existingConfig.bots) {
-      existingConfig.bots = {}
     }
 
     if (!existingConfig.bots[id]) {
