@@ -10,7 +10,7 @@ import { ApiServer } from './api/server'
 import { loadConfig, setConfigPath } from './config/yaml'
 import { setGlobalLogger, getLogger } from './utils/logger'
 import { setGlobalConfig } from './whatsapp/client'
-import { runCreateBot } from './cli/create-bot'
+import { runCreateBot } from './commands/create-bot'
 
 const packageJsonPath = path.join(__dirname, '..', 'package.json')
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))

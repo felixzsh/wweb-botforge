@@ -33,7 +33,7 @@ function setupSystemd() {
       console.log('Development mode detected: Using local paths for testing');
       console.log(`   Install dir: ${installDir}`);
       console.log(`   Node path: ${nodePath}`);
-      console.log('   Note: Ensure dist/cli/index.js exists (run build first)');
+      console.log('   Note: Ensure dist/cli.js exists (run build first)');
     }
 
     console.log('Setting up WWeb BotForge systemd service...');

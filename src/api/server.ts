@@ -1,7 +1,9 @@
-import express from 'express'
+import express, { Router } from 'express'
 import { OutboxService } from '../services/outbox'
 import { Bot } from '../bot/types'
-import { createApiRoutes } from './routes'
+import { createHealthRouter } from './routes/health'
+import { createBotsRouter } from './routes/bots'
+import { createMessagesRouter } from './routes/messages'
 import { getLogger } from '../utils/logger'
 
 export class ApiServer {
@@ -42,7 +44,11 @@ export class ApiServer {
   }
 
   private setupRoutes(): void {
-    this.app.use('/api', createApiRoutes(this.outboxService, this.bots))
+    const api = Router()
+    api.use('/health', createHealthRouter())
+    api.use('/bots', createBotsRouter(this.bots))
+    api.use('/messages', createMessagesRouter(this.outboxService, this.bots))
+    this.app.use('/api', api)
 
     this.app.get('/', (req, res) => {
       res.json({

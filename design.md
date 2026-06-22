@@ -18,7 +18,7 @@ injection. No layers of abstraction where a direct call suffices.
 
 ```
 src/
-├── index.ts              CLI entry point (Commander.js)
+├── cli.ts                CLI entry point (Commander.js)
 ├── config/yaml.ts        YAML loader with !include support
 ├── utils/logger.ts       Pino-based structured logger
 ├── bot/
@@ -49,8 +49,11 @@ src/
 │   └── outbox.ts         OutboxService: per-bot FIFO message queue with delays
 ├── api/
 │   ├── server.ts         ApiServer: Express server lifecycle
-│   └── routes/           /api/health, /api/bots, /api/messages
-└── cli/
+│   └── routes/
+│       ├── health.ts     GET /api/health
+│       ├── bots.ts       GET /api/bots, /api/bots/:botId
+│       └── messages.ts   POST /api/messages/send, GET /api/messages/queue
+└── commands/
     └── create-bot.ts     Interactive inquirer wizard for first-time bot setup
 ```
 
