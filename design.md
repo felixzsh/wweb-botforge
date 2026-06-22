@@ -1,127 +1,257 @@
-# WWeb BotForge - Domain and Infrastructure Design
+# WWeb BotForge — Architecture & Design
 
 ## Overview
-This document outlines the initial domain model and infrastructure design for WWeb BotForge, focusing on representing bots as objects deserialized from YAML configurations. The design supports two loading approaches: a single `main.yml` file or a `main.yml` that includes other YAML files.
 
-## Folder Structure
-A scalable and maintainable structure following Domain-Driven Design (DDD) principles:
+WWeb BotForge is a config-driven WhatsApp bot framework. Bots, flows, and
+actions are defined entirely in YAML — no code required to add or modify bot
+behavior. The runtime loads YAML config at startup, maps it to domain objects,
+and orchestrates WhatsApp sessions, message routing, flow execution, and
+outbound message queuing.
+
+The design prioritizes simplicity over formalism: plain data objects, pure
+functions, and a handful of stateful services wired together via constructor
+injection. No layers of abstraction where a direct call suffices.
+
+---
+
+## Source Structure
 
 ```
-botforge/
-├── src/
-│   ├── core/
-│   │   ├── domain/           # Core domain
-│   │   │   ├── entities/
-│   │   │   ├── value-objects/
-│   │   │   └── interfaces/
-│   │   ├── application/      # Application logic
-│   │   └── infrastructure/   # Concrete implementations
-│   ├── cli/                 # CLI commands
-│   └── api/                 # REST API (future)
-├── config/
-│   └── main.yml            # Main configuration
-├── .wwebjs_auth/           # WhatsApp sessions
-└── tests/
+src/
+├── index.ts              CLI entry point (Commander.js)
+├── config/yaml.ts        YAML loader with !include support
+├── utils/logger.ts       Pino-based structured logger
+├── bot/
+│   ├── types.ts          Shared domain interfaces (Bot, MessageChannel, ConfigFile, ...)
+│   ├── bot.ts            Pure factories (createBot, createDefaultSettings)
+│   ├── fleet.ts          BotFleet: orchestration root, wiring, lifecycle
+│   ├── mapper.ts         Snake_case config → camelCase domain objects
+│   ├── validation.ts     Inline validation predicates
+│   └── fuzzy.ts          Fuse.js fuzzy matching wrapper
+├── whatsapp/
+│   ├── types.ts          WhatsApp-specific helpers, message adapters
+│   ├── client.ts         WhatsAppChannel (implements MessageChannel) + WhatsAppInitializer
+│   └── session.ts        SessionManager singleton for channel lifecycle
+├── flow/
+│   ├── types.ts          Flow domain types (FlowDef, FlowStep, FlowBranch, FlowState, ...)
+│   ├── executor.ts       FlowExecutor: message routing & state machine
+│   ├── state.ts          FlowStateService: SQLite-backed flow session persistence
+│   └── mapper.ts         FlowConfig YAML → FlowDef domain objects
+├── action/
+│   ├── types.ts          Action domain types (ActionDef, ActionExecutionContext, ...)
+│   ├── executor.ts       Pure functions: executeAction, getAction
+│   ├── catalog.ts        ActionCatalog builder from YAML config
+│   ├── cooldown.ts       CooldownService: in-memory per-sender rate limiting
+│   ├── webhook.ts        sendWebhookRequest: fetch + retry + exponential backoff
+│   └── template.ts       Variable interpolation ({{ sender }}, {{ message }}, ...)
+├── services/
+│   ├── inbox.ts          InboxService: message listener registration & filtering
+│   └── outbox.ts         OutboxService: per-bot FIFO message queue with delays
+├── api/
+│   ├── server.ts         ApiServer: Express server lifecycle
+│   └── routes/           /api/health, /api/bots, /api/messages
+└── cli/
+    └── create-bot.ts     Interactive inquirer wizard for first-time bot setup
 ```
 
-- `core/domain/`: Pure business logic with entities, value objects, and interfaces
-- `core/application/`: Use cases and application services
-- `core/infrastructure/`: External concerns like file I/O, databases, and concrete implementations
-- `cli/`: Command-line interface tools
-- `api/`: REST API endpoints (future)
-- `config/`: Configuration files
-- `.wwebjs_auth/`: WhatsApp session storage
+---
 
-## Infrastructure Proposals
+## Core Architecture
 
-### Repository Implementations
-- **YamlBotRepository**: Implements `IBotRepository` using YAML files as storage
-- **InMemoryBotRepository**: For testing and development
+### Domain Model
 
-### External Service Adapters
-- **YamlLoader**: Handles loading and parsing YAML configurations with include support
-- **WebhookClient**: HTTP client for sending webhook requests with retry logic
-- **WhatsAppClientAdapter**: Wrapper around whatsapp-web.js for domain isolation
+Domain concepts are plain TypeScript interfaces with no behavior:
 
-### Configuration Management
-- **ConfigManager**: Centralizes access to application configuration
-- **EnvironmentConfig**: Loads settings from environment variables
+| Interface | Role |
+|---|---|
+| `Bot` | Bot identity, settings, sorted flow references, channel reference |
+| `MessageChannel` | Transport abstraction: send, onMessage, connect, disconnect, lifecycle events |
+| `IncomingMessage` / `OutgoingMessage` | Normalized message format independent of WhatsApp wire format |
+| `FlowDef` | Flow definition: triggers, entry step, steps, branches, timeout, fallback |
+| `FlowStep` | A step within a flow: action reference + optional branch conditions |
+| `FlowBranch` | Branching condition: fuzzy-matched phrases + target step |
+| `ActionDef` | What happens when an action fires: optional reply text + optional webhook |
+| `FlowState` | Runtime state for an in-progress flow session (sender, current step, timeout) |
+| `ConfigFile` | Raw YAML shape: global settings + actions + flows + bots |
 
-### Persistence
-- **SessionStore**: Manages WhatsApp session files (.wwebjs_auth)
-- **FileSystemAdapter**: Abstraction for file operations
+### Transport Abstraction
 
-### Logging and Monitoring
-- **LoggerAdapter**: Standardized logging interface
-- **MetricsCollector**: Collects usage metrics (future)
+`MessageChannel` is the sole interface between domain logic and WhatsApp
+concrete. `WhatsAppChannel` implements it via `whatsapp-web.js`. Swapping to
+another messaging platform requires only a new `MessageChannel` implementation
+— bots, flows, and actions remain untouched.
 
-## Validation of Loading Approaches
+### Dependency Wiring
 
-### Approach 1: Single main.yml
+`BotFleet` is the composition root. At startup it:
+1. Loads YAML config into `ConfigFile`
+2. Maps config to action catalog, flow catalog, and bot domain objects
+3. Instantiates services: `FlowStateService`, `FlowExecutor`, `CooldownService`
+4. Creates WhatsApp channels via `SessionManager`
+5. Registers each bot with `InboxService` and `OutboxService`
+6. Optionally starts `ApiServer`
+
+All dependencies are passed via constructor — no service locators or global mutable state (except logger and WhatsApp global config).
+
+### Message Flow
+
+```
+WhatsApp message
+  → WhatsAppChannel.onMessage
+    → InboxService (filter: ignored senders, groups, self-messages)
+      → FlowExecutor.handleMessage()
+        → active flow? → match branch → transition step → executeAction()
+        → new message? → match flow triggers by priority → enter flow
+        → executeAction()
+          → resolve template variables
+          → check cooldown
+          → enqueue reply → OutboxService → WhatsAppChannel.send()
+          → fire webhook → sendWebhookRequest()
+```
+
+### Flow State Machine
+
+`FlowExecutor` manages per-user flow sessions via `FlowStateService` (SQLite):
+- **Active session**: Incoming messages are routed to the current step's branches via fuzzy matching. Matching branch transitions to `goto` step.
+- **No session**: Message is matched against all flows' triggers (sorted by priority). First match enters the flow at its `entry_step`.
+- **Terminal steps**: Steps without branches destroy the session on execution.
+- **Timeout**: Sessions expire after configurable idle timeout (`sessionTimeout`).
+- **Fallback**: Unmatched branches fall through to `fallback_step` if configured.
+
+Both triggers and branch conditions use Fuse.js fuzzy string matching, supporting comma-separated multi-phrase lists with configurable thresholds.
+
+### Outbox Pattern
+
+Outgoing messages are not sent directly. They're enqueued per-bot with a configurable inter-message delay (`queue_delay`). This prevents rate-limiting and provides queue visibility via the API (`GET /api/messages/queue/:botId`).
+
+### Config Mapper Pattern
+
+YAML config uses snake_case keys (the conventional YAML style). Dedicated mapper functions convert these to camelCase domain objects:
+
+```
+BotConfig (snake_case)  → mapConfigToBot()  → Bot (camelCase)
+FlowConfig (snake_case) → mapFlowCatalog()  → FlowCatalog (Map<id, FlowDef>)
+ActionConfig             → mapActionCatalog() → ActionCatalog (Map<id, ActionDef>)
+```
+
+This decouples the file format from the internal model — YAML can evolve independently.
+
+### Catalog Pattern
+
+Actions and flows are loaded into `Map<string, T>` catalogs at startup for O(1) lookup:
+- `ActionCatalog`: `Map<string, ActionDef>`
+- `FlowCatalog`: `Map<string, FlowDef>`
+
+Bots reference flows by ID. Flows reference actions by ID within their steps.
+
+---
+
+## API Layer
+
+A lightweight Express server exposes:
+- `GET /api/health` — Liveness check
+- `GET /api/bots` — List all bots
+- `GET /api/bots/:botId` — Individual bot status
+- `POST /api/messages/send` — Enqueue a message via OutboxService
+- `GET /api/messages/queue/:botId` — Per-bot queue status
+- `GET /api/messages/queue` — All queues status
+
+The API receives `OutboxService` and bots map via constructor — it accesses the same services as the core runtime.
+
+---
+
+## YAML Configuration
+
 ```yaml
-# config/main.yml
+global:
+  apiEnabled: true
+  apiPort: 3000
+  logLevel: info
+  sessionTimeout: 300
+
+actions:
+  hello_reply:
+    reply: "Hello {{ sender }}! You said: {{ message }}"
+
+  notify_slack:
+    webhook:
+      url: https://hooks.slack.com/...
+      method: POST
+      retry: 3
+
+  with_cooldown:
+    reply: "Processing..."
+    cooldown: 60
+    cooldown_reply: "Please wait {{ variables.remaining }} seconds"
+
+flows:
+  welcome:
+    triggers: "hi, hello, hey"
+    entry_step: greet
+    steps:
+      greet:
+        action: hello_reply
+
+  support_flow:
+    triggers: "help, support, problem"
+    entry_step: ask_issue
+    timeout: 120
+    fallback_step: didnt_understand
+    steps:
+      ask_issue:
+        action: ask_what_issue
+        branches:
+          - when: "login, password, can't access"
+            goto: login_help
+          - when: "payment, billing, charge"
+            goto: billing_help
+      login_help:
+        action: login_solution
+      billing_help:
+        action: billing_solution
+      didnt_understand:
+        action: fallback_reply
+
 bots:
-  support-bot:
-    name: "Support Bot"
+  support:
     flows:
-      - id: faq
+      - id: welcome
         priority: 10
+      - id: support_flow
+        priority: 5
     settings:
       simulate_typing: true
-
-  sales-bot:
-    name: "Sales Bot"
-    flows:
-      - id: sales-flow
-        priority: 5
+      typing_delay: 1500
+      queue_delay: 500
+      ignore_groups: true
+      ignored_senders:
+        - "123456789@c.us"
 ```
 
-Result: `YamlLoader.loadMainConfig()` returns a `RawConfig` with `bots` array containing the two bot objects directly.
+### `!include` Directive
 
-### Approach 2: main.yml with includes
+Config files support YAML `!include` tags to split configuration across files:
+
 ```yaml
-# config/main.yml
+actions: !include actions/main.yml
+flows: !include flows/main.yml
+
 bots:
-  - !include bots/support-bot.yml
-  - !include bots/sales-bot.yml
+  support: !include bots/support.yml
+  sales: !include bots/sales.yml
 ```
 
-```yaml
-# config/bots/support-bot.yml
-id: support-bot
-name: "Support Bot"
-flows:
-  - id: faq
-    priority: 10
-settings:
-  simulate_typing: true
-```
+Additionally, files placed in `actions/`, `flows/`, and `bots/` directories relative to the config file are auto-loaded and merged with any inline definitions.
 
-Result: `YamlLoader.loadMainConfig()` detects `!include`, loads `soporte-bot.yml` and `ventas-bot.yml`, merges them into the `bots` array in `RawConfig`.
+---
 
-In both cases, `BotFactory.createBots()` produces an array of `Bot` entities that can be used by the application layer.
+## Design Principles
 
-## Architecture Diagram
-
-```mermaid
-graph TD
-    A[main.yml] --> B[YamlLoader]
-    B --> C[RawConfig]
-    C --> D[BotFactory]
-    D --> E[Bot[]]
-
-    F[bots/*.yml] --> B
-
-    E --> G[Application Services]
-    G --> H[IBotRepository]
-    H --> I[Infrastructure Implementations]
-    I --> J[whatsapp-web.js instances]
-```
-
-This design ensures:
-- **Domain-Driven Design**: Clear separation between domain, application, and infrastructure
-- **Rich Domain Model**: Entities with behavior, value objects with validation
-- **Dependency Inversion**: Domain depends on interfaces, infrastructure implements them
-- **Testability**: Each layer can be unit tested independently
-- **Flexibility**: Supports both YAML organization approaches
-- **Scalability**: Easy to add more entities, use cases, or infrastructure implementations
+1. **Plain data over class hierarchies** — domain concepts are interfaces, not classes with behavior
+2. **Pure functions over methods** — business logic lives in standalone functions, not object methods
+3. **Composition over inheritance** — services are composed at startup, not extended
+4. **Constructor injection** — dependencies are passed explicitly, no service locators
+5. **Config-driven behavior** — bots, flows, and actions are YAML-defined, not coded
+6. **One bounded context** — the entire codebase is a single module; shared types live in `bot/types.ts`
+7. **Minimal abstraction** — add an abstraction only when there's a concrete need (see: `MessageChannel`)
+8. **Direct calls** — `FlowExecutor` calls `outboxService.enqueue()` directly, no event bus or mediator
