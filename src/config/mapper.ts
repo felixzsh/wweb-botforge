@@ -1,4 +1,4 @@
-import { Bot, BotSettings, FlowRef, createBot, createDefaultSettings } from '../bot/bot'
+import { Bot, BotSettings, FlowRef, createBot, createDefaultSettings } from '../bot'
 import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../utils/validation'
 import { BotConfig, BotSettingsConfig, FlowRefConfig, ActionConfig, WebhookActionConfig, FlowConfig, FlowStepConfig, FlowBranchConfig } from './schema'
 import { ActionDef, ActionCatalog } from '../action/action'

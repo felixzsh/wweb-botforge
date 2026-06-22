@@ -1,4 +1,4 @@
-import { Bot } from '../bot/bot'
+import { Bot } from '../bot'
 import { IncomingMessage, WebhookPayload } from '../messaging/contracts'
 import { ActionCatalog, ActionExecutionContext } from '../action/action'
 import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FlowState, FuzzyTrigger } from './flow'

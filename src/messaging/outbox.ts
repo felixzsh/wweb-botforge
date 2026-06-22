@@ -1,4 +1,4 @@
-import { Bot } from '../bot/bot'
+import { Bot } from '../bot'
 import { OutgoingMessage } from './contracts'
 import { getLogger } from '../utils/logger'
 

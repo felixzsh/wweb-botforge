@@ -1,4 +1,4 @@
-import { Bot } from '../bot/bot'
+import { Bot } from '../bot'
 import { IncomingMessage } from './contracts'
 import { FlowExecutor } from '../flow/executor'
 import { getLogger } from '../utils/logger'

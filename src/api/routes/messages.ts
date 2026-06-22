@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { OutboxService } from '../../messaging/outbox'
-import { Bot } from '../../bot/bot'
+import { Bot } from '../../bot'
 
 export function createMessagesRouter(
   outboxService: OutboxService,

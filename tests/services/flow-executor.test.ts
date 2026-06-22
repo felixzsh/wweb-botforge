@@ -6,7 +6,7 @@ import { FlowStateService } from '../../src/flow/state'
 import { OutboxService } from '../../src/messaging/outbox'
 import { CooldownService } from '../../src/action/cooldown'
 import { mapActionCatalog, mapFlowCatalog } from '../../src/config/mapper'
-import { Bot } from '../../src/bot/bot'
+import { Bot } from '../../src/bot'
 import { IncomingMessage } from '../../src/messaging/contracts'
 import { ActionConfig, FlowConfig } from '../../src/config/schema'
 

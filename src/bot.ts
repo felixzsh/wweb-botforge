@@ -1,5 +1,5 @@
-import { MessageChannel } from '../messaging/contracts'
-import { validateId } from '../utils/validation'
+import { MessageChannel } from './messaging/contracts'
+import { validateId } from './utils/validation'
 
 export interface FlowRef {
   id: string

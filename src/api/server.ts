@@ -1,6 +1,6 @@
 import express, { Router } from 'express'
 import { OutboxService } from '../messaging/outbox'
-import { Bot } from '../bot/bot'
+import { Bot } from '../bot'
 import { createHealthRouter } from './routes/health'
 import { createBotsRouter } from './routes/bots'
 import { createMessagesRouter } from './routes/messages'
