@@ -1,9 +1,9 @@
 import inquirer from 'inquirer'
-import { createHash } from 'crypto'
 import qrcode from 'qrcode-terminal'
 import { BotConfig } from '../config/schema'
 import { WhatsAppInitializer } from '../whatsapp/client'
 import { addBotConfig, getConfigPath, setConfigPath } from '../config/yaml'
+import { validateId } from '../helpers/validation'
 
 export async function runCreateBot(configPath?: string) {
   if (configPath) setConfigPath(configPath)
@@ -14,22 +14,24 @@ export async function runCreateBot(configPath?: string) {
     const answers = await inquirer.prompt([
       {
         type: 'input',
-        name: 'botName',
-        message: 'What would you like to name your bot?',
+        name: 'botId',
+        message: 'Enter bot name identifier:',
         validate: (input: string) => {
-          if (input.trim().length === 0) {
+          const sanitized = input.trim().toLowerCase()
+          if (sanitized.length === 0) {
             return 'Bot name cannot be empty'
+          }
+          try {
+            validateId(sanitized, 'Bot')
+          } catch (e) {
+            return (e as Error).message
           }
           return true
         },
       },
     ])
 
-    const botName = answers.botName.trim()
-    const botId = generateBotId(botName)
-
-    console.log(`\nGenerated bot ID: ${botId}`)
-    console.log(`Bot name: ${botName}`)
+    const botId = answers.botId.trim().toLowerCase()
 
     const initializer = new WhatsAppInitializer(botId)
     let phoneNumber: string | undefined
@@ -72,11 +74,10 @@ export async function runCreateBot(configPath?: string) {
 
     await addBotConfig(botId, botConfig, configPath)
 
-    console.log(`\nAdded new bot: ${botName} (${botId})`)
+    console.log(`\nAdded bot: ${botId}`)
     console.log(`Connected to WhatsApp with phone: ${phoneNumber}`)
     console.log(`\nBot configuration saved to ${getConfigPath()}`)
-    console.log(`\nYour bot "${botName}" (${botId}) is now ready to use!`)
-    console.log('\nTo start using your bot, run: npm start')
+    console.log(`\nYour bot "${botId}" is now ready to use!`)
 
     await initializer.destroy()
     process.exit(0)
@@ -87,7 +88,4 @@ export async function runCreateBot(configPath?: string) {
   }
 }
 
-function generateBotId(name: string): string {
-  const hash = createHash('md5').update(name.toLowerCase()).digest('hex')
-  return `bot-${hash.substring(0, 8)}`
-}
+
