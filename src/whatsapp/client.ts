@@ -32,8 +32,6 @@ export function getPuppeteerOptions(): any {
       '--no-zygote',
       '--single-process',
       '--disable-gpu',
-      '--disable-web-security',
-      '--disable-features=VizDisplayCompositor',
     ],
   }
 }
@@ -44,10 +42,6 @@ export function getClientOptions(clientId: string) {
       clientId: clientId,
       dataPath: path.join(getWwebCacheDir(), '.wwebjs_auth'),
     }),
-    webVersionCache: {
-      type: 'local' as const,
-      path: path.join(getWwebCacheDir(), '.wwebjs_cache'),
-    },
     puppeteer: getPuppeteerOptions(),
   }
 }
@@ -89,7 +83,9 @@ export class WhatsAppChannel implements MessageChannel {
     })
 
     this.client.on('message', msg => {
+      console.error('[DEBUG client] message event fired:', msg.id?._serialized, msg.body?.substring(0, 40))
       const domainMessage = toDomainMessage(msg)
+      console.error('[DEBUG client] handlers count:', this.messageHandlers.length)
       this.messageHandlers.forEach(handler => handler(domainMessage))
     })
 

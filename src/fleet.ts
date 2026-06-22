@@ -67,7 +67,11 @@ export class BotFleet {
 
       const loadedBots = mapBotsFromConfig(configFile.bots)
 
+      this.logger.debug(`Initializing ${loadedBots.length} bot(s)...`)
+
       for (const bot of loadedBots) {
+
+        this.logger.debug("about to initialize a bot")
         await this.initializeBot(bot)
 
         if (loadedBots.length > 1) {
@@ -78,7 +82,8 @@ export class BotFleet {
 
       this.isRunning = true
       this.logger.info(`WWeb BotForge started successfully with ${this.bots.size} bot(s)!`)
-      this.logger.info('Bots are now listening for messages...')
+      this.logger.debug("caguabonga")
+      this.logger.info('Bots are now listening for messagesssss...')
 
       this.setupGracefulShutdown()
 

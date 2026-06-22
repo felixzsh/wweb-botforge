@@ -24,28 +24,34 @@ export class InboxService {
     })
 
     bot.channel.onReady(() => {
+      console.error('[DEBUG inbox] registerBot onReady FIRED for', bot.id)
       this.logger.info(`Bot "${bot.id}" is ready and listening for messages`)
     })
   }
 
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
+    console.error('[DEBUG inbox] handleIncomingMessage ENTER:', bot.id, message.from, message.content?.substring(0, 40))
     this.logger.info(`Message received for bot "${bot.id}": ${message.content.substring(0, 50)}...`)
 
     try {
       if (message.metadata?.fromMe) {
+        console.error('[DEBUG inbox] filtered by fromMe')
         return
       }
 
       if (this.isSenderIgnored(bot, message.from)) {
+        console.error('[DEBUG inbox] filtered by ignoredSender:', message.from)
         this.logger.debug(`Ignoring message from "${message.from}" for bot "${bot.id}" (sender in ignored list)`)
         return
       }
 
       if (bot.settings.ignoreGroups && this.isGroupMessage(message.from)) {
+        console.error('[DEBUG inbox] filtered by group:', message.from)
         this.logger.debug(`Ignoring group message for bot "${bot.id}"`)
         return
       }
 
+      console.error('[DEBUG inbox] passing to flowExecutor')
       await this.flowExecutor.handleMessage(bot, message)
 
     } catch (error) {

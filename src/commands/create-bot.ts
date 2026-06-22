@@ -79,6 +79,7 @@ export async function runCreateBot(configPath?: string) {
     console.log(`\nBot configuration saved to bots/${botId}.yml`)
     console.log(`\nYour bot "${botId}" is now ready to use!`)
 
+    await new Promise(r => setTimeout(r, 3000))
     process.exit(0)
 
   } catch (error) {
