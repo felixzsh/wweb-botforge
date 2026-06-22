@@ -1,4 +1,5 @@
-import { mapActionCatalog, resolveAction } from '../../src/action/catalog'
+import { mapActionCatalog } from '../../src/config/mapper'
+import { resolveAction } from '../../src/action/action'
 import { ActionConfig } from '../../src/config/schema'
 
 describe('ActionCatalog', () => {

@@ -1,4 +1,4 @@
-import { mapFlowCatalog } from '../../src/flow/mapper'
+import { mapFlowCatalog } from '../../src/config/mapper'
 import { FlowConfig } from '../../src/config/schema'
 
 describe('FlowMapper', () => {

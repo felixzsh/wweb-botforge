@@ -1,4 +1,4 @@
-import { mapConfigToBot, mapSettings, mapBotsFromConfig } from '../../src/bot/mapper'
+import { mapConfigToBot, mapSettings, mapBotsFromConfig } from '../../src/config/mapper'
 import { BotConfig, BotSettingsConfig } from '../../src/config/schema'
 
 describe('Mapper', () => {

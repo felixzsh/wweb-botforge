@@ -1,4 +1,4 @@
-import { ActionExecutionContext } from './types'
+import { ActionExecutionContext } from './action'
 
 export function resolveVars(text: string, context: ActionExecutionContext): string {
   return text

@@ -2,9 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 import { loadConfig } from '../../src/config/yaml'
-import { mapConfigToBot, mapBotsFromConfig, mapSettings } from '../../src/bot/mapper'
-import { mapActionCatalog } from '../../src/action/catalog'
-import { mapFlowCatalog } from '../../src/flow/mapper'
+import { mapConfigToBot, mapBotsFromConfig, mapSettings, mapActionCatalog, mapFlowCatalog } from '../../src/config/mapper'
 import { BotConfig } from '../../src/config/schema'
 
 describe('YAML Configuration Loading Integration Tests', () => {

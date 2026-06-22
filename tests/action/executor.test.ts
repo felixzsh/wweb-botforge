@@ -1,6 +1,6 @@
-import { executeAction } from '../../src/action/executor'
-import { mapActionCatalog } from '../../src/action/catalog'
-import { ActionExecutionContext } from '../../src/action/types'
+import { executeAction } from '../../src/action/action'
+import { mapActionCatalog } from '../../src/config/mapper'
+import { ActionExecutionContext } from '../../src/action/action'
 import { ActionConfig } from '../../src/config/schema'
 
 describe('executeAction', () => {
