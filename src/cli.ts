@@ -11,6 +11,7 @@ import { loadConfig, setConfigPath, getDefaultConfigPath } from './config/yaml'
 import { setGlobalLogger, getLogger } from './helpers/logger'
 import { setGlobalConfig } from './whatsapp/client'
 import { runCreateBot } from './commands/create-bot'
+import { runGuide } from './commands/guide'
 
 const packageJsonPath = path.join(__dirname, '..', 'package.json')
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
@@ -35,6 +36,11 @@ program
   .command('create-bot')
   .description('Create a new WhatsApp bot interactively')
   .action(() => runCreateBot(program.opts().config))
+
+program
+  .command('guide')
+  .description('Show AI agent configuration guide')
+  .action(() => runGuide())
 
 program
   .command('start')
