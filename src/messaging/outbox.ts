@@ -1,4 +1,5 @@
-import { Bot, OutgoingMessage } from '../bot/types'
+import { Bot } from '../bot/types'
+import { OutgoingMessage } from './types'
 import { getLogger } from '../utils/logger'
 
 export interface QueuedMessage {

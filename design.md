@@ -26,7 +26,7 @@ src/
 │   ├── logger.ts       Pino-based structured logger
 │   └── fuzzy.ts        Fuse.js fuzzy matching wrapper
 ├── bot/
-│   ├── types.ts          Shared domain interfaces (Bot, MessageChannel, BotSettings, ...)
+│   ├── types.ts          Bot domain types (Bot, FlowRef, BotSettings)
 │   ├── bot.ts            Pure factories (createBot, createDefaultSettings)
 │   ├── fleet.ts          BotFleet: orchestration root, wiring, lifecycle
 │   ├── mapper.ts         Snake_case config → camelCase domain objects
@@ -47,7 +47,8 @@ src/
 │   ├── cooldown.ts       CooldownService: in-memory per-sender rate limiting
 │   ├── webhook.ts        sendWebhookRequest: fetch + retry + exponential backoff
 │   └── template.ts       Variable interpolation ({{ sender }}, {{ message }}, ...)
-├── services/
+├── messaging/
+│   ├── types.ts          Messaging domain (MessageChannel, IncomingMessage, OutgoingMessage, WebhookPayload)
 │   ├── inbox.ts          InboxService: message listener registration & filtering
 │   └── outbox.ts         OutboxService: per-bot FIFO message queue with delays
 ├── api/
@@ -258,6 +259,6 @@ Additionally, files placed in `actions/`, `flows/`, and `bots/` directories rela
 3. **Composition over inheritance** — services are composed at startup, not extended
 4. **Constructor injection** — dependencies are passed explicitly, no service locators
 5. **Config-driven behavior** — bots, flows, and actions are YAML-defined, not coded
-6. **One bounded context** — the entire codebase is a single module; shared types live in `bot/types.ts`
+6. **One bounded context** — the entire codebase is a single module; core bot domain in `bot/types.ts`, messaging contracts in `messaging/types.ts`, config shapes in `config/types.ts`
 7. **Minimal abstraction** — add an abstraction only when there's a concrete need (see: `MessageChannel`)
 8. **Direct calls** — `FlowExecutor` calls `outboxService.enqueue()` directly, no event bus or mediator

@@ -1,4 +1,5 @@
-import { Bot, BotSettings, FlowRef, MessageChannel } from './types'
+import { Bot, BotSettings, FlowRef } from './types'
+import { MessageChannel } from '../messaging/types'
 import { validateBotId } from './validation'
 
 export function createBot(props: {

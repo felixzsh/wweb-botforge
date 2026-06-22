@@ -1,5 +1,6 @@
 import { Client, LocalAuth } from 'whatsapp-web.js'
-import { IncomingMessage, OutgoingMessage, MessageChannel, Bot } from '../bot/types'
+import { IncomingMessage, OutgoingMessage, MessageChannel } from '../messaging/types'
+import { Bot } from '../bot/types'
 import { ConfigFile } from '../config/types'
 import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './types'
 import { getLogger } from '../utils/logger'

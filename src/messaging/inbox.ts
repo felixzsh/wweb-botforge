@@ -1,4 +1,5 @@
-import { Bot, IncomingMessage } from '../bot/types'
+import { Bot } from '../bot/types'
+import { IncomingMessage } from './types'
 import { FlowExecutor } from '../flow/executor'
 import { getLogger } from '../utils/logger'
 
