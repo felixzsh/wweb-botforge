@@ -1,0 +1,116 @@
+import { InboxService } from '../../../src/messages/inbox'
+import { FlowExecutor } from '../../../src/flow/executor'
+import { Bot, createBot, createDefaultSettings } from '../../../src/bot'
+import { MockChannel } from '../helpers/mock-channel'
+
+describe('InboxService', () => {
+  let inbox: InboxService
+  let flowExecutor: jest.Mocked<FlowExecutor>
+  let mockChannel: MockChannel
+  let bot: Bot
+
+  beforeEach(() => {
+    flowExecutor = {
+      handleMessage: jest.fn().mockResolvedValue(true),
+    } as unknown as jest.Mocked<FlowExecutor>
+
+    inbox = new InboxService(flowExecutor)
+    mockChannel = new MockChannel()
+    bot = createBot({ id: 'test-bot', settings: createDefaultSettings() })
+    bot.channel = mockChannel
+  })
+
+  describe('registerBot', () => {
+    it('should register message and ready handlers on channel', () => {
+      inbox.registerBot(bot)
+
+      expect(mockChannel['messageHandlers']).toHaveLength(1)
+      expect(mockChannel['readyHandlers']).toHaveLength(1)
+    })
+
+    it('should throw if bot has no channel', () => {
+      const bareBot = createBot({ id: 'no-channel', settings: createDefaultSettings() })
+
+      expect(() => inbox.registerBot(bareBot)).toThrow(
+        'Bot "no-channel" does not have a registered channel'
+      )
+    })
+  })
+
+  describe('message handling', () => {
+    beforeEach(() => {
+      inbox.registerBot(bot)
+    })
+
+    it('should ignore messages from self', async () => {
+      await mockChannel.simulateMessage({
+        id: 'msg-1',
+        from: '521234567890',
+        to: 'test-bot',
+        content: 'hello',
+        timestamp: new Date(),
+        metadata: { fromMe: true },
+      })
+
+      expect(flowExecutor.handleMessage).not.toHaveBeenCalled()
+    })
+
+    it('should ignore messages from ignored senders', async () => {
+      bot.settings.ignoredSenders = ['5550001111']
+
+      await mockChannel.simulateMessage({
+        id: 'msg-2',
+        from: '5550001111',
+        to: 'test-bot',
+        content: 'spam',
+        timestamp: new Date(),
+      })
+
+      expect(flowExecutor.handleMessage).not.toHaveBeenCalled()
+    })
+
+    it('should ignore group messages when ignoreGroups is true', async () => {
+      bot.settings.ignoreGroups = true
+
+      await mockChannel.simulateMessage({
+        id: 'msg-3',
+        from: '1234567890@g.us',
+        to: 'test-bot',
+        content: 'group msg',
+        timestamp: new Date(),
+      })
+
+      expect(flowExecutor.handleMessage).not.toHaveBeenCalled()
+    })
+
+    it('should process messages from allowed senders', async () => {
+      await mockChannel.simulateMessage({
+        id: 'msg-4',
+        from: '5551112222',
+        to: 'test-bot',
+        content: 'help',
+        timestamp: new Date(),
+      })
+
+      expect(flowExecutor.handleMessage).toHaveBeenCalledTimes(1)
+      expect(flowExecutor.handleMessage).toHaveBeenCalledWith(
+        bot,
+        expect.objectContaining({ content: 'help' })
+      )
+    })
+
+    it('should process group messages when ignoreGroups is false', async () => {
+      bot.settings.ignoreGroups = false
+
+      await mockChannel.simulateMessage({
+        id: 'msg-5',
+        from: '1234567890@g.us',
+        to: 'test-bot',
+        content: 'group msg',
+        timestamp: new Date(),
+      })
+
+      expect(flowExecutor.handleMessage).toHaveBeenCalledTimes(1)
+    })
+  })
+})
