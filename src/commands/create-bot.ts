@@ -1,7 +1,7 @@
 import inquirer from 'inquirer'
 import { createHash } from 'crypto'
 import qrcode from 'qrcode-terminal'
-import { BotConfig } from '../config/types'
+import { BotConfig } from '../config/schema'
 import { WhatsAppInitializer } from '../whatsapp/client'
 import { addBotConfig, getConfigPath, setConfigPath } from '../config/yaml'
 

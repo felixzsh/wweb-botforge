@@ -1,5 +1,5 @@
 import { ActionDef, ActionCatalog } from './types'
-import { ActionConfig, WebhookActionConfig } from '../config/types'
+import { ActionConfig, WebhookActionConfig } from '../config/schema'
 
 export function resolveAction(catalog: ActionCatalog, id: string): ActionDef {
   const action = catalog.get(id)

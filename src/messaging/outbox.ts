@@ -1,5 +1,5 @@
-import { Bot } from '../bot/types'
-import { OutgoingMessage } from './types'
+import { Bot } from '../bot/bot'
+import { OutgoingMessage } from './contracts'
 import { getLogger } from '../utils/logger'
 
 export interface QueuedMessage {

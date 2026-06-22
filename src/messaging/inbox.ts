@@ -1,5 +1,5 @@
-import { Bot } from '../bot/types'
-import { IncomingMessage } from './types'
+import { Bot } from '../bot/bot'
+import { IncomingMessage } from './contracts'
 import { FlowExecutor } from '../flow/executor'
 import { getLogger } from '../utils/logger'
 

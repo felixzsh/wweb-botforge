@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3'
-import { FlowState } from './types'
+import { FlowState } from './flow'
 
 export class FlowStateService {
   private db: Database.Database

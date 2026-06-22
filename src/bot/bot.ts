@@ -1,6 +1,28 @@
-import { Bot, BotSettings, FlowRef } from './types'
-import { MessageChannel } from '../messaging/types'
+import { MessageChannel } from '../messaging/contracts'
 import { validateId } from '../utils/validation'
+
+export interface FlowRef {
+  id: string
+  priority: number
+}
+
+export interface Bot {
+  id: string
+  phone?: string
+  settings: BotSettings
+  flows: FlowRef[]
+  channel?: MessageChannel
+}
+
+export interface BotSettings {
+  simulateTyping: boolean
+  typingDelay: number
+  queueDelay: number
+  readReceipts: boolean
+  ignoreGroups: boolean
+  ignoredSenders: string[]
+  adminNumbers: string[]
+}
 
 export function createBot(props: {
   id: string

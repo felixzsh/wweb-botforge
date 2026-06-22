@@ -1,5 +1,5 @@
 import pino from 'pino'
-import { ConfigFile } from '../config/types'
+import { ConfigFile } from '../config/schema'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 

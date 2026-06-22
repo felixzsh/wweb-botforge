@@ -7,9 +7,9 @@ import { OutboxService } from '../../src/messaging/outbox'
 import { CooldownService } from '../../src/action/cooldown'
 import { mapActionCatalog } from '../../src/action/catalog'
 import { mapFlowCatalog } from '../../src/flow/mapper'
-import { Bot } from '../../src/bot/types'
-import { IncomingMessage } from '../../src/messaging/types'
-import { ActionConfig, FlowConfig } from '../../src/config/types'
+import { Bot } from '../../src/bot/bot'
+import { IncomingMessage } from '../../src/messaging/contracts'
+import { ActionConfig, FlowConfig } from '../../src/config/schema'
 
 describe('FlowExecutor', () => {
   let dbPath: string

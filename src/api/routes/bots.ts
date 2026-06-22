@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { Bot } from '../../bot/types'
+import { Bot } from '../../bot/bot'
 
 export function createBotsRouter(bots: Map<string, Bot>): Router {
   const router = Router()

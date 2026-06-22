@@ -1,8 +1,8 @@
 import { Client, LocalAuth } from 'whatsapp-web.js'
-import { IncomingMessage, OutgoingMessage, MessageChannel } from '../messaging/types'
-import { Bot } from '../bot/types'
-import { ConfigFile } from '../config/types'
-import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './types'
+import { IncomingMessage, OutgoingMessage, MessageChannel } from '../messaging/contracts'
+import { Bot } from '../bot/bot'
+import { ConfigFile } from '../config/schema'
+import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './whatsapp'
 import { getLogger } from '../utils/logger'
 
 let globalConfig: ConfigFile['global'] | undefined

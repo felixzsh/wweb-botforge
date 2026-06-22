@@ -5,7 +5,7 @@ import { loadConfig } from '../../src/config/yaml'
 import { mapConfigToBot, mapBotsFromConfig, mapSettings } from '../../src/bot/mapper'
 import { mapActionCatalog } from '../../src/action/catalog'
 import { mapFlowCatalog } from '../../src/flow/mapper'
-import { BotConfig } from '../../src/config/types'
+import { BotConfig } from '../../src/config/schema'
 
 describe('YAML Configuration Loading Integration Tests', () => {
   describe('Valid Configuration Files', () => {

@@ -1,5 +1,5 @@
 import { mapConfigToBot, mapSettings, mapBotsFromConfig } from '../../src/bot/mapper'
-import { BotConfig, BotSettingsConfig } from '../../src/config/types'
+import { BotConfig, BotSettingsConfig } from '../../src/config/schema'
 
 describe('Mapper', () => {
   describe('mapSettings', () => {

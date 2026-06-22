@@ -3,7 +3,7 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { ConfigFile, BotConfig, ActionConfig, FlowConfig } from './types'
+import { ConfigFile, BotConfig, ActionConfig, FlowConfig } from './schema'
 import { getLogger } from '../utils/logger'
 
 let configPath: string

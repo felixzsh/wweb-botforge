@@ -1,5 +1,5 @@
-import { Bot, BotSettings, FlowRef } from './types'
-import { BotConfig, BotSettingsConfig, FlowRefConfig } from '../config/types'
+import { Bot, BotSettings, FlowRef } from './bot'
+import { BotConfig, BotSettingsConfig, FlowRefConfig } from '../config/schema'
 import { createBot, createDefaultSettings } from './bot'
 import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../utils/validation'
 
