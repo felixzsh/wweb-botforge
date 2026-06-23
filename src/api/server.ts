@@ -1,9 +1,14 @@
 import express, { Router } from 'express'
 import { OutboxService } from '../messages/outbox'
 import { Bot } from '../bot'
+import { BotFleet } from '../fleet'
+import { ConfigWatcher } from '../config/watcher'
 import { createHealthRouter } from './routes/health'
 import { createBotsRouter } from './routes/bots'
 import { createMessagesRouter } from './routes/messages'
+import { createSessionsRouter } from './routes/sessions'
+import { createStatusRouter } from './routes/status'
+import { createConfigRouter } from './routes/config'
 import { getLogger } from '../helpers/logger'
 
 export class ApiServer {
@@ -11,13 +16,23 @@ export class ApiServer {
   private port: number
   private outboxService: OutboxService
   private bots: Map<string, Bot>
+  private fleet?: BotFleet
+  private configWatcher?: ConfigWatcher
   private server: any
 
-  constructor(outboxService: OutboxService, bots: Map<string, Bot>, port: number = 3000) {
+  constructor(
+    outboxService: OutboxService,
+    bots: Map<string, Bot>,
+    port: number = 3000,
+    fleet?: BotFleet,
+    configWatcher?: ConfigWatcher
+  ) {
     this.app = express()
     this.port = port
     this.outboxService = outboxService
     this.bots = bots
+    this.fleet = fleet
+    this.configWatcher = configWatcher
 
     this.setupMiddleware()
     this.setupRoutes()
@@ -48,32 +63,33 @@ export class ApiServer {
     api.use('/health', createHealthRouter())
     api.use('/bots', createBotsRouter(this.bots))
     api.use('/messages', createMessagesRouter(this.outboxService, this.bots))
+    api.use('/sessions', createSessionsRouter())
+    api.use('/status', createStatusRouter(this.bots))
+    if (this.fleet && this.configWatcher) {
+      api.use('/config', createConfigRouter(this.fleet, this.configWatcher))
+    }
     this.app.use('/api', api)
 
     this.app.get('/', (req, res) => {
+      const endpoints: any = {
+        health: '/api/health',
+        messages: '/api/messages',
+        bots: '/api/bots',
+        sessions: '/api/sessions',
+        status: '/api/status',
+      }
+      if (this.fleet && this.configWatcher) {
+        endpoints.config = '/api/config'
+      }
       res.json({
         service: 'WWeb BotForge API',
-        version: '1.0.0',
-        endpoints: {
-          health: '/api/health',
-          messages: '/api/messages',
-          bots: '/api/bots',
-          docs: 'See README.md for API documentation',
-        },
+        endpoints,
       })
     })
 
     this.app.use((req, res) => {
       res.status(404).json({
         error: 'Endpoint not found',
-        availableEndpoints: {
-          health: 'GET /api/health',
-          sendMessage: 'POST /api/messages/send',
-          queueStatus: 'GET /api/messages/queue/:botId',
-          allQueues: 'GET /api/messages/queue',
-          listBots: 'GET /api/bots',
-          getBot: 'GET /api/bots/:botId',
-        },
       })
     })
   }
@@ -82,7 +98,6 @@ export class ApiServer {
     return new Promise((resolve) => {
       this.server = this.app.listen(this.port, () => {
         this.logger.info(`API Server started on port ${this.port}`)
-        this.logger.info(`API Documentation: http://localhost:${this.port}`)
         resolve()
       })
     })

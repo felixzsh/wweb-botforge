@@ -8,11 +8,14 @@ import { BotFleet } from './fleet'
 import { OutboxService } from './messages/outbox'
 import { ApiServer } from './api/server'
 import { loadConfig, setConfigPath, getDefaultConfigPath } from './config/yaml'
+import { ConfigWatcher } from './config/watcher'
 import { setGlobalLogger, getLogger } from './helpers/logger'
 import { setGlobalConfig } from './whatsapp/client'
 import { runCreateBot } from './commands/create-bot'
 import { runGuide } from './commands/guide'
 import { runValidate } from './commands/validate'
+import { runAuth } from './commands/auth'
+import { runStatus } from './commands/status'
 
 const packageJsonPath = path.join(__dirname, '..', 'package.json')
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
@@ -35,7 +38,7 @@ program
 
 program
   .command('create-bot')
-  .description('Create a new WhatsApp bot interactively')
+  .description('Create a new WhatsApp bot config')
   .action(() => runCreateBot(program.opts().config))
 
 program
@@ -49,13 +52,29 @@ program
   .action(() => runValidate(program.opts().config))
 
 program
-  .command('start')
-  .description('Start the WhatsApp bots')
+  .command('daemon')
+  .alias('start')
+  .description('Start the WhatsApp bot daemon')
   .action(async () => {
-    await startBots(program.opts().config)
+    await runDaemon(program.opts().config)
   })
 
-async function startBots(configPath?: string) {
+program
+  .command('auth')
+  .description('Authenticate a bot session via QR code')
+  .argument('<botId>', 'Bot ID to authenticate')
+  .action(async (botId) => {
+    await runAuth(botId, program.opts().config)
+  })
+
+program
+  .command('status')
+  .description('Show all bots and their session status')
+  .action(async () => {
+    await runStatus(program.opts().config)
+  })
+
+async function runDaemon(configPath?: string) {
   if (configPath) setConfigPath(configPath)
   const configFile = await loadConfig(configPath)
 
@@ -65,18 +84,23 @@ async function startBots(configPath?: string) {
   }
 
   const logger = getLogger()
-  logger.info('WWeb BotForge - Starting bots...')
+  logger.info('WWeb BotForge Daemon - Starting...')
 
   const outboxService = new OutboxService()
   const fleet = new BotFleet(outboxService)
+
+  const configWatcher = new ConfigWatcher(fleet)
+  configWatcher.start()
 
   const bots = await fleet.start(configFile)
 
   if (configFile.global?.apiEnabled) {
     const apiPort = configFile.global.apiPort || 3000
-    const apiServer = new ApiServer(outboxService, bots, apiPort)
+    const apiServer = new ApiServer(outboxService, bots, apiPort, fleet, configWatcher)
     await apiServer.start()
   }
+
+  logger.info('WWeb BotForge Daemon is running')
 }
 
 program.parse()

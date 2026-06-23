@@ -180,7 +180,11 @@ export class WhatsAppChannel implements MessageChannel {
   }
 
   onReady(handler: ReadyHandler): void {
-    this.readyHandlers.push(handler)
+    if (this.isConnected) {
+      handler()
+    } else {
+      this.readyHandlers.push(handler)
+    }
   }
 
   onDisconnected(handler: DisconnectedHandler): void {

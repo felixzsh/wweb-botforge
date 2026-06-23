@@ -11,6 +11,7 @@ import { FlowStateService } from './flow/state'
 import { FlowExecutor } from './flow/executor'
 import { SessionManager } from './whatsapp/session'
 import { setGlobalConfig, getWwebCacheDir } from './whatsapp/client'
+import { MessageChannel } from './messages/contracts'
 import { getLogger } from './helpers/logger'
 
 export class BotFleet {
@@ -70,14 +71,8 @@ export class BotFleet {
       this.logger.debug(`Initializing ${loadedBots.length} bot(s)...`)
 
       for (const bot of loadedBots) {
-
         this.logger.debug("about to initialize a bot")
-        await this.initializeBot(bot)
-
-        if (loadedBots.length > 1) {
-          this.logger.info('Waiting 3 seconds before initializing next bot...')
-          await this.delay(3000)
-        }
+        this.registerBot(bot)
       }
 
       this.isRunning = true
@@ -114,34 +109,35 @@ export class BotFleet {
     }
   }
 
-  private async initializeBot(bot: Bot): Promise<void> {
-    try {
-      this.logger.info(`Initializing bot: ${bot.id} (${bot.id})`)
+  private registerBot(bot: Bot): void {
+    this.logger.info(`Registering bot: ${bot.id}`)
+    this.bots.set(bot.id, bot)
+    this.outboxService.setupBotQueue(bot)
 
-      this.bots.set(bot.id, bot)
+    this.sessionManager.onSessionReady(bot.id, (channel) => {
+      this.linkSessionToBot(bot, channel)
+    })
 
-      const channel = this.sessionManager.createChannel(bot.id)
-      bot.channel = channel
+    this.sessionManager.registerSession(bot.id).catch((err) => {
+      this.logger.warn(`Bot "${bot.id}" session registration failed: ${err.message}`)
+    })
+  }
 
-      this.outboxService.setupBotQueue(bot)
-      this.inboxService!.registerBot(bot)
+  private linkSessionToBot(bot: Bot, channel: MessageChannel): void {
+    bot.channel = channel
+    this.inboxService!.registerBot(bot)
+    this.setupBotEventHandlers(bot)
 
-      this.setupBotEventHandlers(bot)
-
-      await bot.channel.connect()
-
-      this.logger.info(`Bot "${bot.id}" channel initialized (awaiting connection)`)
-
-    } catch (error) {
-      this.logger.error(`Failed to initialize bot "${bot.id}":`, error)
-      throw error
+    const phone = channel.getPhone()
+    if (phone) {
+      bot.phone = phone
     }
+
+    this.logger.info(`Bot "${bot.id}" linked to session`)
   }
 
   private setupBotEventHandlers(bot: Bot): void {
-    if (!bot.channel) {
-      throw new Error(`Bot "${bot.id}" does not have a registered channel`)
-    }
+    if (!bot.channel) return
 
     bot.channel.onReady(() => {
       this.logger.info(`Bot "${bot.id}" is ready!`)
@@ -168,8 +164,22 @@ export class BotFleet {
     })
 
     bot.channel.onAuthRequired?.((info) => {
-      this.logger.info(`QR auth required for bot "${bot.id}" (channel ${info.channelId})`)
+      this.logger.info(`QR auth required for bot "${bot.id}"`)
     })
+  }
+
+  linkExistingSession(botId: string): void {
+    const bot = this.bots.get(botId)
+    if (!bot) {
+      this.logger.warn(`Cannot link session: bot "${botId}" not found`)
+      return
+    }
+    const channel = this.sessionManager.getChannel(botId)
+    if (!channel) {
+      this.logger.warn(`Cannot link session: no session for "${botId}"`)
+      return
+    }
+    this.linkSessionToBot(bot, channel)
   }
 
   private setupGracefulShutdown(): void {
@@ -197,11 +207,15 @@ export class BotFleet {
   getStatus(): any {
     const botStatuses = Array.from(this.bots.values()).map(bot => {
       const queueStatus = this.outboxService.getBotQueueStatus(bot.id)
+      const sessionInfo = this.sessionManager.getSessionInfo(bot.id)
 
       return {
         id: bot.id,
-        name: bot.id,
         flowsCount: bot.flows.length,
+        session: sessionInfo ? {
+          state: sessionInfo.state,
+          phone: sessionInfo.phone,
+        } : null,
         queue: {
           size: queueStatus.queueSize,
           delayMs: queueStatus.delayMs,
@@ -211,22 +225,15 @@ export class BotFleet {
       }
     })
 
-    const queueStatus = this.outboxService.getAllQueuesStatus()
-
     return {
       isRunning: this.isRunning,
       bots: botStatuses,
       totalBots: botStatuses.length,
-      queues: queueStatus,
     }
   }
 
   isRunningStatus(): boolean {
     return this.isRunning
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   getOutboxService(): OutboxService {
@@ -237,4 +244,19 @@ export class BotFleet {
     return this.bots
   }
 
+  getActionCatalog(): ActionCatalog {
+    return this.actionCatalog
+  }
+
+  setActionCatalog(catalog: ActionCatalog): void {
+    this.actionCatalog = catalog
+  }
+
+  getFlowCatalog(): FlowCatalog {
+    return this.flowCatalog
+  }
+
+  setFlowCatalog(catalog: FlowCatalog): void {
+    this.flowCatalog = catalog
+  }
 }

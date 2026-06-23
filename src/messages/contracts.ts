@@ -33,6 +33,20 @@ export interface MessageChannel {
   getPhone(): string | undefined
 }
 
+export type SessionState = 'pending' | 'qr_received' | 'connected' | 'disconnected' | 'auth_failure'
+
+export interface SessionEvent {
+  type: 'qr' | 'ready' | 'disconnected' | 'auth_failure'
+  data?: unknown
+}
+
+export interface SessionInfo {
+  state: SessionState
+  phone?: string
+  lastQR?: string
+  error?: string
+}
+
 export interface WebhookPayload {
   sender: string
   message: string
