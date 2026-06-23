@@ -1,7 +1,7 @@
 import { Client, LocalAuth } from 'whatsapp-web.js'
 import * as path from 'path'
 import * as os from 'os'
-import { IncomingMessage, OutgoingMessage, MessageChannel } from '../messages/contracts'
+import { IncomingMessage, OutgoingMessage, MessageChannel, AuthRequiredInfo } from '../messages/contracts'
 import { Bot } from '../bot'
 import { ConfigFile } from '../config/schema'
 import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './whatsapp'
@@ -52,19 +52,23 @@ type DisconnectedHandler = (reason: string) => void | Promise<void>
 type AuthFailureHandler = (error: Error) => void | Promise<void>
 type ConnectionErrorHandler = (error: Error) => void | Promise<void>
 type StateChangeHandler = (newState: string) => void | Promise<void>
+type AuthRequiredHandler = (info: AuthRequiredInfo) => void | Promise<void>
 
 export class WhatsAppChannel implements MessageChannel {
   private client: Client
+  private channelId: string
   private messageHandlers: MessageHandler[] = []
   private readyHandlers: ReadyHandler[] = []
   private disconnectedHandlers: DisconnectedHandler[] = []
   private authFailureHandlers: AuthFailureHandler[] = []
   private connectionErrorHandlers: ConnectionErrorHandler[] = []
   private stateChangeHandlers: StateChangeHandler[] = []
+  private authRequiredHandlers: AuthRequiredHandler[] = []
   private isConnected: boolean = false
   private phoneNumber?: string
 
   constructor(clientId: string) {
+    this.channelId = clientId
     this.client = new Client(getClientOptions(clientId))
     this.setupEventListeners()
   }
@@ -92,6 +96,16 @@ export class WhatsAppChannel implements MessageChannel {
     this.client.on('disconnected', reason => {
       this.isConnected = false
       this.disconnectedHandlers.forEach(handler => handler(reason))
+    })
+
+    this.client.on('qr', (qr: string) => {
+      this.logger.info(`qr auth required for channel ${this.channelId}`)
+      const info: AuthRequiredInfo = {
+        channelId: this.channelId,
+        method: 'qr',
+        data: qr,
+      }
+      this.authRequiredHandlers.forEach(handler => handler(info))
     })
 
     this.client.on('auth_failure', (msg: any) => {
@@ -177,6 +191,10 @@ export class WhatsAppChannel implements MessageChannel {
 
   onStateChange(handler: StateChangeHandler): void {
     this.stateChangeHandlers.push(handler)
+  }
+
+  onAuthRequired(handler: AuthRequiredHandler): void {
+    this.authRequiredHandlers.push(handler)
   }
 
   getPhone(): string | undefined {

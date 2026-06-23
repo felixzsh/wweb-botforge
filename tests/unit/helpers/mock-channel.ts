@@ -1,4 +1,4 @@
-import { MessageChannel, IncomingMessage, OutgoingMessage } from '../../../src/messages/contracts'
+import { MessageChannel, IncomingMessage, OutgoingMessage, AuthRequiredInfo } from '../../../src/messages/contracts'
 
 type MessageHandler = (message: IncomingMessage) => void | Promise<void>
 type ReadyHandler = () => void | Promise<void>
@@ -6,6 +6,7 @@ type DisconnectedHandler = (reason: string) => void | Promise<void>
 type AuthFailureHandler = (error: Error) => void | Promise<void>
 type ConnectionErrorHandler = (error: Error) => void | Promise<void>
 type StateChangeHandler = (newState: string) => void | Promise<void>
+type AuthRequiredHandler = (info: AuthRequiredInfo) => void | Promise<void>
 
 export class MockChannel implements MessageChannel {
   sentMessages: OutgoingMessage[] = []
@@ -15,6 +16,7 @@ export class MockChannel implements MessageChannel {
   private authFailureHandlers: AuthFailureHandler[] = []
   private connectionErrorHandlers: ConnectionErrorHandler[] = []
   private stateChangeHandlers: StateChangeHandler[] = []
+  private authRequiredHandlers: AuthRequiredHandler[] = []
   connected: boolean = false
   phoneNumber: string = '521234567890'
 
@@ -45,6 +47,10 @@ export class MockChannel implements MessageChannel {
 
   onStateChange(handler: StateChangeHandler): void {
     this.stateChangeHandlers.push(handler)
+  }
+
+  onAuthRequired(handler: AuthRequiredHandler): void {
+    this.authRequiredHandlers.push(handler)
   }
 
   async connect(): Promise<void> {
@@ -82,6 +88,10 @@ export class MockChannel implements MessageChannel {
 
   simulateStateChange(state: string): void {
     this.stateChangeHandlers.forEach(h => h(state))
+  }
+
+  simulateAuthRequired(info: AuthRequiredInfo): void {
+    this.authRequiredHandlers.forEach(h => h(info))
   }
 
   getSentMessages(): OutgoingMessage[] {

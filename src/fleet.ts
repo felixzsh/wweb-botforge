@@ -81,9 +81,7 @@ export class BotFleet {
       }
 
       this.isRunning = true
-      this.logger.info(`WWeb BotForge started successfully with ${this.bots.size} bot(s)!`)
-      this.logger.debug("caguabonga")
-      this.logger.info('Bots are now listening for messagesssss...')
+      this.logger.info('Waiting for bot connections...')
 
       this.setupGracefulShutdown()
 
@@ -132,7 +130,7 @@ export class BotFleet {
 
       await bot.channel.connect()
 
-      this.logger.info(`Bot "${bot.id}" initialized and ready`)
+      this.logger.info(`Bot "${bot.id}" channel initialized (awaiting connection)`)
 
     } catch (error) {
       this.logger.error(`Failed to initialize bot "${bot.id}":`, error)
@@ -167,6 +165,10 @@ export class BotFleet {
 
     bot.channel.onStateChange((state: string) => {
       this.logger.info(`Bot "${bot.id}" state changed to:`, state)
+    })
+
+    bot.channel.onAuthRequired?.((info) => {
+      this.logger.info(`QR auth required for bot "${bot.id}" (channel ${info.channelId})`)
     })
   }
 

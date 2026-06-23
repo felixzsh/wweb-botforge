@@ -13,6 +13,12 @@ export interface OutgoingMessage {
   metadata?: Record<string, any>
 }
 
+export interface AuthRequiredInfo {
+  channelId: string
+  method: string
+  data?: string
+}
+
 export interface MessageChannel {
   send(message: OutgoingMessage): Promise<string>
   onMessage(handler: (message: IncomingMessage) => void | Promise<void>): void
@@ -21,6 +27,7 @@ export interface MessageChannel {
   onAuthFailure(handler: (error: Error) => void | Promise<void>): void
   onConnectionError(handler: (error: Error) => void | Promise<void>): void
   onStateChange(handler: (newState: string) => void | Promise<void>): void
+  onAuthRequired?(handler: (info: AuthRequiredInfo) => void | Promise<void>): void
   connect(): Promise<void>
   disconnect(): Promise<void>
   getPhone(): string | undefined
