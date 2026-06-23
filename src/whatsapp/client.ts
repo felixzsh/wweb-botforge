@@ -30,8 +30,14 @@ export function getPuppeteerOptions(): any {
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--single-process',
       '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--disable-default-apps',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--mute-audio',
     ],
   }
 }
