@@ -4,7 +4,7 @@ import * as os from 'os'
 import { IncomingMessage, OutgoingMessage, MessageChannel, AuthRequiredInfo } from '../messages/contracts'
 import { Bot } from '../bot'
 import { ConfigFile } from '../config/schema'
-import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber } from './whatsapp'
+import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber, normalizePhoneNumber } from './whatsapp'
 import { getLogger } from '../helpers/logger'
 
 export function getWwebCacheDir(): string {
@@ -92,10 +92,21 @@ export class WhatsAppChannel implements MessageChannel {
       this.readyHandlers.forEach(handler => handler())
     })
 
-    this.client.on('message', msg => {
-      console.error('[DEBUG client] message event fired:', msg.id?._serialized, msg.body?.substring(0, 40))
+    this.client.on('message', async msg => {
       const domainMessage = toDomainMessage(msg)
-      console.error('[DEBUG client] handlers count:', this.messageHandlers.length)
+
+      if (msg.from.includes('@lid')) {
+        try {
+          const contact = await msg.getContact()
+          const result = await this.client.getContactLidAndPhone([contact.id._serialized])
+          if (result && result[0]?.pn) {
+            domainMessage.from = normalizePhoneNumber(result[0].pn)
+          }
+        } catch (err: any) {
+          this.logger.debug('LID resolution failed:', err.message)
+        }
+      }
+
       this.messageHandlers.forEach(handler => handler(domainMessage))
     })
 
