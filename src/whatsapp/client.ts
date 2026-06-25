@@ -49,6 +49,10 @@ export function getClientOptions(clientId: string) {
       dataPath: path.join(getWwebCacheDir(), '.wwebjs_auth'),
     }),
     puppeteer: getPuppeteerOptions(),
+    webVersionCache: {
+      type: 'local' as const,
+      path: path.join(getWwebCacheDir(), '.wwebjs_cache'),
+    },
   }
 }
 
