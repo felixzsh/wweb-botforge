@@ -34,26 +34,9 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 npm install -g wweb-botforge
 ```
 
-### 2. Create Your First Bot
+### 2. Setup & Start as System Service
 
-```bash
-botforge create-bot
-```
-
-Answer the questions:
-- **Bot Name**: `My Awesome Bot`
-
-The command will:
-- Generate a unique bot ID automatically
-- Show a QR code for WhatsApp authentication
-- Create the bot configuration with your phone number
-- Save everything to `~/.config/wweb-botforge/config.yml`
-
-### 3. Configure Your Bot
-
-The `create-bot` command creates a bot entry with default settings but no defined behavior. Your bot won't respond to messages until you define actions, flows, and assign them to your bot by editing `~/.config/wweb-botforge/config.yml`. See the Configuration Guide below.
-
-### 4. Setup & Start as System Service
+The daemon is configured automatically during install. Start it with:
 
 ```bash
 # Start the service
@@ -63,7 +46,20 @@ systemctl --user start wweb-botforge
 systemctl --user enable wweb-botforge
 ```
 
-Your bot is now running as a system service! Send messages to test it.
+### 3. Authenticate Your Bot
+
+```bash
+botforge auth <botId>
+```
+
+Shows a QR code to link your WhatsApp account. Once scanned, the bot is authenticated and ready.
+
+### 4. Check Status
+
+```bash
+botforge status
+journalctl --user -u wweb-botforge -f    # real-time logs
+```
 
 ## Configuration Guide
 

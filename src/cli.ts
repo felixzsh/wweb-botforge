@@ -11,7 +11,6 @@ import { loadConfig, setConfigPath, getDefaultConfigPath } from './config/yaml'
 import { ConfigWatcher } from './config/watcher'
 import { setGlobalLogger, getLogger } from './helpers/logger'
 import { setGlobalConfig } from './whatsapp/client'
-import { runCreateBot } from './commands/create-bot'
 import { runGuide } from './commands/guide'
 import { runValidate } from './commands/validate'
 import { runAuth } from './commands/auth'
@@ -35,11 +34,6 @@ program
     const setupScript = path.join(__dirname, '..', 'scripts', 'setup-systemd.js')
     execSync(`node ${setupScript}`, { stdio: 'inherit' })
   })
-
-program
-  .command('create-bot')
-  .description('Create a new WhatsApp bot config')
-  .action(() => runCreateBot(program.opts().config))
 
 program
   .command('guide')

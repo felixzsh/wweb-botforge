@@ -361,9 +361,9 @@ settings:
 ## Quick Start CLI Commands
 
 \`\`\`
-botforge start                  # Start all bots
-botforge start -c path/to.yml  # Start with custom config
-botforge create-bot             # Interactive bot creation wizard
+botforge daemon                 # Start the bot daemon
+botforge status                 # Show bot session status
+botforge auth <botId>           # Authenticate a bot
 botforge setup                  # Setup systemd service
 botforge guide                  # Show this guide
 \`\`\`

@@ -57,7 +57,8 @@ src/
 │       ├── bots.ts       GET /api/bots, /api/bots/:botId
 │       └── messages.ts   POST /api/messages/send, GET /api/messages/queue
 └── commands/
-    └── create-bot.ts     Interactive inquirer wizard for first-time bot setup
+    ├── auth.ts           Session authentication via QR
+    └── status.ts         Bot session status display
 ```
 
 ---
