@@ -78,13 +78,13 @@ async function runDaemon(configPath?: string) {
   if (configPath) setConfigPath(configPath)
   const configFile = await loadConfig(configPath)
 
-  if (configFile.global) {
-    setGlobalLogger(configFile.global)
-    setGlobalConfig(configFile.global)
+  if (configFile) {
+    setGlobalLogger(configFile)
+    setGlobalConfig(configFile)
   }
 
   const logger = getLogger()
-  logger.info('WWeb BotForge Daemon - Starting...')
+  logger.info('WWeb BotForge - Starting bots...')
 
   const outboxService = new OutboxService()
   const fleet = new BotFleet(outboxService)
@@ -94,8 +94,8 @@ async function runDaemon(configPath?: string) {
 
   const bots = await fleet.start(configFile)
 
-  if (configFile.global?.apiEnabled) {
-    const apiPort = configFile.global.apiPort || 3000
+  if (configFile?.apiEnabled) {
+    const apiPort = configFile.apiPort || 3000
     const apiServer = new ApiServer(outboxService, bots, apiPort, fleet, configWatcher)
     await apiServer.start()
   }

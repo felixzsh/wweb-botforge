@@ -191,6 +191,6 @@ export async function addBotConfig(id: string, botConfig: BotConfig, customPath?
 
   const mainConfigPath = customPath || getConfigPath()
   if (!fsSync.existsSync(mainConfigPath)) {
-    await saveConfig({ global: {}, bots: {} }, mainConfigPath)
+    await saveConfig({ bots: {} }, mainConfigPath)
   }
 }

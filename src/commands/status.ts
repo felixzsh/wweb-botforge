@@ -5,7 +5,7 @@ async function getApiBase(configPath?: string): Promise<string> {
   try {
     if (configPath) setConfigPath(configPath)
     const config = await loadConfig(configPath)
-    const apiPort = config.global?.apiPort || 3000
+    const apiPort = config.apiPort || 3000
     return `http://localhost:${apiPort}`
   } catch {
     return 'http://localhost:3000'

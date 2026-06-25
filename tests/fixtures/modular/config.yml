@@ -1,3 +1,2 @@
-global:
-  sessionTimeout: 300
-  logLevel: "debug"
+sessionTimeout: 300
+logLevel: "debug"

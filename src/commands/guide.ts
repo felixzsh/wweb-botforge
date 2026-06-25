@@ -43,15 +43,14 @@ Place config files in a directory structure. File names become IDs.
 
 The loader merges directory files with any inline definitions in \`config.yml\`. Inline definitions take precedence.
 
-### config.yml (only global, no actions/flows/bots inline)
+### config.yml (global settings only, actions/flows/bots are separate files)
 
 \`\`\`yaml
-global:
-  chromiumPath: "/usr/bin/chromium"
-  apiPort: 3000
-  apiEnabled: true
-  logLevel: "info"
-  sessionTimeout: 300
+chromiumPath: "/usr/bin/chromium"
+apiPort: 3000
+apiEnabled: true
+logLevel: "info"
+sessionTimeout: 300
 \`\`\`
 
 ---
@@ -270,10 +269,9 @@ bots:
 \`~/.config/wweb-botforge/config.yml\`:
 
 \`\`\`yaml
-global:
-  chromiumPath: "/usr/bin/chromium"
-  apiEnabled: true
-  logLevel: "info"
+chromiumPath: "/usr/bin/chromium"
+apiEnabled: true
+logLevel: "info"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/greet.yml\`:

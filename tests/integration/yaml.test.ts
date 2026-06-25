@@ -62,8 +62,8 @@ describe('YAML Configuration Loading Integration Tests', () => {
 
         const config = await loadConfig(fixturePath)
 
-        expect(config.global?.sessionTimeout).toBe(300)
-        expect(config.global?.logLevel).toBe('info')
+        expect(config.sessionTimeout).toBe(300)
+        expect(config.logLevel).toBe('info')
         expect(config.actions).toBeDefined()
         expect(config.flows).toBeDefined()
         expect(Object.keys(config.bots)).toHaveLength(2)
@@ -361,8 +361,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
       fs.mkdirSync(botsDir)
 
       fs.writeFileSync(configPath, `
-global:
-  sessionTimeout: 600
+sessionTimeout: 600
 bots:
   support-bot:
     flows:
@@ -493,8 +492,7 @@ reply: "Original reply from directory"
       fs.mkdirSync(flowsDir)
 
       fs.writeFileSync(configPath, `
-global:
-  sessionTimeout: 120
+sessionTimeout: 120
 bots:
   test-bot:
     flows:
@@ -630,7 +628,7 @@ goto: show-hours`)
       const configPath = path.join(tempDir, 'config.yml')
 
       const config = {
-        global: { logLevel: 'info' as const },
+        logLevel: 'info' as const,
         bots: {
           'test-bot': {
             flows: [{ id: 'faq', priority: 5 }],
@@ -643,7 +641,7 @@ goto: show-hours`)
 
       const loaded = await loadConfig(configPath)
       expect(loaded.bots['test-bot']).toBeDefined()
-      expect(loaded.global?.logLevel).toBe('info')
+      expect(loaded.logLevel).toBe('info')
     })
 
     it('should create directory structure when saving', async () => {
@@ -718,12 +716,12 @@ goto: show-hours`)
 
       expect(fs.existsSync(configPath)).toBe(true)
       const content = fs.readFileSync(configPath, 'utf8')
-      expect(content).toContain('global:')
+      expect(content).toContain('bots:')
     })
 
     it('should not modify existing config.yml', async () => {
       await saveConfig({
-        global: { sessionTimeout: 999 },
+        sessionTimeout: 999,
         bots: { existing: {} },
       }, configPath)
 

@@ -221,7 +221,7 @@ export class FlowExecutor {
 
         const result = matchFuzzyVerbose(branch.when!, message, threshold)
         if (!result) {
-          this.logger.debug(`      [${bi}] when="${branch.when!.join(', ')}" → ${branch.goto}`)
+          this.logger.debug(`      [${bi}] when="${branch.when}" → ${branch.goto}`)
           continue
         }
 
@@ -230,7 +230,7 @@ export class FlowExecutor {
           (result.score === best.score && ni > best.nodeIndex)
 
         const marker = isBest ? '◀ BEST' : '◀ worse'
-        this.logger.debug(`      [${bi}] when="${branch.when!.join(', ')}" → ${branch.goto} | match="${result.match}" score=${result.score.toFixed(3)} ${marker}`)
+        this.logger.debug(`      [${bi}] when="${branch.when}" → ${branch.goto} | match="${result.match}" score=${result.score.toFixed(3)} ${marker}`)
 
         if (isBest) {
           best = { branch, score: result.score, nodeIndex: ni }

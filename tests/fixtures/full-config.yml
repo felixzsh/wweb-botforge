@@ -1,9 +1,8 @@
-global:
-  chromiumPath: "/usr/bin/chromium"
-  apiPort: 3000
-  apiEnabled: true
-  logLevel: "info"
-  sessionTimeout: 300
+chromiumPath: "/usr/bin/chromium"
+apiPort: 3000
+apiEnabled: true
+logLevel: "info"
+sessionTimeout: 300
 
 actions:
   greet:

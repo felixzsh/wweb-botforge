@@ -69,14 +69,13 @@ Your bot is now running as a system service! Send messages to test it.
 
 ### Global Configuration
 
-Configure system-wide settings in the `global` section:
+Configure system-wide settings at the top level of `config.yml`:
 
 ```yaml
-global:
-  chromiumPath: "/usr/bin/chromium"  # Path to Chromium/Chrome browser
-  apiPort: 3000                     # REST API port (optional)
-  apiEnabled: true                  # Enable REST API (optional)
-  logLevel: "info"                  # Global log level
+chromiumPath: "/usr/bin/chromium"  # Path to Chromium/Chrome browser
+apiPort: 3000                     # REST API port (optional)
+apiEnabled: true                  # Enable REST API (optional)
+logLevel: "info"                  # Global log level
 ```
 
 ### Architecture

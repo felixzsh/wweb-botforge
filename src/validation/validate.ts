@@ -94,36 +94,28 @@ async function loadYamlFile(filepath: string): Promise<{ content: string; parsed
   }
 }
 
-function validateGlobal(data: unknown, ctx: FileContext): void {
-  if (data === null || data === undefined) return
-  if (typeof data !== 'object' || Array.isArray(data)) {
-    ctx.add('global must be an object', 'global')
-    return
+function validateConfigFile(config: Record<string, unknown>, ctx: FileContext): void {
+  if (config.chromiumPath !== undefined && typeof config.chromiumPath !== 'string') {
+    ctx.add('chromiumPath must be a string', 'chromiumPath')
   }
 
-  const g = data as Record<string, unknown>
-
-  if (g.chromiumPath !== undefined && typeof g.chromiumPath !== 'string') {
-    ctx.add('global.chromiumPath must be a string', 'chromiumPath')
-  }
-
-  if (g.apiPort !== undefined) {
-    if (typeof g.apiPort !== 'number' || !Number.isInteger(g.apiPort) || g.apiPort < 0) {
-      ctx.add('global.apiPort must be a non-negative integer', 'apiPort')
+  if (config.apiPort !== undefined) {
+    if (typeof config.apiPort !== 'number' || !Number.isInteger(config.apiPort) || config.apiPort < 0) {
+      ctx.add('apiPort must be a non-negative integer', 'apiPort')
     }
   }
 
-  if (g.apiEnabled !== undefined && typeof g.apiEnabled !== 'boolean') {
-    ctx.add('global.apiEnabled must be a boolean', 'apiEnabled')
+  if (config.apiEnabled !== undefined && typeof config.apiEnabled !== 'boolean') {
+    ctx.add('apiEnabled must be a boolean', 'apiEnabled')
   }
 
-  if (g.logLevel !== undefined && !isValidLogLevel(g.logLevel)) {
-    ctx.add('global.logLevel must be one of: info, debug, warn, error', 'logLevel')
+  if (config.logLevel !== undefined && !isValidLogLevel(config.logLevel)) {
+    ctx.add('logLevel must be one of: info, debug, warn, error', 'logLevel')
   }
 
-  if (g.sessionTimeout !== undefined) {
-    if (typeof g.sessionTimeout !== 'number' || !Number.isInteger(g.sessionTimeout) || g.sessionTimeout < 0) {
-      ctx.add('global.sessionTimeout must be a non-negative integer', 'sessionTimeout')
+  if (config.sessionTimeout !== undefined) {
+    if (typeof config.sessionTimeout !== 'number' || !Number.isInteger(config.sessionTimeout) || config.sessionTimeout < 0) {
+      ctx.add('sessionTimeout must be a non-negative integer', 'sessionTimeout')
     }
   }
 }
@@ -422,7 +414,7 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
   if (configParsed && typeof configParsed === 'object' && !Array.isArray(configParsed)) {
     const configObj = configParsed as Record<string, unknown>
 
-    validateGlobal(configObj.global, configCtx)
+    validateConfigFile(configObj, configCtx)
 
     if (configObj.bots !== undefined) {
       if (typeof configObj.bots !== 'object' || configObj.bots === null || Array.isArray(configObj.bots)) {

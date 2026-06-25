@@ -12,9 +12,9 @@ export function getWwebCacheDir(): string {
   return path.join(cacheHome, 'wweb-botforge')
 }
 
-let globalConfig: ConfigFile['global'] | undefined
+let globalConfig: ConfigFile | undefined
 
-export function setGlobalConfig(config: ConfigFile['global']): void {
+export function setGlobalConfig(config: ConfigFile): void {
   globalConfig = config
 }
 

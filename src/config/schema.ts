@@ -54,13 +54,11 @@ export interface FlowConfig {
 }
 
 export interface ConfigFile {
-  global?: {
-    chromiumPath?: string
-    logLevel?: 'info' | 'debug' | 'warn' | 'error'
-    apiPort?: number
-    apiEnabled?: boolean
-    sessionTimeout?: number
-  }
+  chromiumPath?: string
+  logLevel?: 'info' | 'debug' | 'warn' | 'error'
+  apiPort?: number
+  apiEnabled?: boolean
+  sessionTimeout?: number
   actions?: Record<string, ActionConfig>
   flows?: Record<string, FlowConfig>
   bots: Record<string, BotConfig>

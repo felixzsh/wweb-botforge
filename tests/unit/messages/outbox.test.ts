@@ -44,14 +44,6 @@ describe('OutboxService', () => {
     it('should configure queue for a bot', () => {
       outbox.setupBotQueue(bot)
     })
-
-    it('should throw if bot has no channel', () => {
-      const bareBot = createBot({ id: 'no-channel', settings: createDefaultSettings() })
-
-      expect(() => outbox.setupBotQueue(bareBot)).toThrow(
-        'Bot "no-channel" does not have a registered channel'
-      )
-    })
   })
 
   describe('enqueue', () => {

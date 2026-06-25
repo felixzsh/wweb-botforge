@@ -92,7 +92,7 @@ export function getLogger(): Logger {
   return globalLogger
 }
 
-export function setGlobalLogger(config: ConfigFile['global']): void {
+export function setGlobalLogger(config: ConfigFile): void {
   const logLevel = config?.logLevel || 'info'
   globalLogger = createLogger(logLevel)
 }

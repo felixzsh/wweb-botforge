@@ -169,11 +169,10 @@ The API receives `OutboxService` and bots map via constructor — it accesses th
 ## YAML Configuration
 
 ```yaml
-global:
-  apiEnabled: true
-  apiPort: 3000
-  logLevel: info
-  sessionTimeout: 300
+apiEnabled: true
+apiPort: 3000
+logLevel: info
+sessionTimeout: 300
 
 actions:
   hello_reply:

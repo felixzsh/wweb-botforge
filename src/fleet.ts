@@ -49,7 +49,7 @@ export class BotFleet {
       const flowStateDbPath = path.join(getWwebCacheDir(), 'flows.db')
       this.flowStateService = new FlowStateService(flowStateDbPath)
 
-      const flowStateTimeout = configFile.global?.sessionTimeout ?? 300
+      const flowStateTimeout = configFile.sessionTimeout ?? 300
       this.flowExecutor = new FlowExecutor(
         this.actionCatalog,
         this.flowCatalog,
