@@ -53,7 +53,8 @@ export class FlowStateService {
     flowId: string,
     stepId: string,
     timeout: number,
-    now: number = Date.now()
+    now: number = Date.now(),
+    initialVariables?: Record<string, any>
   ): FlowState {
     this.destroyBySenderBot(sender, botId)
 
@@ -64,7 +65,7 @@ export class FlowStateService {
       botId,
       flowId,
       stepId,
-      variables: {},
+      variables: { ...initialVariables },
       startedAt: now,
       lastActivityAt: now,
       timeout,

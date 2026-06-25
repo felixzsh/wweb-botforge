@@ -1,15 +1,21 @@
 import { Bot } from '../bot'
 import { IncomingMessage, WebhookPayload } from '../messages/contracts'
 import { ActionCatalog, ActionExecutionContext } from '../action/action'
-import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FlowState, FuzzyTrigger } from './flow'
+import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FlowState } from './flow'
 import { executeAction, getAction } from '../action/action'
 import { resolveVars } from '../action/action'
 import { FlowStateService } from './state'
 import { OutboxService } from '../messages/outbox'
 import { CooldownService } from '../action/cooldown'
 import { sendWebhookRequest } from '../action/webhook'
-import { matchFuzzy } from '../helpers/fuzzy'
+import { matchFuzzyVerbose } from '../helpers/fuzzy'
 import { getLogger } from '../helpers/logger'
+
+interface BranchMatch {
+  branch: FlowBranch
+  score: number
+  nodeIndex: number
+}
 
 export class FlowExecutor {
   constructor(
@@ -54,19 +60,24 @@ export class FlowExecutor {
       return false
     }
 
-    const branch = this.findMatchingBranch(currentStep.branches, message.content)
+    this.logger.debug(`[active] flow="${flow.id}" step="${state.stepId}" action="${currentStep.action}"`)
+    this.logger.debug(`  message: "${message.content}" from "${message.from}"`)
 
-    if (!branch) {
+    const match = this.findBestBranch(flow, state, message.content)
+
+    if (!match) {
       if (flow.fallbackStep && flow.steps[flow.fallbackStep]) {
         await this.transitionToStep(bot, message, state, flow, flow.fallbackStep)
         return true
       }
 
-      this.logger.debug(`No branch matched for flow state ${state.id}, ignoring message`)
+      this.logger.debug(`  no branch matched, ignoring`)
       return true
     }
 
-    await this.transitionToStep(bot, message, state, flow, branch.goto)
+    this.logger.debug(`  >> goto="${match.branch.goto}" | node=${match.nodeIndex} score=${match.score.toFixed(3)}`)
+
+    await this.transitionToStep(bot, message, state, flow, match.branch.goto)
     return true
   }
 
@@ -87,8 +98,11 @@ export class FlowExecutor {
       }
 
       if (!this.matchesFlowTriggers(flow, message.content)) {
+        this.logger.debug(`new: flow "${flow.id}" triggers no match, skip`)
         continue
       }
+
+      this.logger.debug(`new: flow "${flow.id}" matched, enter "${flow.entryStep}"`)
 
       const consumed = await this.executeStepAction(bot, message, entryStep, {})
 
@@ -100,7 +114,10 @@ export class FlowExecutor {
         this.flowStateService.destroyBySenderBot(message.from, bot.id)
       } else {
         const timeout = flow.timeout ?? this.defaultTimeout
-        this.flowStateService.create(message.from, bot.id, flow.id, flow.entryStep, timeout)
+        this.flowStateService.create(
+          message.from, bot.id, flow.id, flow.entryStep, timeout,
+          Date.now(), { __visitedSteps: [] }
+        )
       }
 
       return true
@@ -123,13 +140,128 @@ export class FlowExecutor {
       return
     }
 
-    await this.executeStepAction(bot, message, step, state.variables)
+    const vars = { ...state.variables }
+    const visited: string[] = vars.__visitedSteps ?? []
+
+    if (stepId === flow.entryStep) {
+      vars.__visitedSteps = []
+    } else if (stepId !== state.stepId) {
+      const prevStep = flow.steps[state.stepId]
+      const hasNavBranches = prevStep?.branches.some(b => b.when && b.when.length > 0)
+
+      if (hasNavBranches && !visited.includes(state.stepId)) {
+        vars.__visitedSteps = [...visited, state.stepId]
+      }
+    }
+
+    await this.executeStepAction(bot, message, step, vars)
 
     if (step.branches.length === 0) {
       this.flowStateService.destroy(state.id)
     } else {
-      this.flowStateService.updateStep(state.id, stepId, state.variables)
+      this.flowStateService.updateStep(state.id, stepId, vars)
+      this.logger.debug(`  visited updated: [${(vars.__visitedSteps ?? []).join(', ')}]`)
     }
+  }
+
+  private findBestBranch(
+    flow: FlowDef,
+    state: FlowState,
+    message: string
+  ): BranchMatch | null {
+    const visited: string[] = state.variables?.__visitedSteps ?? []
+    const currentStep = flow.steps[state.stepId]
+
+    if (!currentStep) return null
+
+    this.logger.debug(`  context: "${message}"`)
+    this.logger.debug(`  current: ${state.stepId} | visited: [${visited.join(', ')}]`)
+
+    const nodes: { branches: FlowBranch[]; stepName: string }[] = []
+
+    const allStepNames = [...new Set([...visited, state.stepId])]
+
+    for (const stepName of allStepNames) {
+      const step = flow.steps[stepName]
+      if (step && stepName !== state.stepId) {
+        nodes.push({ branches: step.branches, stepName })
+      }
+    }
+
+    nodes.push({ branches: currentStep.branches, stepName: state.stepId })
+
+    let best: BranchMatch | null = null
+
+    for (let ni = 0; ni < nodes.length; ni++) {
+      const node = nodes[ni]
+      const branchList = node.branches || []
+
+      const condBranches = branchList.filter(b => b.when && b.when.length > 0)
+
+      if (condBranches.length === 0) {
+        this.logger.debug(`    Node ${ni} ${node.stepName}: 0 conditional branches`)
+        continue
+      }
+
+      this.logger.debug(`    Node ${ni} ${node.stepName} — ${condBranches.length} branches:`)
+
+      for (let bi = 0; bi < condBranches.length; bi++) {
+        const branch = condBranches[bi]
+        const threshold = branch.fuzzyThreshold ?? 0.6
+
+        const result = matchFuzzyVerbose(branch.when!, message, threshold)
+        if (!result) {
+          this.logger.debug(`      [${bi}] when="${branch.when!.join(', ')}" → ${branch.goto}`)
+          continue
+        }
+
+        const isBest = !best ||
+          result.score < best.score ||
+          (result.score === best.score && ni > best.nodeIndex)
+
+        const marker = isBest ? '◀ BEST' : '◀ worse'
+        this.logger.debug(`      [${bi}] when="${branch.when!.join(', ')}" → ${branch.goto} | match="${result.match}" score=${result.score.toFixed(3)} ${marker}`)
+
+        if (isBest) {
+          best = { branch, score: result.score, nodeIndex: ni }
+        }
+      }
+    }
+
+    if (best) {
+      this.logger.debug(`    >> winner: Node ${best.nodeIndex} goto="${best.branch.goto}" score=${best.score.toFixed(3)}`)
+      return best
+    }
+
+    const defaultBranch = currentStep.branches.find(b => !b.when || b.when.length === 0)
+    if (defaultBranch) {
+      this.logger.debug(`    >> default → goto="${defaultBranch.goto}"`)
+      return { branch: defaultBranch, score: 1, nodeIndex: nodes.length - 1 }
+    }
+
+    this.logger.debug(`    >> no match`)
+    return null
+  }
+
+  private matchesFlowTriggers(flow: FlowDef, message: string): boolean {
+    if (!flow.triggers || flow.triggers.length === 0) {
+      return false
+    }
+
+    this.logger.debug(`  triggers: flow="${flow.id}" ${flow.triggers.length} triggers`)
+
+    for (let i = 0; i < flow.triggers.length; i++) {
+      const trigger = flow.triggers[i]
+      const threshold = trigger.fuzzyThreshold ?? 0.6
+
+      const result = matchFuzzyVerbose(trigger.phrases, message, threshold)
+      if (result) {
+        this.logger.debug(`    [${i}] MATCH: "${result.match}" score=${result.score.toFixed(3)}`)
+        return true
+      }
+    }
+
+    return false
   }
 
   private async executeStepAction(
@@ -211,31 +343,6 @@ export class FlowExecutor {
     }
 
     this.cooldownService.setCooldown(sender, `action:${actionId}`)
-  }
-
-  private findMatchingBranch(branches: FlowBranch[], message: string): FlowBranch | null {
-    const defaultBranch = branches.find(branch => !branch.when || branch.when.length === 0)
-    const conditionalBranches = branches.filter(branch => branch.when && branch.when.length > 0)
-
-    for (const branch of conditionalBranches) {
-      const threshold = branch.fuzzyThreshold ?? 0.6
-      if (matchFuzzy(branch.when!, message, threshold)) {
-        return branch
-      }
-    }
-
-    return defaultBranch || null
-  }
-
-  private matchesFlowTriggers(flow: FlowDef, message: string): boolean {
-    if (!flow.triggers || flow.triggers.length === 0) {
-      return false
-    }
-
-    return flow.triggers.some(trigger => {
-      const threshold = trigger.fuzzyThreshold ?? 0.6
-      return matchFuzzy(trigger.phrases, message, threshold) !== null
-    })
   }
 
   private buildWebhookPayload(bot: Bot, message: IncomingMessage, webhookName: string): WebhookPayload {
