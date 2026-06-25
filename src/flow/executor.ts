@@ -154,8 +154,13 @@ export class FlowExecutor {
       const prevStep = flow.steps[state.stepId]
       const hasNavBranches = prevStep?.branches.some(b => b.when && b.when.length > 0)
 
-      if (hasNavBranches && !visited.includes(state.stepId)) {
-        vars.__visitedSteps = [...visited, state.stepId]
+      if (hasNavBranches) {
+        if (visited.includes(state.stepId)) {
+          const reordered = visited.filter(s => s !== state.stepId)
+          vars.__visitedSteps = [...reordered, state.stepId]
+        } else {
+          vars.__visitedSteps = [...visited, state.stepId]
+        }
       }
     }
 
