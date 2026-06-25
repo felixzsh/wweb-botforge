@@ -244,19 +244,9 @@ export class BotFleet {
     return this.bots
   }
 
-  getActionCatalog(): ActionCatalog {
-    return this.actionCatalog
-  }
-
-  setActionCatalog(catalog: ActionCatalog): void {
-    this.actionCatalog = catalog
-  }
-
-  getFlowCatalog(): FlowCatalog {
-    return this.flowCatalog
-  }
-
-  setFlowCatalog(catalog: FlowCatalog): void {
-    this.flowCatalog = catalog
+  reloadCatalogs(actionCatalog: ActionCatalog, flowCatalog: FlowCatalog): void {
+    this.actionCatalog = actionCatalog
+    this.flowCatalog = flowCatalog
+    this.flowExecutor?.updateCatalogs(actionCatalog, flowCatalog)
   }
 }

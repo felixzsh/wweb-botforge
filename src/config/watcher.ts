@@ -71,8 +71,7 @@ export class ConfigWatcher {
       const newFlowCatalog = mapFlowCatalog(configFile.flows || {})
       const loadedBots = mapBotsFromConfig(configFile.bots)
 
-      this.fleet.setActionCatalog(newActionCatalog)
-      this.fleet.setFlowCatalog(newFlowCatalog)
+      this.fleet.reloadCatalogs(newActionCatalog, newFlowCatalog)
 
       const existingBots = this.fleet.getBots()
       const existingIds = new Set(existingBots.keys())

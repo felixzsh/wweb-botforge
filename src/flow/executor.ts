@@ -31,6 +31,11 @@ export class FlowExecutor {
     return getLogger()
   }
 
+  updateCatalogs(actionCatalog: ActionCatalog, flowCatalog: FlowCatalog): void {
+    this.actionCatalog = actionCatalog
+    this.flowCatalog = flowCatalog
+  }
+
   async handleMessage(bot: Bot, message: IncomingMessage): Promise<boolean> {
     this.flowStateService.cleanupExpired()
 
