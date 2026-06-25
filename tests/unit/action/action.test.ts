@@ -55,6 +55,29 @@ describe('Action', () => {
       expect(result.webhook?.url).toBe('https://api.example.com/escalate')
     })
 
+    it('should resolve senderName when provided', () => {
+      const config: Record<string, ActionConfig> = {
+        greet: { reply: 'Hi {{senderName}}!' },
+      }
+      const catalog = mapActionCatalog(config)
+      const ctx: ActionExecutionContext = { ...context, senderName: 'Marcos' }
+
+      const result = executeAction(catalog, 'greet', ctx)
+
+      expect(result.reply).toBe('Hi Marcos!')
+    })
+
+    it('should fallback senderName to sender when senderName is missing', () => {
+      const config: Record<string, ActionConfig> = {
+        greet: { reply: 'Hi {{senderName}}!' },
+      }
+      const catalog = mapActionCatalog(config)
+
+      const result = executeAction(catalog, 'greet', context)
+
+      expect(result.reply).toBe('Hi 521234567890!')
+    })
+
     it('should resolve missing variable as empty string', () => {
       const config: Record<string, ActionConfig> = {
         greet: { reply: 'Hello {{variables.unknown}}!' },
