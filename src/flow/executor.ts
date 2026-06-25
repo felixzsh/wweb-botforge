@@ -284,6 +284,7 @@ export class FlowExecutor {
       botId: bot.id,
       botName: bot.id,
       sender: message.from,
+      senderName: message.senderName,
       message: message.content,
       variables,
     }

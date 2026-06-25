@@ -102,8 +102,16 @@ export class WhatsAppChannel implements MessageChannel {
           if (result && result[0]?.pn) {
             domainMessage.from = normalizePhoneNumber(result[0].pn)
           }
+          domainMessage.senderName = contact.pushname || contact.name || contact.shortName
         } catch (err: any) {
           this.logger.debug('LID resolution failed:', err.message)
+        }
+      } else {
+        try {
+          const contact = await msg.getContact()
+          domainMessage.senderName = contact.pushname || contact.name || contact.shortName
+        } catch (err: any) {
+          this.logger.debug('Contact resolution failed:', err.message)
         }
       }
 

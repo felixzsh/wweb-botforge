@@ -4,6 +4,7 @@ export interface IncomingMessage {
   to: string
   content: string
   timestamp: Date
+  senderName?: string
   metadata?: Record<string, any>
 }
 

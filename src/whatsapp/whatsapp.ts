@@ -138,7 +138,9 @@ export function generateMessageId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-export function toDomainMessage(message: WWebJSMessage) {
+import { IncomingMessage } from '../messages/contracts'
+
+export function toDomainMessage(message: WWebJSMessage): IncomingMessage {
   return {
     id: message.id._serialized,
     from: widToPhoneNumber(message.from),
