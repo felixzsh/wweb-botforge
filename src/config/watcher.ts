@@ -9,13 +9,14 @@ export class ConfigWatcher {
   private watcher: fs.FSWatcher | null = null
   private fleet: BotFleet
   private configDir: string
+  private configPath: string
   private debounceTimer: NodeJS.Timeout | null = null
   private watching: boolean = false
 
   constructor(fleet: BotFleet, configPath?: string) {
     this.fleet = fleet
-    const resolvedPath = configPath || getConfigPath()
-    this.configDir = path.dirname(resolvedPath)
+    this.configPath = configPath || getConfigPath()
+    this.configDir = path.dirname(this.configPath)
   }
 
   private get logger() {
@@ -66,7 +67,7 @@ export class ConfigWatcher {
     try {
       this.logger.info('Reloading configuration...')
 
-      const configFile = await loadConfig()
+      const configFile = await loadConfig(this.configPath)
       const newActionCatalog = mapActionCatalog(configFile.actions || {})
       const newFlowCatalog = mapFlowCatalog(configFile.flows || {})
       const loadedBots = mapBotsFromConfig(configFile.bots)

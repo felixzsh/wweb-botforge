@@ -249,4 +249,8 @@ export class BotFleet {
     this.flowCatalog = flowCatalog
     this.flowExecutor?.updateCatalogs(actionCatalog, flowCatalog)
   }
+
+  getFlowExecutor(): FlowExecutor | undefined {
+    return this.flowExecutor
+  }
 }
