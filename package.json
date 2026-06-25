@@ -1,6 +1,6 @@
 {
   "name": "wweb-botforge",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Create powerful WhatsApp bots with YAML configuration",
   "scripts": {
     "build": "tsc",
@@ -75,7 +75,6 @@
     "commander": "^12.1.0",
     "express": "^5.1.0",
     "fuse.js": "^7.4.2",
-
     "js-yaml": "^4.1.0",
     "pino": "^10.0.0",
     "pino-pretty": "^13.1.2",
