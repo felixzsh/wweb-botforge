@@ -17,7 +17,7 @@ describe('FlowExecutor', () => {
   let outboxService: OutboxService
   let executor: FlowExecutor
   let bot: Bot
-  let sentMessages: Array<{ to: string; content: string }>
+  let sentMessages: Array<{ to: string; content: string; metadata?: Record<string, any> }>
 
   beforeEach(() => {
     dbPath = path.join(os.tmpdir(), `botforge-flow-test-${Date.now()}.db`)
@@ -25,8 +25,8 @@ describe('FlowExecutor', () => {
     cooldownService = new CooldownService()
     sentMessages = []
     outboxService = {
-      enqueue: (_botId: string, to: string, content: string) => {
-        sentMessages.push({ to, content })
+      enqueue: (_botId: string, to: string, content: string, metadata?: Record<string, any>) => {
+        sentMessages.push({ to, content, metadata })
         return 'fake-id'
       },
     } as unknown as OutboxService
@@ -42,6 +42,22 @@ describe('FlowExecutor', () => {
       webhook_greet: { reply: 'Webhook sent', webhook: { url: 'https://example.com/hook', retry: 1 } },
       webhook_fail: { reply: 'Failed webhook', webhook: { url: 'https://example.com/fail', retry: 1 } },
       webhook_only: { webhook: { url: 'https://example.com/hook-only', retry: 1 } },
+      send_office: {
+        reply: 'Here is our office.',
+        location: {
+          latitude: 19.4326,
+          longitude: -99.1332,
+          name: 'Main Office',
+          address: 'Av. Reforma 123',
+        },
+      },
+      send_store_only: {
+        location: {
+          latitude: 19.4326,
+          longitude: -99.1332,
+          name: 'Store',
+        },
+      },
     }
 
     const flows: Record<string, FlowConfig> = {
@@ -200,6 +216,26 @@ describe('FlowExecutor', () => {
         steps: {
           start: {
             action: 'greet',
+            branches: [],
+          },
+        },
+      },
+      'location-flow': {
+        entry_step: 'start',
+        triggers: 'office',
+        steps: {
+          start: {
+            action: 'send_office',
+            branches: [],
+          },
+        },
+      },
+      'location-only-flow': {
+        entry_step: 'start',
+        triggers: 'store',
+        steps: {
+          start: {
+            action: 'send_store_only',
             branches: [],
           },
         },
@@ -512,6 +548,42 @@ describe('FlowExecutor', () => {
       const handled = await executor.handleMessage(bot, makeMessage('anything'))
 
       expect(handled).toBe(false)
+    })
+  })
+
+  describe('location actions', () => {
+    it('should enqueue reply and location when action has both', async () => {
+      bot.flows = [{ id: 'location-flow', priority: 1 }]
+
+      const handled = await executor.handleMessage(bot, makeMessage('office'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages).toHaveLength(2)
+      expect(sentMessages[0].content).toBe('Here is our office.')
+      expect(sentMessages[1].content).toBe('')
+      expect(sentMessages[1].metadata).toEqual({
+        type: 'location',
+        latitude: 19.4326,
+        longitude: -99.1332,
+        name: 'Main Office',
+        address: 'Av. Reforma 123',
+        url: undefined,
+        description: undefined,
+      })
+    })
+
+    it('should enqueue only location when action has no reply', async () => {
+      bot.flows = [{ id: 'location-only-flow', priority: 1 }]
+
+      const handled = await executor.handleMessage(bot, makeMessage('store'))
+
+      expect(handled).toBe(true)
+      expect(sentMessages).toHaveLength(1)
+      expect(sentMessages[0].content).toBe('')
+      expect(sentMessages[0].metadata?.type).toBe('location')
+      expect(sentMessages[0].metadata?.latitude).toBe(19.4326)
+      expect(sentMessages[0].metadata?.longitude).toBe(-99.1332)
+      expect(sentMessages[0].metadata?.name).toBe('Store')
     })
   })
 

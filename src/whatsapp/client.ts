@@ -1,4 +1,4 @@
-import { Client, LocalAuth } from 'whatsapp-web.js'
+import { Client, LocalAuth, Location } from 'whatsapp-web.js'
 import * as path from 'path'
 import * as os from 'os'
 import { IncomingMessage, OutgoingMessage, MessageChannel, AuthRequiredInfo } from '../messages/contracts'
@@ -188,6 +188,14 @@ export class WhatsAppChannel implements MessageChannel {
 
     const whatsappMsg = toWhatsAppFormat(message)
     this.logger.debug('WhatsApp send options:', JSON.stringify(whatsappMsg.options, null, 2))
+
+    if (whatsappMsg.options?.type === 'location') {
+      const { latitude, longitude, name, address, url, description } = whatsappMsg.options as Record<string, any>
+      const locationInstance = new Location(latitude, longitude, { name, address, url, description } as any)
+      const { type: _t, latitude: _la, longitude: _lo, name: _n, address: _a, url: _u, description: _d, ...rest } = whatsappMsg.options as Record<string, any>
+      const result = await this.client.sendMessage(whatsappMsg.to, locationInstance, rest)
+      return result.id._serialized
+    }
 
     const result = await this.client.sendMessage(
       whatsappMsg.to,

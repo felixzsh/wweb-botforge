@@ -27,9 +27,19 @@ export interface WebhookActionConfig {
   retry?: number
 }
 
+export interface LocationActionConfig {
+  latitude: number
+  longitude: number
+  name?: string
+  address?: string
+  url?: string
+  description?: string
+}
+
 export interface ActionConfig {
   reply?: string
   webhook?: WebhookActionConfig
+  location?: LocationActionConfig
   cooldown?: number
   cooldown_reply?: string
 }

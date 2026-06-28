@@ -94,6 +94,56 @@ describe('Action', () => {
 
       expect(() => executeAction(catalog, 'missing', context)).toThrow('Action "missing" not found in catalog')
     })
+
+    it('should resolve location-only action', () => {
+      const config: Record<string, ActionConfig> = {
+        send_location: {
+          location: {
+            latitude: 19.4326,
+            longitude: -99.1332,
+            name: 'Office',
+          },
+        },
+      }
+      const catalog = mapActionCatalog(config)
+
+      const result = executeAction(catalog, 'send_location', context)
+
+      expect(result.reply).toBeUndefined()
+      expect(result.webhook).toBeUndefined()
+      expect(result.location).toEqual({
+        latitude: 19.4326,
+        longitude: -99.1332,
+        name: 'Office',
+      })
+    })
+
+    it('should resolve composite action with reply and location', () => {
+      const config: Record<string, ActionConfig> = {
+        send_office: {
+          reply: 'Here is our office.',
+          location: {
+            latitude: 19.4326,
+            longitude: -99.1332,
+            name: 'Main Office',
+            address: 'Av. Reforma 123',
+            url: 'https://maps.example.com/office',
+            description: 'Open Mon-Fri 9-18h',
+          },
+        },
+      }
+      const catalog = mapActionCatalog(config)
+
+      const result = executeAction(catalog, 'send_office', context)
+
+      expect(result.reply).toBe('Here is our office.')
+      expect(result.location?.latitude).toBe(19.4326)
+      expect(result.location?.longitude).toBe(-99.1332)
+      expect(result.location?.name).toBe('Main Office')
+      expect(result.location?.address).toBe('Av. Reforma 123')
+      expect(result.location?.url).toBe('https://maps.example.com/office')
+      expect(result.location?.description).toBe('Open Mon-Fri 9-18h')
+    })
   })
 
   describe('resolveAction', () => {

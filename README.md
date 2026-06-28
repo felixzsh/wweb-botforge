@@ -121,6 +121,24 @@ actions:
       method: POST
       headers:
         X-API-Key: "your-crm-key"
+
+  # Send a WhatsApp location pin (combined with a text reply)
+  send-office:
+    reply: "Here is our office."
+    location:
+      latitude: 19.4326
+      longitude: -99.1332
+      name: "Main Office"
+      address: "Av. Reforma 123, CDMX"
+      url: "https://maps.example.com/office"
+      description: "Open Mon-Fri 9-18h"
+
+  # Location-only action (no text reply)
+  send-store-only:
+    location:
+      latitude: 19.4326
+      longitude: -99.1332
+      name: "Store"
 ```
 
 When a webhook fires, it sends a JSON payload:
@@ -200,6 +218,25 @@ actions:
 ```
 
 Cooldowns are per-sender, per-action — different senders are tracked independently.
+
+### Location Actions
+
+Send a WhatsApp location pin to the user. An action may be `location`-only or combined with `reply`/`webhook`.
+
+```yaml
+actions:
+  send-office:
+    reply: "Here is our office."
+    location:
+      latitude: 19.4326
+      longitude: -99.1332
+      name: "Main Office"
+      address: "Av. Reforma 123, CDMX"
+      url: "https://maps.example.com/office"
+      description: "Open Mon-Fri 9-18h"
+```
+
+Required: `latitude` (-90 to 90), `longitude` (-180 to 180). Optional: `name`, `address`, `url`, `description`.
 
 ### Bot Settings
 

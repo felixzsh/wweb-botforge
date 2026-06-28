@@ -308,6 +308,23 @@ export class FlowExecutor {
       this.outboxService.enqueue(bot.id, message.from, result.reply)
     }
 
+    if (result.location) {
+      this.outboxService.enqueue(
+        bot.id,
+        message.from,
+        '',
+        {
+          type: 'location',
+          latitude: result.location.latitude,
+          longitude: result.location.longitude,
+          name: result.location.name,
+          address: result.location.address,
+          url: result.location.url,
+          description: result.location.description,
+        }
+      )
+    }
+
     if (result.webhook) {
       try {
         const payload = this.buildWebhookPayload(bot, message, result.webhook.name || 'unnamed')

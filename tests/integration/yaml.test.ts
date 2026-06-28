@@ -164,13 +164,13 @@ describe('YAML Configuration Loading Integration Tests', () => {
   })
 
   describe('Action Validation', () => {
-    it('should throw when action has neither reply nor webhook', async () => {
+    it('should throw when action has neither reply, webhook, nor location', async () => {
       const fixturePath = path.join(__dirname, '../fixtures/action-empty.yml')
 
       const config = await loadConfig(fixturePath)
 
       expect(() => mapActionCatalog(config.actions!)).toThrow(
-        'Action "broken-action" must define reply, webhook, or both'
+        'Action "broken-action" must define reply, webhook, location, or a combination'
       )
     })
 

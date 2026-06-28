@@ -19,10 +19,20 @@ export interface WebhookAction {
   retries: number
 }
 
+export interface LocationAction {
+  latitude: number
+  longitude: number
+  name?: string
+  address?: string
+  url?: string
+  description?: string
+}
+
 export interface ActionDef {
   id: string
   reply?: string
   webhook?: WebhookAction
+  location?: LocationAction
   cooldown?: number
   cooldownReply?: string
 }
@@ -41,6 +51,7 @@ export interface ActionExecutionContext {
 export interface ActionExecutionResult {
   reply?: string
   webhook?: WebhookAction
+  location?: LocationAction
 }
 
 export function resolveAction(catalog: ActionCatalog, id: string): ActionDef {
@@ -68,6 +79,10 @@ export function executeAction(
       ...action.webhook,
       url: resolveVars(action.webhook.url, context),
     }
+  }
+
+  if (action.location) {
+    result.location = { ...action.location }
   }
 
   return result

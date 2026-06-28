@@ -56,12 +56,60 @@ describe('Mapper', () => {
       expect(action?.webhook?.retries).toBe(5)
     })
 
-    it('should throw if action has neither reply nor webhook', () => {
+    it('should throw if action has neither reply nor webhook nor location', () => {
       const config: Record<string, ActionConfig> = {
         empty: {},
       }
 
-      expect(() => mapActionCatalog(config)).toThrow('Action "empty" must define reply, webhook, or both')
+      expect(() => mapActionCatalog(config)).toThrow('Action "empty" must define reply, webhook, location, or a combination')
+    })
+
+    it('should map location-only actions', () => {
+      const config: Record<string, ActionConfig> = {
+        send_store: {
+          location: {
+            latitude: 19.4326,
+            longitude: -99.1332,
+            name: 'Store',
+            address: 'Reforma 123',
+            url: 'https://maps.example.com/store',
+            description: 'Open Mon-Fri',
+          },
+        },
+      }
+
+      const catalog = mapActionCatalog(config)
+
+      const action = catalog.get('send_store')
+      expect(action?.reply).toBeUndefined()
+      expect(action?.webhook).toBeUndefined()
+      expect(action?.location).toEqual({
+        latitude: 19.4326,
+        longitude: -99.1332,
+        name: 'Store',
+        address: 'Reforma 123',
+        url: 'https://maps.example.com/store',
+        description: 'Open Mon-Fri',
+      })
+    })
+
+    it('should map composite actions with reply and location', () => {
+      const config: Record<string, ActionConfig> = {
+        send_office: {
+          reply: 'Here is our office.',
+          location: {
+            latitude: 19.4326,
+            longitude: -99.1332,
+          },
+        },
+      }
+
+      const catalog = mapActionCatalog(config)
+
+      const action = catalog.get('send_office')
+      expect(action?.reply).toBe('Here is our office.')
+      expect(action?.location?.latitude).toBe(19.4326)
+      expect(action?.location?.longitude).toBe(-99.1332)
     })
   })
 

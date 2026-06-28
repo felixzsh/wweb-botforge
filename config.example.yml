@@ -63,6 +63,24 @@ actions:
   pong:
     reply: "pong!"
 
+  # Send a WhatsApp location pin (combined with a text reply)
+  send-office:
+    reply: "Here is our office."
+    location:
+      latitude: 19.4326
+      longitude: -99.1332
+      name: "Main Office"
+      address: "Av. Reforma 123, CDMX"
+      url: "https://maps.example.com/office"
+      description: "Open Mon-Fri 9-18h"
+
+  # Location-only action (no text reply)
+  send-store-only:
+    location:
+      latitude: 19.4326
+      longitude: -99.1332
+      name: "Store"
+
 # Flow Catalog — reusable conversation flows that bots reference by id
 # Flows are universal: you can use the same flow in multiple bots
 flows:
@@ -203,3 +221,4 @@ bots:
 # - Flow sessions automatically expire after timeout seconds of inactivity
 # - fallback_step handles unexpected user responses without breaking the flow
 # - Action reply templates support {{sender}}, {{message}}, {{bot.id}}, {{variables.name}}
+# - Location actions send a WhatsApp location pin; fields: latitude, longitude, name, address, url, description

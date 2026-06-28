@@ -1,7 +1,7 @@
 import { Bot, BotSettings, FlowRef, createBot, createDefaultSettings } from '../bot'
 import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../helpers/validation'
-import { BotConfig, BotSettingsConfig, FlowRefConfig, ActionConfig, WebhookActionConfig, FlowConfig, FlowStepConfig, FlowBranchConfig } from './schema'
-import { ActionDef, ActionCatalog } from '../action/action'
+import { BotConfig, BotSettingsConfig, FlowRefConfig, ActionConfig, WebhookActionConfig, LocationActionConfig, FlowConfig, FlowStepConfig, FlowBranchConfig } from './schema'
+import { ActionDef, ActionCatalog, LocationAction } from '../action/action'
 import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FuzzyTrigger } from '../flow/flow'
 
 export function mapActionCatalog(config: Record<string, ActionConfig>): ActionCatalog {
@@ -15,14 +15,15 @@ export function mapActionCatalog(config: Record<string, ActionConfig>): ActionCa
 }
 
 function mapAction(id: string, config: ActionConfig): ActionDef {
-  if (!config.reply && !config.webhook) {
-    throw new Error(`Action "${id}" must define reply, webhook, or both`)
+  if (!config.reply && !config.webhook && !config.location) {
+    throw new Error(`Action "${id}" must define reply, webhook, location, or a combination`)
   }
 
   return {
     id,
     reply: config.reply,
     webhook: config.webhook ? mapWebhookAction(config.webhook) : undefined,
+    location: config.location ? mapLocationAction(config.location) : undefined,
     cooldown: config.cooldown,
     cooldownReply: config.cooldown_reply,
   }
@@ -43,6 +44,17 @@ function mapWebhookAction(config: WebhookActionConfig): {
     headers: config.headers ?? {},
     timeout: config.timeout ?? 5000,
     retries: config.retry ?? 3,
+  }
+}
+
+function mapLocationAction(config: LocationActionConfig): LocationAction {
+  return {
+    latitude: config.latitude,
+    longitude: config.longitude,
+    name: config.name,
+    address: config.address,
+    url: config.url,
+    description: config.description,
   }
 }
 

@@ -129,14 +129,45 @@ function validateActionFile(id: string, data: unknown, ctx: FileContext): Action
   const a = data as Record<string, unknown>
   const hasReply = a.reply !== undefined
   const hasWebhook = a.webhook !== undefined
+  const hasLocation = a.location !== undefined
 
-  if (!hasReply && !hasWebhook) {
-    ctx.add('Action must define reply, webhook, or both')
+  if (!hasReply && !hasWebhook && !hasLocation) {
+    ctx.add('Action must define reply, webhook, location, or a combination')
     return null
   }
 
   if (hasReply && typeof a.reply !== 'string') {
     ctx.add('action.reply must be a string', 'reply')
+  }
+
+  if (hasLocation) {
+    if (typeof a.location !== 'object' || a.location === null || Array.isArray(a.location)) {
+      ctx.add('action.location must be an object', 'location')
+    } else {
+      const loc = a.location as Record<string, unknown>
+      if (typeof loc.latitude !== 'number' || !Number.isFinite(loc.latitude)) {
+        ctx.add('action.location.latitude must be a number', 'latitude')
+      } else if (loc.latitude < -90 || loc.latitude > 90) {
+        ctx.add('action.location.latitude must be between -90 and 90', 'latitude')
+      }
+      if (typeof loc.longitude !== 'number' || !Number.isFinite(loc.longitude)) {
+        ctx.add('action.location.longitude must be a number', 'longitude')
+      } else if (loc.longitude < -180 || loc.longitude > 180) {
+        ctx.add('action.location.longitude must be between -180 and 180', 'longitude')
+      }
+      if (loc.name !== undefined && typeof loc.name !== 'string') {
+        ctx.add('action.location.name must be a string', 'name')
+      }
+      if (loc.address !== undefined && typeof loc.address !== 'string') {
+        ctx.add('action.location.address must be a string', 'address')
+      }
+      if (loc.url !== undefined && typeof loc.url !== 'string') {
+        ctx.add('action.location.url must be a string', 'url')
+      }
+      if (loc.description !== undefined && typeof loc.description !== 'string') {
+        ctx.add('action.location.description must be a string', 'description')
+      }
+    }
   }
 
   if (hasWebhook) {
@@ -172,7 +203,7 @@ function validateActionFile(id: string, data: unknown, ctx: FileContext): Action
     ctx.add('action.cooldown_reply must be a string', 'cooldown_reply')
   }
 
-  return hasReply || hasWebhook ? (data as ActionConfig) : null
+  return hasReply || hasWebhook || hasLocation ? (data as ActionConfig) : null
 }
 
 function validateFlowFile(id: string, data: unknown, ctx: FileContext, allSteps: Set<string>): FlowConfig | null {
