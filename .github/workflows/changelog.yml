@@ -1,0 +1,90 @@
+name: Changelog
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        run: |
+          set -euo pipefail
+
+          PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null \
+                 || git describe --tags --abbrev=0 HEAD~ 2>/dev/null || true)
+          TAG=${GITHUB_REF_NAME}
+
+          if [ -z "$PREV" ]; then
+            RANGE="$TAG"
+          else
+            RANGE="${PREV}..${TAG}"
+          fi
+
+          > /tmp/breaking.txt
+          > /tmp/features.txt
+          > /tmp/fixes.txt
+          > /tmp/other.txt
+
+          CONVENTIONAL_PREFIX='^(feat|fix|refactor|perf|style)(\([^)]*\))?!?:'
+
+          while IFS= read -r line; do
+            hash="${line%%|||*}"
+            shortHash="${hash:0:7}"
+            msg="${line#*|||}"
+            body=$(git log -1 --pretty=format:"%b" "$hash")
+
+            if ! echo "$msg" | grep -qE "$CONVENTIONAL_PREFIX"; then
+              continue
+            fi
+
+            desc=$(echo "$msg" | sed -E 's/^[a-zA-Z][a-zA-Z0-9_-]*(\([^)]*\))?!?: //')
+            scope=$(echo "$msg" | sed -E -n 's/^[a-zA-Z][a-zA-Z0-9_-]*\(([^)]*)\).*/\1/p')
+            summary=$(echo "$body" | tr '\n' ' ' | sed -E 's/  +/ /g' | xargs)
+
+            if [ -n "$scope" ]; then
+              display="$desc ($scope)"
+            else
+              display="$desc"
+            fi
+
+            if [ -n "$summary" ]; then
+              display="$display: $summary"
+            fi
+
+            if echo "$msg" | grep -qE '!:' || echo "$body" | grep -qi 'BREAKING CHANGE'; then
+              echo "- $display ($shortHash)" >> /tmp/breaking.txt
+            elif echo "$msg" | grep -qE '^feat(\(.*\))?:'; then
+              echo "- $display ($shortHash)" >> /tmp/features.txt
+            elif echo "$msg" | grep -qE '^fix(\(.*\))?:'; then
+              echo "- $display ($shortHash)" >> /tmp/fixes.txt
+            else
+              echo "- $display ($shortHash)" >> /tmp/other.txt
+            fi
+          done < <(git log "$RANGE" --pretty=format:"%H|||%s")
+
+          {
+            [ -s /tmp/breaking.txt ] && echo "### Breaking Changes" && echo "" && cat /tmp/breaking.txt && echo ""
+            [ -s /tmp/features.txt ] && echo "### Features" && echo "" && cat /tmp/features.txt && echo ""
+            [ -s /tmp/fixes.txt ] && echo "### Bug Fixes" && echo "" && cat /tmp/fixes.txt && echo ""
+            [ -s /tmp/other.txt ] && echo "### Other" && echo "" && cat /tmp/other.txt && echo ""
+          } > body.md
+
+          cat body.md
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --notes-file body.md
