@@ -1,11 +1,11 @@
-import Database from 'better-sqlite3'
+import { DatabaseSync } from 'node:sqlite'
 import { FlowState } from './flow'
 
 export class FlowStateService {
-  private db: Database.Database
+  private db: DatabaseSync
 
   constructor(dbPath: string) {
-    this.db = new Database(dbPath)
+    this.db = new DatabaseSync(dbPath)
     this.setupSchema()
   }
 
@@ -119,7 +119,7 @@ export class FlowStateService {
       .prepare('DELETE FROM flow_states WHERE (last_activity_at + (timeout * 1000)) < ?')
       .run(cutoff)
 
-    return result.changes
+    return Number(result.changes)
   }
 
   count(): number {

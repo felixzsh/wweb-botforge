@@ -23,7 +23,7 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 ### Prerequisites
 
 **System Requirements:**
-- **Node.js** 16+ and **npm**
+- **Node.js** 22.13+ and **npm/pnpm**
 - **Chromium browser** installed on your system
 - **For Linux systemd service mode**: `xvfb` (X Virtual Framebuffer) for headless operation
 
