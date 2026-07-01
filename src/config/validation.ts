@@ -112,27 +112,27 @@ async function readAndParseYaml(filepath: string, ctx: FileContext): Promise<unk
 }
 
 function validateConfigFile(config: Record<string, unknown>, ctx: FileContext): void {
-  if (config.chromiumPath !== undefined && typeof config.chromiumPath !== 'string') {
-    ctx.add('chromiumPath must be a string', 'chromiumPath')
+  if (config.chromium_path !== undefined && typeof config.chromium_path !== 'string') {
+    ctx.add('chromium_path must be a string', 'chromium_path')
   }
 
-  if (config.apiPort !== undefined) {
-    if (typeof config.apiPort !== 'number' || !Number.isInteger(config.apiPort) || config.apiPort < 0) {
-      ctx.add('apiPort must be a non-negative integer', 'apiPort')
+  if (config.api_port !== undefined) {
+    if (typeof config.api_port !== 'number' || !Number.isInteger(config.api_port) || config.api_port < 0) {
+      ctx.add('api_port must be a non-negative integer', 'api_port')
     }
   }
 
-  if (config.apiEnabled !== undefined && typeof config.apiEnabled !== 'boolean') {
-    ctx.add('apiEnabled must be a boolean', 'apiEnabled')
+  if (config.api_enabled !== undefined && typeof config.api_enabled !== 'boolean') {
+    ctx.add('api_enabled must be a boolean', 'api_enabled')
   }
 
-  if (config.logLevel !== undefined && !isValidLogLevel(config.logLevel)) {
-    ctx.add('logLevel must be one of: info, debug, warn, error', 'logLevel')
+  if (config.log_level !== undefined && !isValidLogLevel(config.log_level)) {
+    ctx.add('log_level must be one of: info, debug, warn, error', 'log_level')
   }
 
-  if (config.sessionTimeout !== undefined) {
-    if (typeof config.sessionTimeout !== 'number' || !Number.isInteger(config.sessionTimeout) || config.sessionTimeout < 0) {
-      ctx.add('sessionTimeout must be a non-negative integer', 'sessionTimeout')
+  if (config.session_timeout !== undefined) {
+    if (typeof config.session_timeout !== 'number' || !Number.isInteger(config.session_timeout) || config.session_timeout < 0) {
+      ctx.add('session_timeout must be a non-negative integer', 'session_timeout')
     }
   }
 }

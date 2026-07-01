@@ -49,7 +49,7 @@ export class BotFleet {
       const graphStateDbPath = path.join(getWwebCacheDir(), 'graphs.db')
       this.graphStateService = new GraphStateService(graphStateDbPath)
 
-      const graphStateTimeout = configFile.sessionTimeout ?? 300
+      const graphStateTimeout = configFile.session_timeout ?? 300
       this.graphExecutor = new GraphExecutor(
         this.actionCatalog,
         this.graphCatalog,

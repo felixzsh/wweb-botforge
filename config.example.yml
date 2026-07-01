@@ -3,11 +3,11 @@
 # Copy this to ~/.config/wweb-botforge/config.yml and customize for your needs
 
 # Global system configuration
-chromiumPath: "/usr/bin/chromium"  # Path to your Chromium/Chrome installation
-apiPort: 3000                     # Port for REST API (optional)
-apiEnabled: true                  # Enable REST API for external integrations
-logLevel: "info"                  # Log level: info, debug, warn, error
-sessionTimeout: 300               # Global default timeout for graph sessions (seconds)
+chromium_path: "/usr/bin/chromium"  # Path to your Chromium/Chrome installation
+api_port: 3000                     # Port for REST API (optional)
+api_enabled: true                  # Enable REST API for external integrations
+log_level: "info"                  # Log level: info, debug, warn, error
+session_timeout: 300               # Global default timeout for graph sessions (seconds)
 
 # Action Catalog — reusable actions that graphs reference by id
 # Actions are universal: not tied to any specific bot or graph

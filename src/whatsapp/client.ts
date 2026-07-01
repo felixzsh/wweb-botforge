@@ -19,7 +19,7 @@ export function setGlobalConfig(config: ConfigFile): void {
 }
 
 export function getPuppeteerOptions(): any {
-  const chromiumPath = globalConfig?.chromiumPath || '/usr/bin/chromium'
+  const chromiumPath = globalConfig?.chromium_path || '/usr/bin/chromium'
   return {
     executablePath: chromiumPath,
     headless: true,

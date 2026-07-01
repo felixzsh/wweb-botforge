@@ -57,11 +57,11 @@ The loader merges directory files with any inline definitions in \`config.yml\`.
 ### config.yml (global settings only, actions/graphs/bots are separate files)
 
 \`\`\`yaml
-chromiumPath: "/usr/bin/chromium"
-apiPort: 3000
-apiEnabled: true
-logLevel: "info"
-sessionTimeout: 300
+chromium_path: "/usr/bin/chromium"
+api_port: 3000
+api_enabled: true
+log_level: "info"
+session_timeout: 300
 \`\`\`
 
 ---
@@ -72,11 +72,11 @@ sessionTimeout: 300
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| chromiumPath | string | - | Path to Chromium/Chrome |
-| apiPort | number | 3000 | REST API port |
-| apiEnabled | boolean | false | Enable REST API |
-| logLevel | string | "info" | info, debug, warn, error |
-| sessionTimeout | number | 300 | Default graph session TTL (seconds) |
+| chromium_path | string | - | Path to Chromium/Chrome |
+| api_port | number | 3000 | REST API port |
+| api_enabled | boolean | false | Enable REST API |
+| log_level | string | "info" | info, debug, warn, error |
+| session_timeout | number | 300 | Default graph session TTL (seconds) |
 
 ### Actions
 
@@ -255,9 +255,9 @@ bots:
 \`~/.config/wweb-botforge/config.yml\`:
 
 \`\`\`yaml
-chromiumPath: "/usr/bin/chromium"
-apiEnabled: true
-logLevel: "info"
+chromium_path: "/usr/bin/chromium"
+api_enabled: true
+log_level: "info"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/greet.yml\`:

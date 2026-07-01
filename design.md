@@ -123,7 +123,7 @@ WhatsApp message
   executes the root action, and re-applies the user's original message against
   the root edges. The first message is never discarded.
 - **Fallback**: Unmatched input falls through to `fallback_node` if configured.
-- **Timeout**: Sessions expire after configurable idle timeout (`sessionTimeout`
+- **Timeout**: Sessions expire after configurable idle timeout (`session_timeout`
   or per-graph `timeout`). Any subsequent message starts a new session at root.
 - **No terminal nodes**: A node with `edges: []` does not destroy the session;
   the user can still reach other visited nodes via their own edges. Sessions
@@ -182,10 +182,10 @@ same services as the core runtime.
 ## YAML Configuration
 
 ```yaml
-apiEnabled: true
-apiPort: 3000
-logLevel: info
-sessionTimeout: 300
+api_enabled: true
+api_port: 3000
+log_level: info
+session_timeout: 300
 
 actions:
   hello_reply:

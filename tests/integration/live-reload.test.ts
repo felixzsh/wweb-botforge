@@ -60,7 +60,7 @@ describe('Live reload integration', () => {
   }
 
   function writeMainConfig() {
-    fs.writeFileSync(configPath, 'sessionTimeout: 300\n')
+    fs.writeFileSync(configPath, 'session_timeout: 300\n')
   }
 
   async function sendMessage(from: string, content: string): Promise<void> {

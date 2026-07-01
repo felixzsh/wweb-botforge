@@ -58,11 +58,11 @@ export interface GraphConfig {
 }
 
 export interface ConfigFile {
-  chromiumPath?: string
-  logLevel?: 'info' | 'debug' | 'warn' | 'error'
-  apiPort?: number
-  apiEnabled?: boolean
-  sessionTimeout?: number
+  chromium_path?: string
+  log_level?: 'info' | 'debug' | 'warn' | 'error'
+  api_port?: number
+  api_enabled?: boolean
+  session_timeout?: number
   actions?: Record<string, ActionConfig>
   graphs?: Record<string, GraphConfig>
   bots: Record<string, BotConfig>
