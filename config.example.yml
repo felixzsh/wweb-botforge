@@ -4,8 +4,7 @@
 
 # Global system configuration
 chromium_path: "/usr/bin/chromium"  # Path to your Chromium/Chrome installation
-api_port: 3000                     # Port for REST API (optional)
-api_enabled: true                  # Enable REST API for external integrations
+api_port: 3000                     # Port for REST API (set to enable the API)
 log_level: "info"                  # Log level: info, debug, warn, error
 session_timeout: 300               # Global default timeout for graph sessions (seconds)
 

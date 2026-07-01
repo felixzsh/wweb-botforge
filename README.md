@@ -69,8 +69,7 @@ Configure system-wide settings at the top level of `config.yml`:
 
 ```yaml
 chromium_path: "/usr/bin/chromium"  # Path to Chromium/Chrome browser
-api_port: 3000                     # REST API port (optional)
-api_enabled: true                  # Enable REST API (optional)
+api_port: 3000                     # REST API port (set to enable the API)
 log_level: "info"                  # Global log level
 session_timeout: 300               # Global default timeout for graph sessions (seconds)
 ```

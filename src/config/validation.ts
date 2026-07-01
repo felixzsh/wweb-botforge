@@ -122,10 +122,6 @@ function validateConfigFile(config: Record<string, unknown>, ctx: FileContext): 
     }
   }
 
-  if (config.api_enabled !== undefined && typeof config.api_enabled !== 'boolean') {
-    ctx.add('api_enabled must be a boolean', 'api_enabled')
-  }
-
   if (config.log_level !== undefined && !isValidLogLevel(config.log_level)) {
     ctx.add('log_level must be one of: info, debug, warn, error', 'log_level')
   }

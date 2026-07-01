@@ -61,7 +61,6 @@ export interface ConfigFile {
   chromium_path?: string
   log_level?: 'info' | 'debug' | 'warn' | 'error'
   api_port?: number
-  api_enabled?: boolean
   session_timeout?: number
   actions?: Record<string, ActionConfig>
   graphs?: Record<string, GraphConfig>

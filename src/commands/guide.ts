@@ -59,7 +59,6 @@ The loader merges directory files with any inline definitions in \`config.yml\`.
 \`\`\`yaml
 chromium_path: "/usr/bin/chromium"
 api_port: 3000
-api_enabled: true
 log_level: "info"
 session_timeout: 300
 \`\`\`
@@ -73,8 +72,7 @@ session_timeout: 300
 | Field | Type | Default | Description |
 |---|---|---|---|
 | chromium_path | string | - | Path to Chromium/Chrome |
-| api_port | number | 3000 | REST API port |
-| api_enabled | boolean | false | Enable REST API |
+| api_port | number | 3000 | REST API port (if set, API runs on this port) |
 | log_level | string | "info" | info, debug, warn, error |
 | session_timeout | number | 300 | Default graph session TTL (seconds) |
 
@@ -256,7 +254,6 @@ bots:
 
 \`\`\`yaml
 chromium_path: "/usr/bin/chromium"
-api_enabled: true
 log_level: "info"
 \`\`\`
 

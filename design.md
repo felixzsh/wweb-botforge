@@ -182,7 +182,6 @@ same services as the core runtime.
 ## YAML Configuration
 
 ```yaml
-api_enabled: true
 api_port: 3000
 log_level: info
 session_timeout: 300
