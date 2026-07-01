@@ -2,7 +2,7 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { validateConfig } from '../../../src/validation/validate'
+import { validateConfig } from '../../../src/config/validation'
 
 async function setupTempConfig(configContent: string, actionFiles: Record<string, string>): Promise<{ tmpDir: string; configPath: string }> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'botforge-loc-test-'))

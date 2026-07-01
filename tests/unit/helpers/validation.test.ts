@@ -1,9 +1,8 @@
 import {
   validateId,
-  validatePriority,
   validateTypingDelay,
   validateQueueDelay,
-} from '../../../src/helpers/validation'
+} from '../../../src/config/validation'
 
 describe('Validation', () => {
   describe('validateId', () => {
@@ -38,19 +37,7 @@ describe('Validation', () => {
 
     it('should use the kind argument in error messages', () => {
       expect(() => validateId('ab', 'Action')).toThrow('Action ID must be at least 3 characters long')
-      expect(() => validateId('Test', 'Flow')).toThrow('Flow ID can only contain lowercase letters, numbers and hyphens')
-    })
-  })
-
-  describe('validatePriority', () => {
-    it('should pass for valid priority', () => {
-      expect(() => validatePriority(0)).not.toThrow()
-      expect(() => validatePriority(1)).not.toThrow()
-      expect(() => validatePriority(100)).not.toThrow()
-    })
-
-    it('should throw for negative priority', () => {
-      expect(() => validatePriority(-1)).toThrow('Priority must be non-negative')
+      expect(() => validateId('Test', 'Graph')).toThrow('Graph ID can only contain lowercase letters, numbers and hyphens')
     })
   })
 

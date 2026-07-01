@@ -1,5 +1,5 @@
 import { MessageChannel } from './messages/contracts'
-import { validateId } from './helpers/validation'
+import { validateId } from './config/validation'
 
 export interface Bot {
   id: string

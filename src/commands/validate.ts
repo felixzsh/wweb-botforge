@@ -1,4 +1,4 @@
-import { validateConfig } from '../validation/validate'
+import { validateConfig } from '../config/validation'
 import { setConfigPath } from '../config/yaml'
 
 export async function runValidate(configPath?: string) {
