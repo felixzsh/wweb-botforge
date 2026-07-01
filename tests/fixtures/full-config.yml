@@ -55,7 +55,7 @@ actions:
       latitude: 19.4326
       longitude: -99.1332
       name: "Main Office"
-      address: "Av. Reforma 123, CDMX"
+      address: "Av. Reforma 123"
 
   send-store-only:
     location:
@@ -63,61 +63,55 @@ actions:
       longitude: -99.1332
       name: "Store"
 
-flows:
+graphs:
   faq-support:
-    entry_step: menu
-    triggers: "menu, hola, hello, help"
+    root: menu
     timeout: 300
-    fallback_step: invalid
-    steps:
+    fallback_node: invalid
+    nodes:
       menu:
         action: menu
-        branches:
-          - when: "1, hours, schedule"
+        edges:
+          - match: "1, hours, schedule"
             goto: hours
-          - when: "2, pricing, price"
+          - match: "2, pricing, price"
             goto: pricing
-          - when: "3, human, agent"
+          - match: "3, human, agent"
             goto: escalate-flow
           - goto: invalid
       hours:
         action: hours
-        branches:
-          - when: "menu, back"
+        edges:
+          - match: "menu, back"
             goto: menu
           - goto: invalid
       pricing:
         action: pricing
-        branches:
-          - when: "menu, back"
+        edges:
+          - match: "menu, back"
             goto: menu
           - goto: invalid
       escalate-flow:
         action: escalate
-        branches: []
+        edges: []
       invalid:
         action: invalid
-        branches:
+        edges:
           - goto: menu
-      end:
+      farewell:
         action: farewell
-        branches: []
+        edges: []
 
   ping-pong:
-    entry_step: ping
-    triggers: "ping"
-    steps:
+    root: ping
+    nodes:
       ping:
         action: pong
-        branches: []
+        edges: []
 
 bots:
   support-bot:
-    flows:
-      - id: faq-support
-        priority: 10
-      - id: ping-pong
-        priority: 5
+    graph: faq-support
     settings:
       queue_delay: 1500
       simulate_typing: true
@@ -130,9 +124,7 @@ bots:
         - "9999999999"
 
   sales-bot:
-    flows:
-      - id: faq-support
-        priority: 10
+    graph: faq-support
     settings:
       queue_delay: 1000
       ignore_groups: false

@@ -16,7 +16,7 @@ export function createStatusRouter(bots: Map<string, Bot>): Router {
 
         return {
           id,
-          flowsCount: bot.flows.length,
+          graph: bot.graph,
           phone: sessionInfo?.phone || bot.phone || null,
           session: sessionInfo ? {
             state: sessionInfo.state,

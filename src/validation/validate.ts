@@ -2,9 +2,9 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import * as yaml from 'js-yaml'
-import { ActionConfig, FlowConfig, BotConfig } from '../config/schema'
+import { ActionConfig, GraphConfig, BotConfig } from '../config/schema'
 import { getDefaultConfigPath } from '../config/yaml'
-import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../helpers/validation'
+import { validateId, validateTypingDelay, validateQueueDelay } from '../helpers/validation'
 
 export interface ValidationError {
   file: string
@@ -78,18 +78,6 @@ async function readAndParseYaml(filepath: string, ctx: FileContext): Promise<unk
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     ctx.add(`YAML parse error: ${msg}`)
-    return null
-  }
-}
-
-async function loadYamlFile(filepath: string): Promise<{ content: string; parsed: unknown } | null> {
-  try {
-    const raw = await fs.readFile(filepath, 'utf-8')
-    const parsed = yaml.load(raw)
-    if (parsed === null || parsed === undefined) return null
-    if (typeof parsed !== 'object' || Array.isArray(parsed)) return null
-    return { content: raw, parsed }
-  } catch {
     return null
   }
 }
@@ -206,119 +194,116 @@ function validateActionFile(id: string, data: unknown, ctx: FileContext): Action
   return hasReply || hasWebhook || hasLocation ? (data as ActionConfig) : null
 }
 
-function validateFlowFile(id: string, data: unknown, ctx: FileContext, allSteps: Set<string>): FlowConfig | null {
+function validateGraphFile(id: string, data: unknown, ctx: FileContext, allNodes: Set<string>): GraphConfig | null {
   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-    ctx.add('Flow must be a YAML object')
+    ctx.add('Graph must be a YAML object')
     return null
   }
 
-  const f = data as Record<string, unknown>
+  const g = data as Record<string, unknown>
 
-  if (typeof f.entry_step !== 'string' || !f.entry_step) {
-    ctx.add('flow.entry_step is required and must be a non-empty string', 'entry_step')
+  if (typeof g.root !== 'string' || !g.root) {
+    ctx.add('graph.root is required and must be a non-empty string', 'root')
     return null
   }
 
-  if (!f.steps || typeof f.steps !== 'object' || Array.isArray(f.steps)) {
-    ctx.add('flow.steps is required and must be an object', 'steps')
+  if (!g.nodes || typeof g.nodes !== 'object' || Array.isArray(g.nodes)) {
+    ctx.add('graph.nodes is required and must be an object', 'nodes')
     return null
   }
 
-  const steps = f.steps as Record<string, unknown>
-  const stepKeys = Object.keys(steps)
+  const nodes = g.nodes as Record<string, unknown>
+  const nodeKeys = Object.keys(nodes)
 
-  if (stepKeys.length === 0) {
-    ctx.add('flow.steps must have at least one step', 'steps')
+  if (nodeKeys.length === 0) {
+    ctx.add('graph.nodes must have at least one node', 'nodes')
     return null
   }
 
-  stepKeys.forEach(sk => allSteps.add(sk))
+  nodeKeys.forEach(nk => allNodes.add(nk))
 
-  if (!steps[f.entry_step as string]) {
-    ctx.add(`flow.entry_step "${f.entry_step}" not found in steps`, 'entry_step')
+  if (!nodes[g.root as string]) {
+    ctx.add(`graph.root "${g.root}" not found in nodes`, 'root')
   }
 
-  if (f.fallback_step !== undefined) {
-    if (typeof f.fallback_step !== 'string') {
-      ctx.add('flow.fallback_step must be a string', 'fallback_step')
-    } else if (!steps[f.fallback_step]) {
-      ctx.add(`flow.fallback_step "${f.fallback_step}" not found in steps`, 'fallback_step')
+  if (g.fallback_node !== undefined) {
+    if (typeof g.fallback_node !== 'string') {
+      ctx.add('graph.fallback_node must be a string', 'fallback_node')
+    } else if (!nodes[g.fallback_node]) {
+      ctx.add(`graph.fallback_node "${g.fallback_node}" not found in nodes`, 'fallback_node')
     }
   }
 
-  if (f.timeout !== undefined) {
-    if (typeof f.timeout !== 'number' || f.timeout < 0) {
-      ctx.add('flow.timeout must be a non-negative number', 'timeout')
+  if (g.timeout !== undefined) {
+    if (typeof g.timeout !== 'number' || g.timeout < 0) {
+      ctx.add('graph.timeout must be a non-negative number', 'timeout')
     }
   }
 
-  if (f.triggers !== undefined) {
-    validateTriggers(f.triggers, ctx)
+  if (g.triggers !== undefined) {
+    ctx.add('graphs no longer support triggers; remove the triggers field; the bot auto-enters the graph root on first message', 'triggers')
   }
 
-  for (const [stepId, stepData] of Object.entries(steps)) {
-    if (typeof stepData !== 'object' || stepData === null) {
-      ctx.add(`flow.steps.${stepId} must be an object`, stepId)
+  for (const [nodeId, nodeData] of Object.entries(nodes)) {
+    if (typeof nodeData !== 'object' || nodeData === null) {
+      ctx.add(`graph.nodes.${nodeId} must be an object`, nodeId)
       continue
     }
 
-    const step = stepData as Record<string, unknown>
+    const node = nodeData as Record<string, unknown>
 
-    if (typeof step.action !== 'string' || !step.action) {
-      ctx.add(`flow.steps.${stepId}.action is required and must be a non-empty string`, stepId)
+    if (typeof node.action !== 'string' || !node.action) {
+      ctx.add(`graph.nodes.${nodeId}.action is required and must be a non-empty string`, nodeId)
     }
 
-    if (step.branches !== undefined) {
-      if (!Array.isArray(step.branches)) {
-        ctx.add(`flow.steps.${stepId}.branches must be an array`, stepId)
+    if (node.edges !== undefined) {
+      if (!Array.isArray(node.edges)) {
+        ctx.add(`graph.nodes.${nodeId}.edges must be an array`, nodeId)
       } else {
-        for (let bi = 0; bi < step.branches.length; bi++) {
-          const branch = step.branches[bi]
-          if (typeof branch !== 'object' || branch === null) {
-            ctx.add(`flow.steps.${stepId}.branches[${bi}] must be an object`, stepId)
+        for (let ei = 0; ei < node.edges.length; ei++) {
+          const edge = node.edges[ei]
+          if (typeof edge !== 'object' || edge === null) {
+            ctx.add(`graph.nodes.${nodeId}.edges[${ei}] must be an object`, nodeId)
             continue
           }
-          const br = branch as Record<string, unknown>
-          if (br.when !== undefined) {
-            if (typeof br.when !== 'string' && !Array.isArray(br.when)) {
-              ctx.add(`flow.steps.${stepId}.branches[${bi}].when must be a string or array`, stepId)
+          const e = edge as Record<string, unknown>
+          if (e.match !== undefined) {
+            if (typeof e.match !== 'string' && !Array.isArray(e.match)) {
+              ctx.add(`graph.nodes.${nodeId}.edges[${ei}].match must be a string or array`, nodeId)
             }
           }
-          if (br.fuzzy_threshold !== undefined && (typeof br.fuzzy_threshold !== 'number' || br.fuzzy_threshold < 0 || br.fuzzy_threshold > 1)) {
-            ctx.add(`flow.steps.${stepId}.branches[${bi}].fuzzy_threshold must be between 0 and 1`, stepId)
+          if (e.fuzzy_threshold !== undefined && (typeof e.fuzzy_threshold !== 'number' || e.fuzzy_threshold < 0 || e.fuzzy_threshold > 1)) {
+            ctx.add(`graph.nodes.${nodeId}.edges[${ei}].fuzzy_threshold must be between 0 and 1`, nodeId)
           }
-          if (typeof br.goto !== 'string' || !br.goto) {
-            ctx.add(`flow.steps.${stepId}.branches[${bi}].goto is required and must be a non-empty string`, stepId)
+          if (typeof e.goto !== 'string' || !e.goto) {
+            ctx.add(`graph.nodes.${nodeId}.edges[${ei}].goto is required and must be a non-empty string`, nodeId)
           }
         }
       }
     }
   }
 
-  return data as FlowConfig
+  return data as GraphConfig
 }
 
-function validateTriggers(triggers: unknown, ctx: FileContext): void {
-  if (typeof triggers === 'string') return
+function findUnreachableNodes(graph: GraphConfig): string[] {
+  const reachable = new Set<string>()
+  const queue: string[] = [graph.root]
+  reachable.add(graph.root)
 
-  if (Array.isArray(triggers)) {
-    for (let i = 0; i < triggers.length; i++) {
-      const t = triggers[i]
-      if (typeof t === 'string') continue
-      if (typeof t === 'object' && t !== null) {
-        const obj = t as Record<string, unknown>
-        if (obj.phrases === undefined) {
-          ctx.add(`flow.triggers[${i}] object must have a 'phrases' field`)
-        }
-        if (obj.fuzzy_threshold !== undefined && (typeof obj.fuzzy_threshold !== 'number' || obj.fuzzy_threshold < 0 || obj.fuzzy_threshold > 1)) {
-          ctx.add(`flow.triggers[${i}].fuzzy_threshold must be between 0 and 1`)
-        }
+  while (queue.length > 0) {
+    const current = queue.shift()!
+    const node = graph.nodes[current]
+    if (!node || !node.edges) continue
+    for (const edge of node.edges) {
+      if (edge.goto && !reachable.has(edge.goto) && graph.nodes[edge.goto]) {
+        reachable.add(edge.goto)
+        queue.push(edge.goto)
       }
     }
-    return
   }
 
-  ctx.add('flow.triggers must be a string or array')
+  return Object.keys(graph.nodes).filter(n => !reachable.has(n))
 }
 
 function validateBotFile(id: string, data: unknown, ctx: FileContext): BotConfig | null {
@@ -329,26 +314,9 @@ function validateBotFile(id: string, data: unknown, ctx: FileContext): BotConfig
 
   const b = data as Record<string, unknown>
 
-  if (b.flows !== undefined) {
-    if (!Array.isArray(b.flows)) {
-      ctx.add('bot.flows must be an array', 'flows')
-    } else {
-      for (let fi = 0; fi < b.flows.length; fi++) {
-        const ref = b.flows[fi]
-        if (typeof ref !== 'object' || ref === null) {
-          ctx.add(`bot.flows[${fi}] must be an object`, 'flows')
-          continue
-        }
-        const flowRef = ref as Record<string, unknown>
-        if (typeof flowRef.id !== 'string' || !flowRef.id) {
-          ctx.add(`bot.flows[${fi}].id is required and must be a non-empty string`, 'flows')
-        }
-        if (flowRef.priority !== undefined) {
-          if (typeof flowRef.priority !== 'number' || flowRef.priority < 0) {
-            ctx.add(`bot.flows[${fi}].priority must be a non-negative number`, 'flows')
-          }
-        }
-      }
+  if (b.graph !== undefined) {
+    if (typeof b.graph !== 'string' || !b.graph) {
+      ctx.add('bot.graph must be a non-empty string', 'graph')
     }
   }
 
@@ -408,17 +376,16 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
   const errors: ValidationError[] = []
 
   const actionsDir = path.join(configDir, 'actions')
-  const flowsDir = path.join(configDir, 'flows')
+  const graphsDir = path.join(configDir, 'graphs')
   const botsDir = path.join(configDir, 'bots')
 
   const allInlineActions: Map<string, ActionConfig> = new Map()
   const allDirActions: Map<string, ActionConfig> = new Map()
-  const allInlineFlows: Map<string, FlowConfig> = new Map()
-  const allDirFlows: Map<string, FlowConfig> = new Map()
+  const allInlineGraphs: Map<string, GraphConfig> = new Map()
+  const allDirGraphs: Map<string, GraphConfig> = new Map()
   const allInlineBots: Map<string, BotConfig> = new Map()
   const allDirBots: Map<string, BotConfig> = new Map()
 
-  // Validate config.yml
   if (!fsSync.existsSync(targetPath)) {
     errors.push({ file: targetPath, line: null, message: `Config file not found at ${targetPath}` })
     return { errors, valid: false }
@@ -481,27 +448,35 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
       }
     }
 
-    if (configObj.flows !== undefined) {
-      if (typeof configObj.flows !== 'object' || configObj.flows === null || Array.isArray(configObj.flows)) {
-        configCtx.add('flows must be a YAML object (map of flow IDs to flow configs)', 'flows')
+    if (configObj.graphs !== undefined) {
+      if (typeof configObj.graphs !== 'object' || configObj.graphs === null || Array.isArray(configObj.graphs)) {
+        configCtx.add('graphs must be a YAML object (map of graph IDs to graph configs)', 'graphs')
       } else {
-        for (const [flowId, flowData] of Object.entries(configObj.flows as Record<string, unknown>)) {
-          validateIdWithContext(flowId, 'Flow', configCtx)
-          const allSteps = new Set<string>()
-          const flowCtx = new FileContext(targetPath, configRaw)
-          const flowConfig = validateFlowFile(flowId, flowData, flowCtx, allSteps)
-          if (flowConfig) {
-            allInlineFlows.set(flowId, flowConfig)
+        for (const [graphId, graphData] of Object.entries(configObj.graphs as Record<string, unknown>)) {
+          validateIdWithContext(graphId, 'Graph', configCtx)
+          const allNodes = new Set<string>()
+          const graphCtx = new FileContext(targetPath, configRaw)
+          const graphConfig = validateGraphFile(graphId, graphData, graphCtx, allNodes)
+          if (graphConfig) {
+            allInlineGraphs.set(graphId, graphConfig)
           }
-          flowCtx.validationErrors.forEach(e => {
-            e.message = `flows.${flowId}: ${e.message}`
+          graphCtx.validationErrors.forEach(e => {
+            e.message = `graphs.${graphId}: ${e.message}`
             errors.push(e)
           })
 
-          // Validate branch goto targets after we know all steps
-          if (flowConfig && allSteps.size > 0) {
-            const branchErrors = validateFlowBranchTargets(flowId, flowConfig, allSteps, targetPath, configRaw)
-            branchErrors.forEach(e => errors.push(e))
+          if (graphConfig && allNodes.size > 0) {
+            const edgeErrors = validateGraphEdgeTargets(graphId, graphConfig, allNodes, targetPath, configRaw)
+            edgeErrors.forEach(e => errors.push(e))
+
+            const unreachable = findUnreachableNodes(graphConfig)
+            for (const nodeName of unreachable) {
+              errors.push({
+                file: targetPath,
+                line: null,
+                message: `graphs.${graphId}: warning: node "${nodeName}" is unreachable from root "${graphConfig.root}"`,
+              })
+            }
           }
         }
       }
@@ -510,7 +485,6 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
 
   errors.push(...configCtx.validationErrors)
 
-  // Validate actions/ directory
   if (fsSync.existsSync(actionsDir)) {
     const actionFiles = await loadDirFiles(actionsDir)
     for (const file of actionFiles) {
@@ -527,32 +501,39 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
     }
   }
 
-  // Validate flows/ directory
-  if (fsSync.existsSync(flowsDir)) {
-    const flowFiles = await loadDirFiles(flowsDir)
-    for (const file of flowFiles) {
-      const flowId = path.basename(file, path.extname(file))
-      validateIdWithContext(flowId, 'Flow', new FileContext(flowsDir, ''))
+  if (fsSync.existsSync(graphsDir)) {
+    const graphFiles = await loadDirFiles(graphsDir)
+    for (const file of graphFiles) {
+      const graphId = path.basename(file, path.extname(file))
+      validateIdWithContext(graphId, 'Graph', new FileContext(graphsDir, ''))
       const content = await fs.readFile(file, 'utf-8')
       const ctx = new FileContext(file, content)
-      const allSteps = new Set<string>()
+      const allNodes = new Set<string>()
       const parsed = await readAndParseYaml(file, ctx)
       if (parsed) {
-        const flowConfig = validateFlowFile(flowId, parsed, ctx, allSteps)
-        if (flowConfig) {
-          allDirFlows.set(flowId, flowConfig)
+        const graphConfig = validateGraphFile(graphId, parsed, ctx, allNodes)
+        if (graphConfig) {
+          allDirGraphs.set(graphId, graphConfig)
         }
 
-        if (flowConfig && allSteps.size > 0) {
-          const branchErrors = validateFlowBranchTargets(flowId, flowConfig, allSteps, file, content)
-          branchErrors.forEach(e => errors.push(e))
+        if (graphConfig && allNodes.size > 0) {
+          const edgeErrors = validateGraphEdgeTargets(graphId, graphConfig, allNodes, file, content)
+          edgeErrors.forEach(e => errors.push(e))
+
+          const unreachable = findUnreachableNodes(graphConfig)
+          for (const nodeName of unreachable) {
+            errors.push({
+              file: file,
+              line: null,
+              message: `graphs.${graphId}: warning: node "${nodeName}" is unreachable from root "${graphConfig.root}"`,
+            })
+          }
         }
       }
       errors.push(...ctx.validationErrors)
     }
   }
 
-  // Validate bots/ directory
   if (fsSync.existsSync(botsDir)) {
     const botFiles = await loadDirFiles(botsDir)
     for (const file of botFiles) {
@@ -569,44 +550,36 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
     }
   }
 
-  // Merge: inline takes precedence over dir
   const mergedActions = new Map([...allDirActions, ...allInlineActions])
-  const mergedFlows = new Map([...allDirFlows, ...allInlineFlows])
+  const mergedGraphs = new Map([...allDirGraphs, ...allInlineGraphs])
   const mergedBots = new Map([...allDirBots, ...allInlineBots])
 
-  // Cross-reference validation
   if (mergedBots.size === 0) {
     errors.push({ file: targetPath, line: null, message: 'No bots defined. At least one bot is required.' })
   }
 
-  for (const [flowId, flow] of mergedFlows) {
-    for (const [stepId, step] of Object.entries(flow.steps)) {
-      if (step.action && !mergedActions.has(step.action)) {
+  for (const [graphId, graph] of mergedGraphs) {
+    for (const [nodeId, node] of Object.entries(graph.nodes)) {
+      if (node.action && !mergedActions.has(node.action)) {
         errors.push({
           file: targetPath,
           line: null,
-          message: `Flow "${flowId}" step "${stepId}" references action "${step.action}" which is not defined`
+          message: `Graph "${graphId}" node "${nodeId}" references action "${node.action}" which is not defined`,
         })
       }
     }
   }
 
   for (const [botId, bot] of mergedBots) {
-    if (bot.flows) {
-      for (const ref of bot.flows) {
-        if (ref.id && !mergedFlows.has(ref.id)) {
-          errors.push({
-            file: targetPath,
-            line: null,
-            message: `Bot "${botId}" references flow "${ref.id}" which is not defined`
-          })
-        }
-      }
+    if (bot.graph && !mergedGraphs.has(bot.graph)) {
+      errors.push({
+        file: targetPath,
+        line: null,
+        message: `Bot "${botId}" references graph "${bot.graph}" which is not defined`,
+      })
     }
   }
 
-  // If bots config is empty, the file-level bots check would catch it,
-  // but if nothing was loaded from anywhere, we report
   if (mergedBots.size === 0 && fsSync.existsSync(botsDir)) {
     const botFiles = await fs.readdir(botsDir)
     const yamlBots = botFiles.filter(f => f.endsWith('.yml') || f.endsWith('.yaml'))
@@ -614,7 +587,7 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
       errors.push({
         file: targetPath,
         line: null,
-        message: 'Bot files found in bots/ but none were valid'
+        message: 'Bot files found in bots/ but none were valid',
       })
     }
   }
@@ -625,31 +598,31 @@ export async function validateConfig(configPath?: string): Promise<ValidationRes
   }
 }
 
-function validateFlowBranchTargets(
-  flowId: string,
-  flow: FlowConfig,
-  allSteps: Set<string>,
+function validateGraphEdgeTargets(
+  graphId: string,
+  graph: GraphConfig,
+  allNodes: Set<string>,
   sourceFile: string,
   sourceContent: string
 ): ValidationError[] {
-  const branchErrors: ValidationError[] = []
+  const edgeErrors: ValidationError[] = []
 
-  for (const [stepId, step] of Object.entries(flow.steps)) {
-    if (step.branches) {
-      for (let bi = 0; bi < step.branches.length; bi++) {
-        const branch = step.branches[bi]
-        if (branch.goto && !allSteps.has(branch.goto)) {
-          branchErrors.push({
+  for (const [nodeId, node] of Object.entries(graph.nodes)) {
+    if (node.edges) {
+      for (let ei = 0; ei < node.edges.length; ei++) {
+        const edge = node.edges[ei]
+        if (edge.goto && !allNodes.has(edge.goto)) {
+          edgeErrors.push({
             file: sourceFile,
             line: null,
-            message: `Flow "${flowId}" step "${stepId}" branch[${bi}] goto "${branch.goto}" not found in steps`
+            message: `Graph "${graphId}" node "${nodeId}" edges[${ei}] goto "${edge.goto}" not found in nodes`,
           })
         }
       }
     }
   }
 
-  return branchErrors
+  return edgeErrors
 }
 
 async function loadDirFiles(dir: string): Promise<string[]> {

@@ -3,7 +3,7 @@ import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { ConfigFile, BotConfig, ActionConfig, FlowConfig } from './schema'
+import { ConfigFile, BotConfig, ActionConfig, GraphConfig } from './schema'
 import { getLogger } from '../helpers/logger'
 
 let configPath: string
@@ -69,11 +69,11 @@ async function loadActionsFromDir(dirPath: string): Promise<Record<string, Actio
   return actions
 }
 
-async function loadFlowsFromDir(dirPath: string): Promise<Record<string, FlowConfig>> {
-  const flows: Record<string, FlowConfig> = {}
+async function loadGraphsFromDir(dirPath: string): Promise<Record<string, GraphConfig>> {
+  const graphs: Record<string, GraphConfig> = {}
 
   if (!fsSync.existsSync(dirPath)) {
-    return flows
+    return graphs
   }
 
   const entries = await fs.readdir(dirPath)
@@ -83,14 +83,14 @@ async function loadFlowsFromDir(dirPath: string): Promise<Record<string, FlowCon
     const id = path.basename(file, path.extname(file))
     const filePath = path.join(dirPath, file)
     const content = await fs.readFile(filePath, 'utf8')
-    const parsed = yaml.load(content) as FlowConfig
+    const parsed = yaml.load(content) as GraphConfig
 
-    if (parsed && typeof parsed === 'object' && parsed.steps) {
-      flows[id] = parsed
+    if (parsed && typeof parsed === 'object' && parsed.nodes) {
+      graphs[id] = parsed
     }
   }
 
-  return flows
+  return graphs
 }
 
 async function loadBotsFromDir(dirPath: string): Promise<Record<string, BotConfig>> {
@@ -134,11 +134,11 @@ export async function loadConfig(customPath?: string): Promise<ConfigFile> {
 
     const baseDir = path.dirname(targetPath)
     const actionsFromDir = await loadActionsFromDir(path.join(baseDir, 'actions'))
-    const flowsFromDir = await loadFlowsFromDir(path.join(baseDir, 'flows'))
+    const graphsFromDir = await loadGraphsFromDir(path.join(baseDir, 'graphs'))
     const botsFromDir = await loadBotsFromDir(path.join(baseDir, 'bots'))
 
     config.actions = { ...actionsFromDir, ...config.actions }
-    config.flows = { ...flowsFromDir, ...config.flows }
+    config.graphs = { ...graphsFromDir, ...config.graphs }
     config.bots = { ...botsFromDir, ...config.bots }
 
     if (!config.bots || typeof config.bots !== 'object' || Object.keys(config.bots).length === 0) {

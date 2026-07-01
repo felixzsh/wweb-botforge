@@ -1,15 +1,14 @@
 bots:
   test-bot:
-    flows:
-      - id: notify-flow
+    graph: notify-graph
 actions:
   notify:
     webhook:
       url: "https://example.com/hook"
-flows:
-  notify-flow:
-    entry_step: trigger
-    steps:
+graphs:
+  notify-graph:
+    root: trigger
+    nodes:
       trigger:
         action: notify
-        branches: []
+        edges: []

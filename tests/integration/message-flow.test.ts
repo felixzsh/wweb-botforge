@@ -23,7 +23,7 @@ describe('Message flow end-to-end', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-flow-int-'))
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-graph-int-'))
     mockConfigDir = tempDir
     outbox = new OutboxService()
     fleet = new BotFleet(outbox)
@@ -45,9 +45,10 @@ describe('Message flow end-to-end', () => {
     return {
       sessionTimeout: 300,
       actions: {},
-      flows: {},
+      graphs: {},
       bots: {
         'test-bot': {
+          graph: 'main',
           settings: { queue_delay: 0, simulate_typing: false },
         },
       },
@@ -55,21 +56,20 @@ describe('Message flow end-to-end', () => {
     }
   }
 
-  it('should reply to a trigger message', async () => {
+  it('should execute root action on first message', async () => {
     await fleet.start(makeConfig({
       actions: { greet: { reply: 'Hello {{sender}}!' } },
-      flows: {
+      graphs: {
         main: {
-          entry_step: 'start',
-          triggers: 'hi',
-          steps: {
-            start: { action: 'greet', branches: [] },
+          root: 'start',
+          nodes: {
+            start: { action: 'greet', edges: [] },
           },
         },
       },
       bots: {
         'test-bot': {
-          flows: [{ id: 'main', priority: 1 }],
+          graph: 'main',
           settings: { queue_delay: 0, simulate_typing: false },
         },
       },
@@ -92,32 +92,31 @@ describe('Message flow end-to-end', () => {
     expect(channel.sentMessages[0].content).toBe('Hello 521234567890!')
   })
 
-  it('should transition between flow steps', async () => {
+  it('should transition between nodes on matching edge', async () => {
     await fleet.start(makeConfig({
       actions: {
         menu: { reply: '1. Hours\n2. Info' },
         hours: { reply: 'Open 9-18h' },
       },
-      flows: {
+      graphs: {
         faq: {
-          entry_step: 'menu',
-          triggers: 'start',
-          steps: {
+          root: 'menu',
+          nodes: {
             menu: {
               action: 'menu',
-              branches: [
-                { when: '1', goto: 'hours' },
-                { when: '2', goto: 'info' },
+              edges: [
+                { match: '1', goto: 'hours' },
+                { match: '2', goto: 'info' },
               ],
             },
-            hours: { action: 'hours', branches: [] },
-            info: { action: 'menu', branches: [] },
+            hours: { action: 'hours', edges: [] },
+            info: { action: 'menu', edges: [] },
           },
         },
       },
       bots: {
         'test-bot': {
-          flows: [{ id: 'faq', priority: 1 }],
+          graph: 'faq',
           settings: { queue_delay: 0, simulate_typing: false },
         },
       },
@@ -155,15 +154,15 @@ describe('Message flow end-to-end', () => {
   it('should ignore messages from self', async () => {
     await fleet.start(makeConfig({
       actions: { greet: { reply: 'Hello!' } },
-      flows: {
+      graphs: {
         main: {
-          entry_step: 'start', triggers: 'hi',
-          steps: { start: { action: 'greet', branches: [] } },
+          root: 'start',
+          nodes: { start: { action: 'greet', edges: [] } },
         },
       },
       bots: {
         'test-bot': {
-          flows: [{ id: 'main', priority: 1 }],
+          graph: 'main',
           settings: { queue_delay: 0, simulate_typing: false },
         },
       },

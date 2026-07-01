@@ -96,12 +96,12 @@ export async function runStatus(configPath?: string): Promise<void> {
       const symbol = stateToSymbol(state)
       const label = stateLabel(state)
       const phone = bot.phone || session?.phone || '-'
-      const flows = bot.flowsCount || 0
+      const graph = bot.graph || '-'
 
       console.log(`  ${symbol} ${bot.id}`)
       console.log(`     State:  ${label}`)
       console.log(`     Phone:  ${phone}`)
-      console.log(`     Flows:  ${flows}`)
+      console.log(`     Graph:  ${graph}`)
       console.log('')
     }
 

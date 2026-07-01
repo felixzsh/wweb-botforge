@@ -2,13 +2,13 @@ bots:
   test-bot:
     graph: broken-graph
 actions:
-  broken-action:
-    cooldown: 30
-    cooldown_reply: "Wait"
+  greet:
+    reply: "Hello!"
 graphs:
   broken-graph:
     root: start
+    fallback_node: nonexistent
     nodes:
       start:
-        action: broken-action
+        action: greet
         edges: []

@@ -24,7 +24,7 @@ async function cleanup(tmpDir: string): Promise<void> {
 
 const baseConfig = `bots:
   test-bot:
-    flows: []
+    graph: any-graph
     settings:
       queue_delay: 1000
 `

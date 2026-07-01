@@ -1,16 +1,11 @@
 import { MessageChannel } from './messages/contracts'
 import { validateId } from './helpers/validation'
 
-export interface FlowRef {
-  id: string
-  priority: number
-}
-
 export interface Bot {
   id: string
   phone?: string
   settings: BotSettings
-  flows: FlowRef[]
+  graph: string
   channel?: MessageChannel
 }
 
@@ -28,7 +23,7 @@ export function createBot(props: {
   id: string
   phone?: string
   settings: BotSettings
-  flows?: FlowRef[]
+  graph?: string
 }): Bot {
   validateId(props.id, 'Bot')
 
@@ -36,7 +31,7 @@ export function createBot(props: {
     id: props.id,
     phone: props.phone,
     settings: props.settings,
-    flows: props.flows || [],
+    graph: props.graph || '',
   }
 }
 

@@ -1,5 +1,5 @@
-import { mapActionCatalog, mapFlowCatalog, mapConfigToBot, mapSettings, mapBotsFromConfig } from '../../../src/config/mapper'
-import { BotConfig, BotSettingsConfig, ActionConfig, FlowConfig } from '../../../src/config/schema'
+import { mapActionCatalog, mapGraphCatalog, mapConfigToBot, mapSettings, mapBotsFromConfig } from '../../../src/config/mapper'
+import { BotConfig, BotSettingsConfig, ActionConfig, GraphConfig } from '../../../src/config/schema'
 
 describe('Mapper', () => {
   describe('mapActionCatalog', () => {
@@ -155,21 +155,18 @@ describe('Mapper', () => {
       const bot = mapConfigToBot('test-bot', {})
 
       expect(bot.id).toBe('test-bot')
+      expect(bot.graph).toBe('')
     })
 
-    it('should map bot with flows', () => {
-      const bot = mapConfigToBot('flow-bot', {
-        flows: [{ id: 'faq-menu', priority: 5 }],
-      })
+    it('should map bot with graph reference', () => {
+      const bot = mapConfigToBot('graph-bot', { graph: 'faq-menu' })
 
-      expect(bot.flows).toHaveLength(1)
-      expect(bot.flows[0].id).toBe('faq-menu')
-      expect(bot.flows[0].priority).toBe(5)
+      expect(bot.graph).toBe('faq-menu')
     })
 
     it('should map complete bot configuration', () => {
       const bot = mapConfigToBot('complete-bot', {
-        flows: [{ id: 'faq-menu', priority: 10 }],
+        graph: 'faq-menu',
         settings: {
           simulate_typing: true,
           typing_delay: 1500,
@@ -182,7 +179,7 @@ describe('Mapper', () => {
       })
 
       expect(bot.id).toBe('complete-bot')
-      expect(bot.flows).toHaveLength(1)
+      expect(bot.graph).toBe('faq-menu')
       expect(bot.settings.ignoreGroups).toBe(false)
     })
 
@@ -217,36 +214,35 @@ describe('Mapper', () => {
     })
   })
 
-  describe('mapFlowCatalog', () => {
-    it('should map a simple flow with triggers and branches', () => {
-      const config: Record<string, FlowConfig> = {
+  describe('mapGraphCatalog', () => {
+    it('should map a simple graph with edges', () => {
+      const config: Record<string, GraphConfig> = {
         'faq-menu': {
-          entry_step: 'menu',
-          triggers: 'menu, hola',
+          root: 'menu',
           timeout: 300,
-          fallback_step: 'invalid',
-          steps: {
+          fallback_node: 'invalid',
+          nodes: {
             menu: {
               action: 'greet',
-              branches: [
-                { when: '1, horario', goto: 'hours' },
-                { when: '2, precio', goto: 'prices' },
+              edges: [
+                { match: '1, horario', goto: 'hours' },
+                { match: '2, precio', goto: 'prices' },
                 { goto: 'invalid' },
               ],
             },
             hours: {
               action: 'hours-info',
-              branches: [
-                { when: 'menu, volver', goto: 'menu' },
+              edges: [
+                { match: 'menu, volver', goto: 'menu' },
               ],
             },
             prices: {
               action: 'prices-info',
-              branches: [],
+              edges: [],
             },
             invalid: {
               action: 'invalid-option',
-              branches: [
+              edges: [
                 { goto: 'menu' },
               ],
             },
@@ -254,116 +250,52 @@ describe('Mapper', () => {
         },
       }
 
-      const catalog = mapFlowCatalog(config)
-      const flow = catalog.get('faq-menu')
+      const catalog = mapGraphCatalog(config)
+      const graph = catalog.get('faq-menu')
 
-      expect(flow).toBeDefined()
-      expect(flow?.entryStep).toBe('menu')
-      expect(flow?.triggers?.[0].phrases).toEqual(['menu', 'hola'])
-      expect(flow?.timeout).toBe(300)
-      expect(flow?.fallbackStep).toBe('invalid')
+      expect(graph).toBeDefined()
+      expect(graph?.root).toBe('menu')
+      expect(graph?.timeout).toBe(300)
+      expect(graph?.fallbackNode).toBe('invalid')
 
-      expect(flow?.steps.menu.action).toBe('greet')
-      expect(flow?.steps.menu.branches).toHaveLength(3)
-      expect(flow?.steps.menu.branches[0].goto).toBe('hours')
-      expect(flow?.steps.menu.branches[2].when).toBeUndefined()
+      expect(graph?.nodes.menu.action).toBe('greet')
+      expect(graph?.nodes.menu.edges).toHaveLength(3)
+      expect(graph?.nodes.menu.edges[0].goto).toBe('hours')
+      expect(graph?.nodes.menu.edges[2].match).toBeUndefined()
 
-      expect(flow?.steps.prices.branches).toHaveLength(0)
+      expect(graph?.nodes.prices.edges).toHaveLength(0)
     })
 
-    it('should support structured triggers', () => {
-      const config: Record<string, FlowConfig> = {
+    it('should map edge with match as string array', () => {
+      const config: Record<string, GraphConfig> = {
         test: {
-          entry_step: 'start',
-          triggers: [{ phrases: 'hola, hi', fuzzy_threshold: 0.4 }],
-          steps: {
+          root: 'start',
+          nodes: {
             start: {
               action: 'greet',
-              branches: [],
-            },
-          },
-        },
-      }
-
-      const catalog = mapFlowCatalog(config)
-      const flow = catalog.get('test')
-
-      expect(flow?.triggers?.[0].fuzzyThreshold).toBe(0.4)
-      expect(flow?.triggers?.[0].phrases).toEqual(['hola', 'hi'])
-    })
-
-    it('should handle empty triggers array', () => {
-      const config: Record<string, FlowConfig> = {
-        test: {
-          entry_step: 'start',
-          triggers: [],
-          steps: {
-            start: {
-              action: 'greet',
-              branches: [],
-            },
-          },
-        },
-      }
-
-      const catalog = mapFlowCatalog(config)
-      const flow = catalog.get('test')
-
-      expect(flow?.triggers).toHaveLength(0)
-    })
-
-    it('should handle triggers as string array', () => {
-      const config: Record<string, FlowConfig> = {
-        test: {
-          entry_step: 'start',
-          triggers: ['hello', 'hi'],
-          steps: {
-            start: {
-              action: 'greet',
-              branches: [],
-            },
-          },
-        },
-      }
-
-      const catalog = mapFlowCatalog(config)
-      const flow = catalog.get('test')
-
-      expect(flow?.triggers).toHaveLength(2)
-      expect(flow?.triggers?.[0].phrases).toEqual(['hello'])
-      expect(flow?.triggers?.[1].phrases).toEqual(['hi'])
-    })
-
-    it('should handle branch with when as string array', () => {
-      const config: Record<string, FlowConfig> = {
-        test: {
-          entry_step: 'start',
-          steps: {
-            start: {
-              action: 'greet',
-              branches: [
-                { when: ['1', 'one'], goto: 'option1' },
+              edges: [
+                { match: ['1', 'one'], goto: 'option1' },
               ],
             },
             option1: {
               action: 'greet',
-              branches: [],
+              edges: [],
             },
           },
         },
       }
 
-      const catalog = mapFlowCatalog(config)
-      const flow = catalog.get('test')
+      const catalog = mapGraphCatalog(config)
+      const graph = catalog.get('test')
 
-      expect(flow?.steps.start.branches[0].when).toEqual(['1', 'one'])
+      expect(graph?.nodes.start.edges[0].match).toEqual(['1', 'one'])
     })
 
-    it('should handle step without branches field', () => {
-      const config: Record<string, FlowConfig> = {
+    it('should handle node without edges field', () => {
+      const config: Record<string, GraphConfig> = {
         test: {
-          entry_step: 'start',
-          steps: {
+          root: 'start',
+          nodes: {
             start: {
               action: 'greet',
             },
@@ -371,59 +303,38 @@ describe('Mapper', () => {
         },
       }
 
-      const catalog = mapFlowCatalog(config)
-      const flow = catalog.get('test')
+      const catalog = mapGraphCatalog(config)
+      const graph = catalog.get('test')
 
-      expect(flow?.steps.start.branches).toEqual([])
+      expect(graph?.nodes.start.edges).toEqual([])
     })
 
-    it('should handle structured triggers with phrases as array', () => {
-      const config: Record<string, FlowConfig> = {
-        test: {
-          entry_step: 'start',
-          triggers: [{ phrases: ['hola', 'hi'], fuzzy_threshold: 0.4 }],
-          steps: {
-            start: {
-              action: 'greet',
-              branches: [],
-            },
-          },
-        },
-      }
-
-      const catalog = mapFlowCatalog(config)
-      const flow = catalog.get('test')
-
-      expect(flow?.triggers?.[0].fuzzyThreshold).toBe(0.4)
-      expect(flow?.triggers?.[0].phrases).toEqual(['hola', 'hi'])
-    })
-
-    it('should throw if entry step does not exist', () => {
-      const config: Record<string, FlowConfig> = {
+    it('should throw if root node does not exist', () => {
+      const config: Record<string, GraphConfig> = {
         broken: {
-          entry_step: 'missing',
-          steps: {},
+          root: 'missing',
+          nodes: {},
         },
       }
 
-      expect(() => mapFlowCatalog(config)).toThrow('Flow "broken" entry step "missing" not found')
+      expect(() => mapGraphCatalog(config)).toThrow('Graph "broken" root node "missing" not found')
     })
 
-    it('should throw if fallback step does not exist', () => {
-      const config: Record<string, FlowConfig> = {
+    it('should throw if fallback node does not exist', () => {
+      const config: Record<string, GraphConfig> = {
         broken: {
-          entry_step: 'start',
-          fallback_step: 'missing',
-          steps: {
+          root: 'start',
+          fallback_node: 'missing',
+          nodes: {
             start: {
               action: 'greet',
-              branches: [],
+              edges: [],
             },
           },
         },
       }
 
-      expect(() => mapFlowCatalog(config)).toThrow('Flow "broken" fallback step "missing" not found')
+      expect(() => mapGraphCatalog(config)).toThrow('Graph "broken" fallback node "missing" not found')
     })
   })
 })

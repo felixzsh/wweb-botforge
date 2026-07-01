@@ -1,0 +1,13 @@
+bots:
+  test-bot:
+    graph: broken-graph
+actions:
+  greet:
+    reply: "Hello!"
+graphs:
+  broken-graph:
+    root: nonexistent
+    nodes:
+      actual:
+        action: greet
+        edges: []

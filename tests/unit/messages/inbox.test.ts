@@ -1,20 +1,20 @@
 import { InboxService } from '../../../src/messages/inbox'
-import { FlowExecutor } from '../../../src/flow/executor'
+import { GraphExecutor } from '../../../src/graph/executor'
 import { Bot, createBot, createDefaultSettings } from '../../../src/bot'
 import { MockChannel } from '../helpers/mock-channel'
 
 describe('InboxService', () => {
   let inbox: InboxService
-  let flowExecutor: jest.Mocked<FlowExecutor>
+  let graphExecutor: jest.Mocked<GraphExecutor>
   let mockChannel: MockChannel
   let bot: Bot
 
   beforeEach(() => {
-    flowExecutor = {
+    graphExecutor = {
       handleMessage: jest.fn().mockResolvedValue(true),
-    } as unknown as jest.Mocked<FlowExecutor>
+    } as unknown as jest.Mocked<GraphExecutor>
 
-    inbox = new InboxService(flowExecutor)
+    inbox = new InboxService(graphExecutor)
     mockChannel = new MockChannel()
     bot = createBot({ id: 'test-bot', settings: createDefaultSettings() })
     bot.channel = mockChannel
@@ -52,7 +52,7 @@ describe('InboxService', () => {
         metadata: { fromMe: true },
       })
 
-      expect(flowExecutor.handleMessage).not.toHaveBeenCalled()
+      expect(graphExecutor.handleMessage).not.toHaveBeenCalled()
     })
 
     it('should ignore messages from ignored senders', async () => {
@@ -66,7 +66,7 @@ describe('InboxService', () => {
         timestamp: new Date(),
       })
 
-      expect(flowExecutor.handleMessage).not.toHaveBeenCalled()
+      expect(graphExecutor.handleMessage).not.toHaveBeenCalled()
     })
 
     it('should ignore group messages when ignoreGroups is true', async () => {
@@ -80,7 +80,7 @@ describe('InboxService', () => {
         timestamp: new Date(),
       })
 
-      expect(flowExecutor.handleMessage).not.toHaveBeenCalled()
+      expect(graphExecutor.handleMessage).not.toHaveBeenCalled()
     })
 
     it('should process messages from allowed senders', async () => {
@@ -92,8 +92,8 @@ describe('InboxService', () => {
         timestamp: new Date(),
       })
 
-      expect(flowExecutor.handleMessage).toHaveBeenCalledTimes(1)
-      expect(flowExecutor.handleMessage).toHaveBeenCalledWith(
+      expect(graphExecutor.handleMessage).toHaveBeenCalledTimes(1)
+      expect(graphExecutor.handleMessage).toHaveBeenCalledWith(
         bot,
         expect.objectContaining({ content: 'help' })
       )
@@ -110,7 +110,7 @@ describe('InboxService', () => {
         timestamp: new Date(),
       })
 
-      expect(flowExecutor.handleMessage).toHaveBeenCalledTimes(1)
+      expect(graphExecutor.handleMessage).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -2,8 +2,7 @@ bots:
   tolerant-bot:
     unknown_field: "should be ignored"
     another_extra: 42
-    flows:
-      - id: simple-flow
+    graph: simple-graph
     settings:
       simulate_typing: false
       unknown_setting: true
@@ -12,11 +11,11 @@ actions:
   greet:
     reply: "Hello!"
     unknown_action_field: "ignored"
-flows:
-  simple-flow:
-    entry_step: start
-    unknown_flow_field: true
-    steps:
+graphs:
+  simple-graph:
+    root: start
+    unknown_graph_field: true
+    nodes:
       start:
         action: greet
-        branches: []
+        edges: []

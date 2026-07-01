@@ -7,10 +7,10 @@ chromiumPath: "/usr/bin/chromium"  # Path to your Chromium/Chrome installation
 apiPort: 3000                     # Port for REST API (optional)
 apiEnabled: true                  # Enable REST API for external integrations
 logLevel: "info"                  # Log level: info, debug, warn, error
-sessionTimeout: 300               # Global default timeout for flow sessions (seconds)
+sessionTimeout: 300               # Global default timeout for graph sessions (seconds)
 
-# Action Catalog — reusable actions that flows reference by id
-# Actions are universal: not tied to any specific bot or flow
+# Action Catalog — reusable actions that graphs reference by id
+# Actions are universal: not tied to any specific bot or graph
 actions:
   # Simple reply action
   greet:
@@ -81,106 +81,97 @@ actions:
       longitude: -99.1332
       name: "Store"
 
-# Flow Catalog — reusable conversation flows that bots reference by id
-# Flows are universal: you can use the same flow in multiple bots
-flows:
-  # FAQ support flow with navigation menu
+# Graph Catalog — conversation state machines owned by a single bot
+# Each graph has a root node, optional timeout, optional fallback_node, and a map of nodes
+graphs:
+  # FAQ support graph with navigation menu
   faq-support:
-    entry_step: menu
-    triggers: "menu, hola, hello, hi, help, start"
-    timeout: 300                   # Session TTL (seconds) — flow dies after inactivity
-    fallback_step: invalid         # Where to go if user sends an unexpected response
-    steps:
+    root: menu
+    timeout: 300                   # Session TTL (seconds) — session dies after inactivity
+    fallback_node: invalid         # Where to go if user sends an unexpected response
+    nodes:
       menu:
         action: menu
-        branches:
-          - when: "1, hour, schedule, time, hours"
+        edges:
+          - match: "1, hours, schedule, time, hours"
             goto: hours
-          - when: "2, catalog, product, brochure"
+          - match: "2, catalog, product, brochure"
             goto: catalog
-          - when: "3, human, agent, person, talk, speak"
+          - match: "3, human, agent, person, talk, speak"
             goto: escalate
-          - when: "4, price, pricing, cost"
+          - match: "4, price, pricing, cost"
             goto: pricing
-          - when: "0, exit, bye, goodbye, end"
-            goto: end
-          - goto: invalid           # Default branch (no 'when'): catches everything else
+          - match: "0, exit, bye, goodbye, end"
+            goto: farewell
+          - goto: invalid           # Default edge (no 'match'): catches everything else
 
       hours:
         action: hours
-        branches:
-          - when: "menu, back, return, volver"
+        edges:
+          - match: "menu, back, return, volver"
             goto: menu
-          - when: "0, exit"
-            goto: end
+          - match: "0, exit"
+            goto: farewell
           - goto: invalid
 
       catalog:
         action: catalog
-        branches:
-          - when: "menu, back"
+        edges:
+          - match: "menu, back"
             goto: menu
-          - when: "0, exit"
-            goto: end
+          - match: "0, exit"
+            goto: farewell
           - goto: invalid
 
       escalate:
         action: escalate            # This action has cooldown
-        branches:
-          - when: "menu, back"
+        edges:
+          - match: "menu, back"
             goto: menu
-          - when: "0, exit"
-            goto: end
+          - match: "0, exit"
+            goto: farewell
           - goto: invalid
 
       pricing:
         action: pricing
-        branches:
-          - when: "menu, back"
+        edges:
+          - match: "menu, back"
             goto: menu
-          - when: "0, exit"
-            goto: end
-          - when: "interested, buy, order, quote"
+          - match: "0, exit"
+            goto: farewell
+          - match: "interested, buy, order, quote"
             goto: lead
           - goto: invalid
 
       lead:
         action: lead-notify
-        branches:
-          - when: "menu, back"
+        edges:
+          - match: "menu, back"
             goto: menu
-          - goto: end
+          - goto: farewell
 
       invalid:
         action: invalid
-        branches:
+        edges:
           - goto: menu               # Always return to menu after invalid input
 
-      end:
+      farewell:
         action: farewell
-        branches: []                 # Empty branches = terminal step, session ends here
+        edges: []                    # No edges — session stays alive until timeout
 
-  # Minimal single-step flow (replaces simple auto-responses)
+  # Minimal single-node graph
   ping-pong:
-    entry_step: ping
-    triggers: "ping"
-    steps:
+    root: ping
+    nodes:
       ping:
         action: pong
-        branches: []
+        edges: []
 
-# Bot definitions — keys are the bot IDs, consistently with actions and flows
+# Bot definitions — keys are the bot IDs, each bot references exactly one graph
 bots:
-  # Support bot using the faq-support flow
+  # Support bot using the faq-support graph
   support-bot:
-    # Flows reference flow IDs from the flow catalog
-    # Higher priority flows are checked first for entry triggers
-    flows:
-      - id: faq-support
-        priority: 10
-      - id: ping-pong
-        priority: 5
-
+    graph: faq-support
     settings:
       queue_delay: 1500
       simulate_typing: true
@@ -190,12 +181,9 @@ bots:
       ignored_senders:              # Senders to ignore entirely
         - "status@broadcast"        # WhatsApp status broadcasts
 
-  # Sales bot reusing the same faq-support flow
+  # Sales bot reusing the same faq-support graph
   sales-bot:
-    flows:
-      - id: faq-support             # Same flow as support bot — reusable
-        priority: 10
-
+    graph: faq-support
     settings:
       queue_delay: 1000
       ignore_groups: false          # Sales bot might engage in groups
@@ -204,21 +192,22 @@ bots:
 # Actions can also be loaded from separate files in the actions/ directory:
 #   ~/.config/wweb-botforge/actions/greet.yml
 #
-# Flows can also be loaded from separate files in the flows/ directory:
-#   ~/.config/wweb-botforge/flows/faq-support.yml
+# Graphs can also be loaded from separate files in the graphs/ directory:
+#   ~/.config/wweb-botforge/graphs/faq-support.yml
 #
-# File name becomes the action/flow ID.
+# File name becomes the action/graph ID.
 # Inline definitions in this file take precedence over directory files.
 
 # Notes:
-# - Actions, flows, and bots all use the same map format: key = ID, value = definition
+# - Actions, graphs, and bots all use the same map format: key = ID, value = definition
 # - Bot IDs are the keys in the bots map; they're auto-generated but you can customize them
+# - Each bot references exactly one graph by ID
 # - IDs can only contain lowercase letters, numbers, and hyphens (no start/end hyphens, no consecutive)
 # - Phone numbers are filled after WhatsApp QR code authentication
-# - Triggers use comma-separated phrases with fuzzy matching (no regex needed)
+# - Edge match phrases are comma-separated, fuzzy-matched (no regex needed)
 # - fuzzy_threshold: 0.3=strict, 0.6=moderate (default), 0.9=loose
 # - Action cooldowns prevent spam (per sender per action)
-# - Flow sessions automatically expire after timeout seconds of inactivity
-# - fallback_step handles unexpected user responses without breaking the flow
+# - Graph sessions automatically expire after timeout seconds of inactivity
+# - fallback_node handles unexpected user responses without breaking the graph
 # - Action reply templates support {{sender}}, {{message}}, {{bot.id}}, {{variables.name}}
 # - Location actions send a WhatsApp location pin; fields: latitude, longitude, name, address, url, description

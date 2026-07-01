@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite'
-import { FlowState } from './flow'
+import { GraphState } from './graph'
 
-export class FlowStateService {
+export class GraphStateService {
   private db: DatabaseSync
 
   constructor(dbPath: string) {
@@ -11,27 +11,27 @@ export class FlowStateService {
 
   private setupSchema(): void {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS flow_states (
+      CREATE TABLE IF NOT EXISTS graph_states (
         id TEXT PRIMARY KEY,
         sender TEXT NOT NULL,
         bot_id TEXT NOT NULL,
-        flow_id TEXT NOT NULL,
-        step_id TEXT NOT NULL,
+        graph_id TEXT NOT NULL,
+        node_id TEXT NOT NULL,
         variables TEXT NOT NULL DEFAULT '{}',
         started_at INTEGER NOT NULL,
         last_activity_at INTEGER NOT NULL,
         timeout INTEGER NOT NULL
       );
 
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_flow_states_sender_bot ON flow_states(sender, bot_id);
-      CREATE INDEX IF NOT EXISTS idx_flow_states_last_activity ON flow_states(last_activity_at);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_graph_states_sender_bot ON graph_states(sender, bot_id);
+      CREATE INDEX IF NOT EXISTS idx_graph_states_last_activity ON graph_states(last_activity_at);
     `)
   }
 
-  findActive(sender: string, botId: string, now: number = Date.now()): FlowState | null {
+  findActive(sender: string, botId: string, now: number = Date.now()): GraphState | null {
     const row = this.db
-      .prepare('SELECT * FROM flow_states WHERE sender = ? AND bot_id = ?')
-      .get(sender, botId) as FlowStateRow | undefined
+      .prepare('SELECT * FROM graph_states WHERE sender = ? AND bot_id = ?')
+      .get(sender, botId) as GraphStateRow | undefined
 
     if (!row) {
       return null
@@ -50,21 +50,21 @@ export class FlowStateService {
   create(
     sender: string,
     botId: string,
-    flowId: string,
-    stepId: string,
+    graphId: string,
+    nodeId: string,
     timeout: number,
     now: number = Date.now(),
     initialVariables?: Record<string, any>
-  ): FlowState {
+  ): GraphState {
     this.destroyBySenderBot(sender, botId)
 
     const id = `${botId}-${sender}-${now}`
-    const state: FlowState = {
+    const state: GraphState = {
       id,
       sender,
       botId,
-      flowId,
-      stepId,
+      graphId,
+      nodeId,
       variables: { ...initialVariables },
       startedAt: now,
       lastActivityAt: now,
@@ -73,14 +73,14 @@ export class FlowStateService {
 
     this.db
       .prepare(
-        'INSERT INTO flow_states (id, sender, bot_id, flow_id, step_id, variables, started_at, last_activity_at, timeout) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO graph_states (id, sender, bot_id, graph_id, node_id, variables, started_at, last_activity_at, timeout) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       )
       .run(
         state.id,
         state.sender,
         state.botId,
-        state.flowId,
-        state.stepId,
+        state.graphId,
+        state.nodeId,
         JSON.stringify(state.variables),
         state.startedAt,
         state.lastActivityAt,
@@ -90,7 +90,7 @@ export class FlowStateService {
     return state
   }
 
-  updateStep(id: string, stepId: string, variables?: Record<string, any>, now: number = Date.now()): void {
+  updateStep(id: string, nodeId: string, variables?: Record<string, any>, now: number = Date.now()): void {
     const state = this.findById(id)
     if (!state) {
       return
@@ -100,30 +100,30 @@ export class FlowStateService {
 
     this.db
       .prepare(
-        'UPDATE flow_states SET step_id = ?, variables = ?, last_activity_at = ? WHERE id = ?'
+        'UPDATE graph_states SET node_id = ?, variables = ?, last_activity_at = ? WHERE id = ?'
       )
-      .run(stepId, JSON.stringify(mergedVariables), now, id)
+      .run(nodeId, JSON.stringify(mergedVariables), now, id)
   }
 
   destroy(id: string): void {
-    this.db.prepare('DELETE FROM flow_states WHERE id = ?').run(id)
+    this.db.prepare('DELETE FROM graph_states WHERE id = ?').run(id)
   }
 
   destroyBySenderBot(sender: string, botId: string): void {
-    this.db.prepare('DELETE FROM flow_states WHERE sender = ? AND bot_id = ?').run(sender, botId)
+    this.db.prepare('DELETE FROM graph_states WHERE sender = ? AND bot_id = ?').run(sender, botId)
   }
 
   cleanupExpired(now: number = Date.now()): number {
     const cutoff = now
     const result = this.db
-      .prepare('DELETE FROM flow_states WHERE (last_activity_at + (timeout * 1000)) < ?')
+      .prepare('DELETE FROM graph_states WHERE (last_activity_at + (timeout * 1000)) < ?')
       .run(cutoff)
 
     return Number(result.changes)
   }
 
   count(): number {
-    const row = this.db.prepare('SELECT COUNT(*) as count FROM flow_states').get() as { count: number }
+    const row = this.db.prepare('SELECT COUNT(*) as count FROM graph_states').get() as { count: number }
     return row.count
   }
 
@@ -131,18 +131,18 @@ export class FlowStateService {
     this.db.close()
   }
 
-  private findById(id: string): FlowState | null {
-    const row = this.db.prepare('SELECT * FROM flow_states WHERE id = ?').get(id) as FlowStateRow | undefined
+  private findById(id: string): GraphState | null {
+    const row = this.db.prepare('SELECT * FROM graph_states WHERE id = ?').get(id) as GraphStateRow | undefined
     return row ? this.rowToState(row) : null
   }
 
-  private rowToState(row: FlowStateRow): FlowState {
+  private rowToState(row: GraphStateRow): GraphState {
     return {
       id: row.id,
       sender: row.sender,
       botId: row.bot_id,
-      flowId: row.flow_id,
-      stepId: row.step_id,
+      graphId: row.graph_id,
+      nodeId: row.node_id,
       variables: JSON.parse(row.variables || '{}'),
       startedAt: row.started_at,
       lastActivityAt: row.last_activity_at,
@@ -150,7 +150,7 @@ export class FlowStateService {
     }
   }
 
-  private isExpired(state: FlowState, now: number): boolean {
+  private isExpired(state: GraphState, now: number): boolean {
     if (state.timeout <= 0) {
       return false
     }
@@ -158,12 +158,12 @@ export class FlowStateService {
   }
 }
 
-interface FlowStateRow {
+interface GraphStateRow {
   id: string
   sender: string
   bot_id: string
-  flow_id: string
-  step_id: string
+  graph_id: string
+  node_id: string
   variables: string
   started_at: number
   last_activity_at: number

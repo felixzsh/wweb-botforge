@@ -1,15 +1,15 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
-import { FlowStateService } from '../../../src/flow/state'
+import { GraphStateService } from '../../../src/graph/state'
 
-describe('FlowStateService', () => {
+describe('GraphStateService', () => {
   let dbPath: string
-  let service: FlowStateService
+  let service: GraphStateService
 
   beforeEach(() => {
-    dbPath = path.join(os.tmpdir(), `botforge-flow-state-test-${Date.now()}.db`)
-    service = new FlowStateService(dbPath)
+    dbPath = path.join(os.tmpdir(), `botforge-graph-state-test-${Date.now()}.db`)
+    service = new GraphStateService(dbPath)
   })
 
   afterEach(() => {
@@ -19,17 +19,17 @@ describe('FlowStateService', () => {
     }
   })
 
-  it('should create and find an active flow state', () => {
+  it('should create and find an active graph state', () => {
     const state = service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 300)
 
     expect(state.sender).toBe('521234567890')
     expect(state.botId).toBe('bot-1')
-    expect(state.flowId).toBe('faq-menu')
-    expect(state.stepId).toBe('menu')
+    expect(state.graphId).toBe('faq-menu')
+    expect(state.nodeId).toBe('menu')
 
     const found = service.findActive('521234567890', 'bot-1')
     expect(found).not.toBeNull()
-    expect(found?.stepId).toBe('menu')
+    expect(found?.nodeId).toBe('menu')
   })
 
   it('should update step and variables', () => {
@@ -38,11 +38,11 @@ describe('FlowStateService', () => {
     service.updateStep(state.id, 'hours', { product: 'A' })
 
     const found = service.findActive('521234567890', 'bot-1')
-    expect(found?.stepId).toBe('hours')
+    expect(found?.nodeId).toBe('hours')
     expect(found?.variables.product).toBe('A')
   })
 
-  it('should destroy flow state', () => {
+  it('should destroy graph state', () => {
     service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 300)
     service.destroyBySenderBot('521234567890', 'bot-1')
 
@@ -50,7 +50,7 @@ describe('FlowStateService', () => {
     expect(found).toBeNull()
   })
 
-  it('should return null for expired flow states', () => {
+  it('should return null for expired graph states', () => {
     const now = Date.now()
     service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 1, now)
 
@@ -58,7 +58,7 @@ describe('FlowStateService', () => {
     expect(found).toBeNull()
   })
 
-  it('should cleanup expired flow states', () => {
+  it('should cleanup expired graph states', () => {
     const now = Date.now()
     service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 1, now)
     service.create('521234567891', 'bot-1', 'faq-menu', 'menu', 300, now)
@@ -81,7 +81,7 @@ describe('FlowStateService', () => {
 
     const found = service.findActive('521234567890', 'bot-1', now + 999999)
     expect(found).not.toBeNull()
-    expect(found?.stepId).toBe('menu')
+    expect(found?.nodeId).toBe('menu')
   })
 
   it('should update step keeping existing variables when no variables provided', () => {
@@ -91,7 +91,7 @@ describe('FlowStateService', () => {
     service.updateStep(state.id, 'hours')
 
     const found = service.findActive('521234567890', 'bot-1')
-    expect(found?.stepId).toBe('hours')
+    expect(found?.nodeId).toBe('hours')
     expect(found?.variables).toEqual({})
   })
 
@@ -100,7 +100,7 @@ describe('FlowStateService', () => {
     service.create('521234567890', 'bot-1', 'faq-menu', 'menu', 300, now)
 
     ;(service as any).db.prepare(
-      'UPDATE flow_states SET variables = ? WHERE sender = ? AND bot_id = ?'
+      'UPDATE graph_states SET variables = ? WHERE sender = ? AND bot_id = ?'
     ).run('', '521234567890', 'bot-1')
 
     const found = service.findActive('521234567890', 'bot-1')

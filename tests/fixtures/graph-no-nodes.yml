@@ -1,0 +1,7 @@
+bots:
+  test-bot:
+    graph: broken-graph
+graphs:
+  broken-graph:
+    root: start
+    nodes: {}

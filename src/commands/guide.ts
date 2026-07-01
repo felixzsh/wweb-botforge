@@ -5,14 +5,25 @@ Framework for running config-driven WhatsApp bots. All behavior is defined in YA
 
 ## Architecture
 
-Three core concepts: **Actions** (what to do), **Flows** (how to respond), **Bots** (who responds).
+Three core concepts: **Actions** (what to do), **Graphs** (how to respond), **Bots** (who responds).
+
+\`\`\`
+Bot
+  └─ Graph (one per bot)
+       └─ Nodes
+            └─ Edges (transitions based on fuzzy-matched user input)
+                 └─ Actions
+\`\`\`
+
+A bot owns exactly one graph. A graph represents the complete conversation for that bot. Nodes belong to their graph and are not reusable across graphs. Actions remain globally reusable.
 
 \`\`\`
 WhatsApp message
   -> InboxService (filters: ignored senders, groups, self-messages)
-    -> FlowExecutor.handleMessage()
-      -> active flow? -> match branch -> transition step -> executeAction()
-      -> new message? -> match flow triggers by priority -> enter flow
+    -> GraphExecutor.handleMessage()
+      -> active session? -> match edge from current/visited nodes -> transition -> executeAction()
+      -> new sender?     -> create session at root, execute root action, then re-resolve the original message
+                            against the root edges (and any visited nodes)
       -> executeAction()
         -> resolve template variables ({{sender}}, {{message}}, etc.)
         -> check cooldown
@@ -33,8 +44,8 @@ Place config files in a directory structure. File names become IDs.
     greet.yml
     menu.yml
     escalate.yml
-  flows/                  # each file = one flow, filename = flow ID
-    faq-support.yml
+  graphs/                 # each file = one graph, filename = graph ID
+    support.yml
     ping-pong.yml
   bots/                   # each file = one bot, filename = bot ID
     support-bot.yml
@@ -43,7 +54,7 @@ Place config files in a directory structure. File names become IDs.
 
 The loader merges directory files with any inline definitions in \`config.yml\`. Inline definitions take precedence.
 
-### config.yml (global settings only, actions/flows/bots are separate files)
+### config.yml (global settings only, actions/graphs/bots are separate files)
 
 \`\`\`yaml
 chromiumPath: "/usr/bin/chromium"
@@ -65,7 +76,7 @@ sessionTimeout: 300
 | apiPort | number | 3000 | REST API port |
 | apiEnabled | boolean | false | Enable REST API |
 | logLevel | string | "info" | info, debug, warn, error |
-| sessionTimeout | number | 300 | Default flow session TTL (seconds) |
+| sessionTimeout | number | 300 | Default graph session TTL (seconds) |
 
 ### Actions
 
@@ -110,92 +121,68 @@ webhook:
 
 An action must define \`reply\`, \`webhook\`, or both.
 
-### Flows
+### Graphs
 
-Each flow has an ID (the key). Stored in \`flows/<id>.yml\`.
+Each graph has an ID (the key). Stored in \`graphs/<id>.yml\`.
 
 \`\`\`yaml
-entry_step: menu
-triggers: "menu, hola, hello, hi, help, start"
+root: menu
 timeout: 300
-fallback_step: invalid
-steps:
+fallback_node: invalid
+nodes:
   menu:
     action: menu
-    branches:
-      - when: "1, hour, schedule, hours"
+    edges:
+      - match: "1, hour, schedule, hours"
         goto: hours
-      - when: "2, catalog, products"
+      - match: "2, catalog, products"
         goto: catalog
-      - when: "0, exit, bye"
+      - match: "0, exit, bye"
         goto: end
       - goto: invalid
   hours:
     action: hours
-    branches:
-      - when: "menu, back"
+    edges:
+      - match: "menu, back"
         goto: menu
       - goto: invalid
   end:
     action: farewell
-    branches: []
+    edges: []
 \`\`\`
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| entry_step | string | yes | Starting step ID |
-| triggers | string, string[], or object[] | no | Entry trigger phrases |
+| root | string | yes | Starting node ID |
 | timeout | number | global default | Session TTL (seconds) |
-| fallback_step | string | - | Step for unmatched input |
+| fallback_node | string | - | Node for unmatched input |
 
-**Trigger formats:**
+Graphs have **no entry triggers**. When a sender has no active session, the bot automatically creates a session at \`root\`, executes the root action, and then re-applies the original message against the root's edges.
 
-\`\`\`yaml
-# Comma-separated string
-triggers: "menu, help, hi"
-
-# Array of strings
-triggers:
-  - "menu, help"
-  - "start, begin"
-
-# Objects with per-phrase fuzzy threshold
-triggers:
-  - phrases: "menu, help"
-    fuzzy_threshold: 0.3
-  - phrases: "start, begin"
-    fuzzy_threshold: 0.6
-\`\`\`
-
-**Steps:**
+**Nodes:**
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | action | string | yes | Action ID to execute |
-| branches | array | - | Branch conditions for user input |
+| edges | array | - | Edge conditions for user input |
 
-**Branches:**
+**Edges:**
 
 | Field | Type | Description |
 |---|---|---|
-| when | string or string[] | Comma-separated trigger phrases |
+| match | string or string[] | Comma-separated fuzzy-matched phrases |
 | fuzzy_threshold | number | Fuse.js threshold (0.3=strict, 0.6=moderate default, 0.9=loose) |
-| goto | string | **Target step ID** |
+| goto | string | **Target node ID** |
 
-- **Default branch**: omit \`when\` to catch unmatched input.
-- **Terminal step**: \`branches: []\` ends the session after execution.
-- **Branches with no \`when\` at end**: serves as the fallback for unmatched input at that step.
+- **Default edge**: omit \`match\` to catch unmatched input.
+- **No edges (\`edges: []\`)**: session stays alive; the user can still navigate via edges from any previously visited node. Sessions only end via timeout.
 
 ### Bots
 
 Each bot has an ID (the key). Stored in \`bots/<id>.yml\`.
 
 \`\`\`yaml
-flows:
-  - id: faq-support
-    priority: 10
-  - id: ping-pong
-    priority: 5
+graph: support
 settings:
   queue_delay: 1500
   simulate_typing: true
@@ -209,9 +196,7 @@ settings:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| flows | array | [] | Flow references with priority |
-| flows[].id | string | - | Flow ID to attach |
-| flows[].priority | number | 1 | Higher = checked first for trigger matching |
+| graph | string | - | Graph ID this bot owns |
 | settings | object | - | Bot behavior |
 | settings.queue_delay | number | 1000 | ms between outgoing messages |
 | settings.simulate_typing | boolean | true | Show typing indicator |
@@ -220,6 +205,8 @@ settings:
 | settings.ignore_groups | boolean | true | Ignore group messages |
 | settings.ignored_senders | string[] | [] | Senders to ignore |
 | settings.admin_numbers | string[] | [] | Admin phone numbers |
+
+A bot references exactly one graph. There is no priority or list of graphs per bot.
 
 ---
 
@@ -243,7 +230,7 @@ Explicit file inclusion from within \`config.yml\`:
 
 \`\`\`yaml
 actions: !include actions/main.yml
-flows: !include flows/main.yml
+graphs: !include graphs/main.yml
 
 bots:
   support: !include bots/support.yml
@@ -254,13 +241,12 @@ bots:
 
 ## Best Practices
 
-1. **Use directory-based config** — one file per action/flow/bot instead of one giant \`config.yml\`. File name = ID.
-2. **One flow per concern** — keep conversational topics in separate flows (e.g., \`faq-flow\`, \`order-flow\`, \`support-flow\`).
+1. **Use directory-based config** — one file per action/graph/bot instead of one giant \`config.yml\`. File name = ID.
+2. **One graph per bot** — keep the whole conversation for a single bot inside one graph.
 3. **Cooldown on human-escalation actions** — prevent spam-triggering manual agent handoffs.
-4. **Terminal steps** — set \`branches: []\` to end sessions cleanly instead of leaving dangling sessions.
-5. **Fallback step** — always configure a \`fallback_step\` to handle unexpected user input.
-6. **Priority ordering** — more specific flows get higher priority so they're matched first.
-7. **Fuzzy thresholds** — \`0.3\` for commands (strict), \`0.6\` default for conversation, \`0.9\` for loose matching.
+4. **Use edges: [] for end-of-conversation nodes** — sessions will still expire on timeout, but a user can still reach previously visited nodes.
+5. **Fallback node** — always configure a \`fallback_node\` to handle unexpected user input.
+6. **Fuzzy thresholds** — \`0.3\` for commands (strict), \`0.6\` default for conversation, \`0.9\` for loose matching.
 
 ---
 
@@ -304,51 +290,48 @@ reply: "Thanks, have a great day!"
 reply: "Invalid option. Choose a number from the menu."
 \`\`\`
 
-\`~/.config/wweb-botforge/flows/support.yml\`:
+\`~/.config/wweb-botforge/graphs/support.yml\`:
 
 \`\`\`yaml
-entry_step: greet
-triggers: "hello, hi, hey, start, help"
+root: greet
 timeout: 300
-fallback_step: invalid
-steps:
+fallback_node: invalid
+nodes:
   greet:
     action: greet
-    branches:
-      - when: "menu, help, continue"
+    edges:
+      - match: "menu, help, continue"
         goto: main_menu
       - goto: invalid
   main_menu:
     action: menu
-    branches:
-      - when: "1, hours, schedule"
+    edges:
+      - match: "1, hours, schedule"
         goto: hours
-      - when: "0, exit, bye"
-        goto: end
+      - match: "0, exit, bye"
+        goto: farewell
       - goto: invalid
   hours:
     action: hours
-    branches:
-      - when: "menu, back"
+    edges:
+      - match: "menu, back"
         goto: main_menu
-      - when: "0, exit"
-        goto: end
+      - match: "0, exit"
+        goto: farewell
       - goto: invalid
   invalid:
     action: invalid
-    branches:
+    edges:
       - goto: main_menu
-  end:
+  farewell:
     action: farewell
-    branches: []
+    edges: []
 \`\`\`
 
 \`~/.config/wweb-botforge/bots/support.yml\`:
 
 \`\`\`yaml
-flows:
-  - id: support
-    priority: 10
+graph: support
 settings:
   queue_delay: 1000
   ignore_groups: true

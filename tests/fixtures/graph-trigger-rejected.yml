@@ -1,0 +1,11 @@
+bots:
+  test-bot:
+    graph: legacy-graph
+graphs:
+  legacy-graph:
+    root: start
+    triggers: "hi, hello"
+    nodes:
+      start:
+        action: greet
+        edges: []

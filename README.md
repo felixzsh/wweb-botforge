@@ -13,7 +13,7 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 
 - **Multiple Bots**: Run several WhatsApp bots from one server
 - **YAML Configuration**: Define bot behavior in simple YAML files
-- **Actions & Flows**: Build conversation state machines with fuzzy-matched triggers
+- **Actions & Graphs**: Build conversation state machines with fuzzy-matched edges
 - **Webhooks**: Connect to your existing apps via HTTP
 - **REST API**: Send messages programmatically (optional)
 - **Systemd Service**: Run as a proper system service with auto-restart
@@ -72,18 +72,23 @@ chromiumPath: "/usr/bin/chromium"  # Path to Chromium/Chrome browser
 apiPort: 3000                     # REST API port (optional)
 apiEnabled: true                  # Enable REST API (optional)
 logLevel: "info"                  # Global log level
+sessionTimeout: 300               # Global default timeout for graph sessions (seconds)
 ```
 
 ### Architecture
 
-BotForge uses three catalogs — **Actions**, **Flows**, and **Bots** — all defined in a single YAML map:
+BotForge uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
 
 - **Actions**: Reusable behaviors — text replies, webhook calls, cooldowns. Not tied to any specific bot.
-- **Flows**: Multi-step conversation state machines that reference actions. Each step has one action and optional branches that transition based on fuzzy-matched user replies.
-- **Bots**: WhatsApp numbers that reference flows (by priority) and have per-bot settings.
+- **Graphs**: Conversation state machines. A graph owns a set of nodes connected by fuzzy-matched edges. Each bot references exactly one graph.
+- **Bots**: WhatsApp numbers that reference a single graph and have per-bot settings.
 
 ```
-Actions (what to do) → Flows (when and how) → Bots (who does it)
+Bot
+  └─ Graph (one per bot)
+       └─ Nodes
+            └─ Edges (transitions based on fuzzy-matched user input)
+                 └─ Actions
 ```
 
 ### Actions
@@ -94,7 +99,7 @@ Replies support template variables:
 - `{{sender}}` — the sender's phone number
 - `{{message}}` — the incoming message text
 - `{{bot.id}}` — the bot's ID
-- `{{variables.name}}` — flow session variables
+- `{{variables.name}}` — graph session variables
 
 ```yaml
 actions:
@@ -155,52 +160,103 @@ When a webhook fires, it sends a JSON payload:
 }
 ```
 
-### Flows
+### Graphs
 
-Flows define multi-step conversations. Each flow has an `entry_step`, optional `triggers` (comma-separated phrases for fuzzy-matching the user's first message), `steps` with branches, and an optional `fallback_step` for unexpected responses.
+Graphs define multi-step conversations. Each graph has a `root` node, optional `timeout`, optional `fallback_node` for unmatched input, and a map of `nodes` connected by `edges`.
 
 ```yaml
-flows:
+graphs:
   faq-support:
-    entry_step: menu
-    triggers: "menu, hola, hello, help, start"
-    timeout: 300
-    fallback_step: invalid
-    steps:
+    root: menu
+    timeout: 300                   # Session TTL (seconds) — session dies after inactivity
+    fallback_node: invalid         # Where to go if user sends an unexpected response
+    nodes:
       menu:
         action: menu
-        branches:
-          - when: "1, hours, schedule"
+        edges:
+          - match: "1, hours, schedule, time, hours"
             goto: hours
-          - when: "2, catalog, products"
+          - match: "2, catalog, product, brochure"
             goto: catalog
-          - when: "3, human, agent"
+          - match: "3, human, agent, person, talk, speak"
             goto: escalate
-          - goto: invalid
+          - match: "4, price, pricing, cost"
+            goto: pricing
+          - match: "0, exit, bye, goodbye, end"
+            goto: farewell
+          - goto: invalid           # Default edge (no 'match'): catches everything else
+
       hours:
         action: hours
-        branches:
-          - when: "menu, back"
+        edges:
+          - match: "menu, back, return, volver"
             goto: menu
+          - match: "0, exit"
+            goto: farewell
           - goto: invalid
-      end:
-        action: farewell
-        branches: []           # empty = terminal step, session ends
 
-  ping-pong:
-    entry_step: ping
-    triggers: "ping"
-    steps:
-      ping:
-        action: pong
-        branches: []
+      catalog:
+        action: catalog
+        edges:
+          - match: "menu, back"
+            goto: menu
+          - match: "0, exit"
+            goto: farewell
+          - goto: invalid
+
+      escalate:
+        action: escalate            # This action has cooldown
+        edges:
+          - match: "menu, back"
+            goto: menu
+          - match: "0, exit"
+            goto: farewell
+          - goto: invalid
+
+      pricing:
+        action: pricing
+        edges:
+          - match: "menu, back"
+            goto: menu
+          - match: "0, exit"
+            goto: farewell
+          - match: "interested, buy, order, quote"
+            goto: lead
+          - goto: invalid
+
+      lead:
+        action: lead-notify
+        edges:
+          - match: "menu, back"
+            goto: menu
+          - goto: farewell
+
+      invalid:
+        action: invalid
+        edges:
+          - goto: menu               # Always return to menu after invalid input
+
+      farewell:
+        action: farewell
+        edges: []                    # No edges — session stays alive until timeout
 ```
 
-- **`triggers`** — comma-separated phrases. Fuzzy-matched against incoming messages to enter the flow.
+**Graph entry behavior:**
+
+When a sender has no active session, the bot automatically:
+1. Creates a new session
+2. Enters the graph's `root` node
+3. Executes the root node's action
+4. Stores the root node in the visited history
+5. Attempts to resolve the user's original message using the normal node resolution algorithm
+
+This means the user's first message is never discarded — it can match a root edge and transition to a different node right away.
+
+- **`match`** — comma-separated phrases. Fuzzy-matched against the user's message with the configured threshold.
 - **`fuzzy_threshold`** — controls strictness. `0.3` = strict, `0.6` = moderate (default), `0.9` = loose.
 - **`timeout`** — seconds of inactivity before the session expires. Defaults to global `sessionTimeout`.
-- **`fallback_step`** — where to redirect if no branch matches. Without one, mismatched messages are silently ignored.
-- **`branches: []`** — empty branches mean the flow ends after that step (terminal).
+- **`fallback_node`** — where to redirect if no edge matches. Without one, mismatched messages are silently ignored.
+- **`edges: []`** — a node with no edges does not destroy the session; the user can still navigate to any previously visited node from its own edges. Sessions only end via timeout.
 
 ### Cooldowns
 
@@ -232,23 +288,26 @@ actions:
       longitude: -99.1332
       name: "Main Office"
       address: "Av. Reforma 123, CDMX"
-      url: "https://maps.example.com/office"
-      description: "Open Mon-Fri 9-18h"
 ```
 
 Required: `latitude` (-90 to 90), `longitude` (-180 to 180). Optional: `name`, `address`, `url`, `description`.
 
 ### Bot Settings
 
+A bot references exactly one graph.
+
 ```yaml
-settings:
-  queue_delay: 1000        # ms between outgoing messages
-  simulate_typing: true    # show typing indicator before replies
-  typing_delay: 1000       # ms to simulate typing before sending
-  read_receipts: true      # mark messages as read
-  ignore_groups: true      # skip group messages
-  ignored_senders:         # skip messages from these senders
-    - "status@broadcast"
+bots:
+  support-bot:
+    graph: faq-support
+    settings:
+      queue_delay: 1500
+      simulate_typing: true
+      typing_delay: 1000
+      read_receipts: true
+      ignore_groups: true
+      ignored_senders:
+        - "status@broadcast"
 ```
 
 See [`config.example.yml`](config.example.yml) for a full working configuration.
@@ -287,7 +346,7 @@ systemctl --user disable wweb-botforge
 
 **Messages not responding?**
 - Check bot status in logs
-- Verify flow triggers are correctly set in config
+- Verify the bot's `graph` field references an existing graph
 - Test with exact phrases first, then tune `fuzzy_threshold`
 
 **Webhook not working?**
@@ -304,4 +363,3 @@ MIT License - see [LICENSE](LICENSE) file.
 ## Acknowledgments
 
 This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WWeb BotForge wouldn't be possible without this foundational work.
-

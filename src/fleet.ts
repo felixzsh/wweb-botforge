@@ -1,14 +1,14 @@
 import * as path from 'path'
 import { Bot } from './bot'
 import { ConfigFile } from './config/schema'
-import { mapBotsFromConfig, mapActionCatalog, mapFlowCatalog } from './config/mapper'
+import { mapBotsFromConfig, mapActionCatalog, mapGraphCatalog } from './config/mapper'
 import { ActionCatalog } from './action/action'
-import { FlowCatalog } from './flow/flow'
+import { GraphCatalog } from './graph/graph'
 import { CooldownService } from './action/cooldown'
 import { OutboxService } from './messages/outbox'
 import { InboxService } from './messages/inbox'
-import { FlowStateService } from './flow/state'
-import { FlowExecutor } from './flow/executor'
+import { GraphStateService } from './graph/state'
+import { GraphExecutor } from './graph/executor'
 import { SessionManager } from './whatsapp/session'
 import { setGlobalConfig, getWwebCacheDir } from './whatsapp/client'
 import { MessageChannel } from './messages/contracts'
@@ -21,9 +21,9 @@ export class BotFleet {
   private inboxService?: InboxService
   private sessionManager: SessionManager
   private actionCatalog: ActionCatalog = new Map()
-  private flowCatalog: FlowCatalog = new Map()
-  private flowStateService?: FlowStateService
-  private flowExecutor?: FlowExecutor
+  private graphCatalog: GraphCatalog = new Map()
+  private graphStateService?: GraphStateService
+  private graphExecutor?: GraphExecutor
   private isRunning: boolean = false
 
   constructor(outboxService: OutboxService) {
@@ -44,22 +44,22 @@ export class BotFleet {
 
     try {
       this.actionCatalog = mapActionCatalog(configFile.actions || {})
-      this.flowCatalog = mapFlowCatalog(configFile.flows || {})
+      this.graphCatalog = mapGraphCatalog(configFile.graphs || {})
 
-      const flowStateDbPath = path.join(getWwebCacheDir(), 'flows.db')
-      this.flowStateService = new FlowStateService(flowStateDbPath)
+      const graphStateDbPath = path.join(getWwebCacheDir(), 'graphs.db')
+      this.graphStateService = new GraphStateService(graphStateDbPath)
 
-      const flowStateTimeout = configFile.sessionTimeout ?? 300
-      this.flowExecutor = new FlowExecutor(
+      const graphStateTimeout = configFile.sessionTimeout ?? 300
+      this.graphExecutor = new GraphExecutor(
         this.actionCatalog,
-        this.flowCatalog,
-        this.flowStateService,
+        this.graphCatalog,
+        this.graphStateService,
         this.outboxService,
-        flowStateTimeout,
+        graphStateTimeout,
         this.cooldownService
       )
 
-      this.inboxService = new InboxService(this.flowExecutor)
+      this.inboxService = new InboxService(this.graphExecutor)
 
       if (Object.keys(configFile.bots).length === 0) {
         this.logger.warn('No bots configured.')
@@ -98,7 +98,7 @@ export class BotFleet {
     try {
       await this.outboxService.shutdown()
       await this.sessionManager.removeAllChannels()
-      this.flowStateService?.close()
+      this.graphStateService?.close()
       this.bots.clear()
 
       this.isRunning = false
@@ -211,7 +211,7 @@ export class BotFleet {
 
       return {
         id: bot.id,
-        flowsCount: bot.flows.length,
+        graph: bot.graph,
         session: sessionInfo ? {
           state: sessionInfo.state,
           phone: sessionInfo.phone,
@@ -244,13 +244,13 @@ export class BotFleet {
     return this.bots
   }
 
-  reloadCatalogs(actionCatalog: ActionCatalog, flowCatalog: FlowCatalog): void {
+  reloadCatalogs(actionCatalog: ActionCatalog, graphCatalog: GraphCatalog): void {
     this.actionCatalog = actionCatalog
-    this.flowCatalog = flowCatalog
-    this.flowExecutor?.updateCatalogs(actionCatalog, flowCatalog)
+    this.graphCatalog = graphCatalog
+    this.graphExecutor?.updateCatalogs(actionCatalog, graphCatalog)
   }
 
-  getFlowExecutor(): FlowExecutor | undefined {
-    return this.flowExecutor
+  getGraphExecutor(): GraphExecutor | undefined {
+    return this.graphExecutor
   }
 }

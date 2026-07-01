@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
 import { loadConfig, saveConfig, setConfigPath, getConfigPath, addBotConfig } from '../../src/config/yaml'
-import { mapConfigToBot, mapBotsFromConfig, mapSettings, mapActionCatalog, mapFlowCatalog } from '../../src/config/mapper'
+import { mapConfigToBot, mapBotsFromConfig, mapSettings, mapActionCatalog, mapGraphCatalog } from '../../src/config/mapper'
 import { BotConfig } from '../../src/config/schema'
 
 describe('YAML Configuration Loading Integration Tests', () => {
@@ -52,12 +52,12 @@ describe('YAML Configuration Loading Integration Tests', () => {
         expect(bot.settings.ignoreGroups).toBe(true)
         expect(bot.settings.ignoredSenders).toEqual([])
         expect(bot.settings.adminNumbers).toEqual([])
-        expect(bot.flows).toEqual([])
+        expect(bot.graph).toBe('')
       })
     })
 
     describe('Full Configuration', () => {
-      it('should load full configuration with actions, flows and multiple bots', async () => {
+      it('should load full configuration with actions, graphs and multiple bots', async () => {
         const fixturePath = path.join(__dirname, '../fixtures/full-config.yml')
 
         const config = await loadConfig(fixturePath)
@@ -65,7 +65,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
         expect(config.sessionTimeout).toBe(300)
         expect(config.logLevel).toBe('info')
         expect(config.actions).toBeDefined()
-        expect(config.flows).toBeDefined()
+        expect(config.graphs).toBeDefined()
         expect(Object.keys(config.bots)).toHaveLength(2)
       })
 
@@ -94,42 +94,37 @@ describe('YAML Configuration Loading Integration Tests', () => {
         expect(leadNotify.reply).toBeUndefined()
       })
 
-      it('should map all flows from full config', async () => {
+      it('should map all graphs from full config', async () => {
         const fixturePath = path.join(__dirname, '../fixtures/full-config.yml')
 
         const config = await loadConfig(fixturePath)
-        const catalog = mapFlowCatalog(config.flows!)
+        const catalog = mapGraphCatalog(config.graphs!)
 
         expect(catalog.has('faq-support')).toBe(true)
         expect(catalog.has('ping-pong')).toBe(true)
 
         const faq = catalog.get('faq-support')!
-        expect(faq.entryStep).toBe('menu')
-        expect(faq.triggers?.[0].phrases).toEqual(['menu', 'hola', 'hello', 'help'])
+        expect(faq.root).toBe('menu')
         expect(faq.timeout).toBe(300)
-        expect(faq.fallbackStep).toBe('invalid')
-        expect(Object.keys(faq.steps)).toHaveLength(6)
+        expect(faq.fallbackNode).toBe('invalid')
+        expect(Object.keys(faq.nodes)).toHaveLength(6)
 
-        const menuStep = faq.steps.menu
-        expect(menuStep.branches).toHaveLength(4)
-        expect(menuStep.branches[0].when).toEqual(['1', 'hours', 'schedule'])
-        expect(menuStep.branches[3].when).toBeUndefined()
+        const menuNode = faq.nodes.menu
+        expect(menuNode.edges).toHaveLength(4)
+        expect(menuNode.edges[0].match).toEqual(['1', 'hours', 'schedule'])
+        expect(menuNode.edges[3].match).toBeUndefined()
 
         const pingPong = catalog.get('ping-pong')!
-        expect(pingPong.steps.ping.branches).toHaveLength(0)
+        expect(pingPong.nodes.ping.edges).toHaveLength(0)
       })
 
-      it('should map support bot with flow references', async () => {
+      it('should map support bot with graph reference', async () => {
         const fixturePath = path.join(__dirname, '../fixtures/full-config.yml')
 
         const config = await loadConfig(fixturePath)
         const bot = mapConfigToBot('support-bot', config.bots['support-bot'])
 
-        expect(bot.flows).toHaveLength(2)
-        expect(bot.flows[0].id).toBe('faq-support')
-        expect(bot.flows[0].priority).toBe(10)
-        expect(bot.flows[1].id).toBe('ping-pong')
-        expect(bot.flows[1].priority).toBe(5)
+        expect(bot.graph).toBe('faq-support')
         expect(bot.settings.queueDelay).toBe(1500)
         expect(bot.settings.simulateTyping).toBe(true)
         expect(bot.settings.ignoredSenders).toEqual(['status@broadcast'])
@@ -142,23 +137,9 @@ describe('YAML Configuration Loading Integration Tests', () => {
         const config = await loadConfig(fixturePath)
         const bot = mapConfigToBot('sales-bot', config.bots['sales-bot'])
 
-        expect(bot.flows).toHaveLength(1)
+        expect(bot.graph).toBe('faq-support')
         expect(bot.settings.ignoreGroups).toBe(false)
         expect(bot.settings.ignoredSenders).toEqual([])
-      })
-    })
-
-    describe('Structured Flow Triggers', () => {
-      it('should parse structured trigger format', async () => {
-        const fixturePath = path.join(__dirname, '../fixtures/flow-structured-triggers.yml')
-
-        const config = await loadConfig(fixturePath)
-        const catalog = mapFlowCatalog(config.flows!)
-
-        const flow = catalog.get('fancy-flow')!
-        expect(flow.triggers).toHaveLength(1)
-        expect(flow.triggers![0].phrases).toEqual(['hola', 'hello', 'hi'])
-        expect(flow.triggers![0].fuzzyThreshold).toBe(0.4)
       })
     })
   })
@@ -189,49 +170,39 @@ describe('YAML Configuration Loading Integration Tests', () => {
     })
   })
 
-  describe('Flow Validation', () => {
-    it('should throw when entry step does not exist', async () => {
-      const fixturePath = path.join(__dirname, '../fixtures/flow-bad-entry.yml')
+  describe('Graph Validation', () => {
+    it('should throw when root node does not exist', async () => {
+      const fixturePath = path.join(__dirname, '../fixtures/graph-bad-root.yml')
 
       const config = await loadConfig(fixturePath)
 
-      expect(() => mapFlowCatalog(config.flows!)).toThrow(
-        'Flow "broken-flow" entry step "nonexistent" not found'
+      expect(() => mapGraphCatalog(config.graphs!)).toThrow(
+        'Graph "broken-graph" root node "nonexistent" not found'
       )
     })
 
-    it('should throw when fallback step does not exist', async () => {
-      const fixturePath = path.join(__dirname, '../fixtures/flow-bad-fallback.yml')
+    it('should throw when fallback node does not exist', async () => {
+      const fixturePath = path.join(__dirname, '../fixtures/graph-bad-fallback.yml')
 
       const config = await loadConfig(fixturePath)
 
-      expect(() => mapFlowCatalog(config.flows!)).toThrow(
-        'Flow "broken-flow" fallback step "nonexistent" not found'
+      expect(() => mapGraphCatalog(config.graphs!)).toThrow(
+        'Graph "broken-graph" fallback node "nonexistent" not found'
       )
     })
 
-    it('should throw when steps map is empty', async () => {
-      const fixturePath = path.join(__dirname, '../fixtures/flow-no-steps.yml')
+    it('should throw when nodes map is empty', async () => {
+      const fixturePath = path.join(__dirname, '../fixtures/graph-no-nodes.yml')
 
       const config = await loadConfig(fixturePath)
 
-      expect(() => mapFlowCatalog(config.flows!)).toThrow(
-        'Flow "broken-flow" entry step "start" not found'
+      expect(() => mapGraphCatalog(config.graphs!)).toThrow(
+        'Graph "broken-graph" root node "start" not found'
       )
     })
   })
 
   describe('Bot Validation', () => {
-    it('should throw when flow priority is negative', async () => {
-      const fixturePath = path.join(__dirname, '../fixtures/bot-negative-priority.yml')
-
-      const config = await loadConfig(fixturePath)
-
-      expect(() => mapConfigToBot('bad-bot', config.bots['bad-bot'])).toThrow(
-        'Priority must be non-negative'
-      )
-    })
-
     it('should throw when queue delay is negative', async () => {
       const fixturePath = path.join(__dirname, '../fixtures/bot-negative-delay.yml')
 
@@ -283,8 +254,8 @@ describe('YAML Configuration Loading Integration Tests', () => {
       const catalog = mapActionCatalog(config.actions!)
       expect(catalog.has('greet')).toBe(true)
 
-      const flowCatalog = mapFlowCatalog(config.flows!)
-      expect(flowCatalog.has('simple-flow')).toBe(true)
+      const graphCatalog = mapGraphCatalog(config.graphs!)
+      expect(graphCatalog.has('simple-graph')).toBe(true)
 
       const bot = mapConfigToBot('tolerant-bot', config.bots['tolerant-bot'])
       expect(bot.settings.simulateTyping).toBe(false)
@@ -304,15 +275,14 @@ describe('YAML Configuration Loading Integration Tests', () => {
       expect(config.actions?.invalid).toBeDefined()
     })
 
-    it('should load flows from adjacent flows/ directory', async () => {
+    it('should load graphs from adjacent graphs/ directory', async () => {
       const fixturePath = path.join(__dirname, '../fixtures/modular/config.yml')
 
       const config = await loadConfig(fixturePath)
 
-      expect(config.flows?.faq).toBeDefined()
-      expect(config.flows?.faq.entry_step).toBe('menu')
-      expect(config.flows?.faq.triggers).toBe('menu, help, faq')
-      expect(config.flows?.faq.fallback_step).toBe('invalid')
+      expect(config.graphs?.faq).toBeDefined()
+      expect(config.graphs?.faq.root).toBe('menu')
+      expect(config.graphs?.faq.fallback_node).toBe('invalid')
     })
 
     it('should load bots from adjacent bots/ directory', async () => {
@@ -322,9 +292,8 @@ describe('YAML Configuration Loading Integration Tests', () => {
 
       expect(config.bots['support-bot']).toBeDefined()
       expect(config.bots['sales-bot']).toBeDefined()
-      expect(config.bots['support-bot'].flows).toHaveLength(1)
-      expect(config.bots['support-bot'].flows![0].id).toBe('faq')
-      expect(config.bots['support-bot'].flows![0].priority).toBe(10)
+      expect(config.bots['support-bot'].graph).toBe('faq')
+      expect(config.bots['sales-bot'].graph).toBe('faq')
     })
 
     it('should map bots loaded from directory', async () => {
@@ -337,6 +306,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
       const supportBot = bots.find(b => b.id === 'support-bot')!
       expect(supportBot.settings.queueDelay).toBe(1500)
       expect(supportBot.settings.ignoreGroups).toBe(true)
+      expect(supportBot.graph).toBe('faq')
 
       const salesBot = bots.find(b => b.id === 'sales-bot')!
       expect(salesBot.settings.queueDelay).toBe(1000)
@@ -364,17 +334,13 @@ describe('YAML Configuration Loading Integration Tests', () => {
 sessionTimeout: 600
 bots:
   support-bot:
-    flows:
-      - id: faq
-        priority: 99
+    graph: faq
     settings:
       queue_delay: 9999
 `)
 
       fs.writeFileSync(path.join(botsDir, 'support-bot.yml'), `
-flows:
-  - id: faq
-    priority: 1
+graph: faq
 settings:
   queue_delay: 500
 `)
@@ -383,7 +349,7 @@ settings:
 
       expect(Object.keys(config.bots)).toHaveLength(1)
       const bot = mapConfigToBot('support-bot', config.bots['support-bot'])
-      expect(bot.flows[0].priority).toBe(99)
+      expect(bot.graph).toBe('faq')
       expect(bot.settings.queueDelay).toBe(9999)
     })
 
@@ -392,23 +358,24 @@ settings:
 
       const configPath = path.join(tempDir, 'config.yml')
       const actionsDir = path.join(tempDir, 'actions')
+      const graphsDir = path.join(tempDir, 'graphs')
       fs.mkdirSync(actionsDir)
+      fs.mkdirSync(graphsDir)
 
       fs.writeFileSync(configPath, `
 bots:
   test-bot:
-    flows:
-      - id: test-flow
+    graph: test-graph
 actions:
   greet:
     reply: "Overridden reply"
-flows:
-  test-flow:
-    entry_step: start
-    steps:
+graphs:
+  test-graph:
+    root: start
+    nodes:
       start:
         action: greet
-        branches: []
+        edges: []
 `)
 
       fs.writeFileSync(path.join(actionsDir, 'greet.yml'), `
@@ -472,7 +439,7 @@ reply: "Original reply from directory"
     })
   })
 
-  describe('Configuration with Actions and Flows Directories', () => {
+  describe('Configuration with Actions and Graphs Directories', () => {
     let tempDir: string
 
     afterEach(() => {
@@ -481,35 +448,33 @@ reply: "Original reply from directory"
       }
     })
 
-    it('should load actions and flows from adjacent directories', async () => {
+    it('should load actions and graphs from adjacent directories', async () => {
       tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-config-'))
 
       const configPath = path.join(tempDir, 'config.yml')
       const actionsDir = path.join(tempDir, 'actions')
-      const flowsDir = path.join(tempDir, 'flows')
+      const graphsDir = path.join(tempDir, 'graphs')
 
       fs.mkdirSync(actionsDir)
-      fs.mkdirSync(flowsDir)
+      fs.mkdirSync(graphsDir)
 
       fs.writeFileSync(configPath, `
 sessionTimeout: 120
 bots:
   test-bot:
-    flows:
-      - id: faq-menu
+    graph: faq-menu
 `)
 
       fs.writeFileSync(path.join(actionsDir, 'greet.yml'), `
 reply: "Hello! Choose an option"
 `)
 
-      fs.writeFileSync(path.join(flowsDir, 'faq-menu.yml'), `
-entry_step: menu
-triggers: "menu, hello"
-steps:
+      fs.writeFileSync(path.join(graphsDir, 'faq-menu.yml'), `
+root: menu
+nodes:
   menu:
     action: greet
-    branches: []
+    edges: []
 `)
 
       const config = await loadConfig(configPath)
@@ -518,9 +483,9 @@ steps:
       expect(config.actions?.greet).toBeDefined()
       expect(config.actions?.greet.reply).toBe('Hello! Choose an option')
 
-      expect(config.flows).toBeDefined()
-      expect(config.flows?.['faq-menu']).toBeDefined()
-      expect(config.flows?.['faq-menu'].entry_step).toBe('menu')
+      expect(config.graphs).toBeDefined()
+      expect(config.graphs?.['faq-menu']).toBeDefined()
+      expect(config.graphs?.['faq-menu'].root).toBe('menu')
     })
   })
 
@@ -545,7 +510,7 @@ steps:
       const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-path-'))
       const configPath = path.join(tempDir, 'my-config.yml')
 
-      fs.writeFileSync(configPath, 'bots:\n  test-bot:\n    flows:\n      - id: faq')
+      fs.writeFileSync(configPath, 'bots:\n  test-bot:\n    graph: any-graph')
 
       const config = await loadConfig(configPath)
       expect(config.bots['test-bot']).toBeDefined()
@@ -563,54 +528,34 @@ steps:
       }
     })
 
-    it('should process !include for flow refs inside bot', async () => {
+    it('should process !include for graph edges', async () => {
       tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-include-'))
 
-      const flowsDir = path.join(tempDir, 'flows')
-      fs.mkdirSync(flowsDir)
-
-      fs.writeFileSync(path.join(tempDir, 'config.yml'), `bots:
-  my-bot:
-    flows:
-      - !include flows/faq-ref.yml`)
-
-      fs.writeFileSync(path.join(flowsDir, 'faq-ref.yml'), `id: faq-support
-priority: 5`)
-
-      const config = await loadConfig(path.join(tempDir, 'config.yml'))
-
-      expect(config.bots['my-bot'].flows).toHaveLength(1)
-      expect(config.bots['my-bot'].flows![0].id).toBe('faq-support')
-      expect(config.bots['my-bot'].flows![0].priority).toBe(5)
-    })
-
-    it('should process !include for flow branches', async () => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-include-branch-'))
-
-      const branchesDir = path.join(tempDir, 'branches')
-      fs.mkdirSync(branchesDir)
+      const edgesDir = path.join(tempDir, 'edges')
+      fs.mkdirSync(edgesDir)
 
       fs.writeFileSync(path.join(tempDir, 'config.yml'), `bots:
   test-bot:
-    flows:
-      - id: demo
-flows:
+    graph: demo
+actions:
+  greet:
+    reply: "Hello"
+graphs:
   demo:
-    entry_step: start
-    triggers: hi
-    steps:
+    root: start
+    nodes:
       start:
         action: greet
-        branches:
-          - !include branches/hours.yml`)
+        edges:
+          - !include edges/hours-edge.yml`)
 
-      fs.writeFileSync(path.join(branchesDir, 'hours.yml'), `when: hours
-goto: show-hours`)
+      fs.writeFileSync(path.join(edgesDir, 'hours-edge.yml'), `match: hours
+goto: hours-node`)
 
       const config = await loadConfig(path.join(tempDir, 'config.yml'))
 
-      expect(config.flows?.demo.steps.start.branches).toHaveLength(1)
-      expect(config.flows!.demo.steps.start.branches![0].goto).toBe('show-hours')
+      expect(config.graphs?.demo.nodes.start.edges).toHaveLength(1)
+      expect(config.graphs!.demo.nodes.start.edges![0].goto).toBe('hours-node')
     })
   })
 
@@ -631,7 +576,7 @@ goto: show-hours`)
         logLevel: 'info' as const,
         bots: {
           'test-bot': {
-            flows: [{ id: 'faq', priority: 5 }],
+            graph: 'faq',
           },
         },
       }
@@ -741,15 +686,15 @@ goto: show-hours`)
       expect(config.bots['loadable'].settings?.ignore_groups).toBe(false)
     })
 
-    it('should write bot with flows and settings', async () => {
+    it('should write bot with graph and settings', async () => {
       await addBotConfig('full', {
-        flows: [{ id: 'faq', priority: 10 }],
+        graph: 'faq',
         settings: { queue_delay: 2000, simulate_typing: false },
       }, configPath)
 
       const botFile = path.join(botsDir, 'full.yml')
       const content = fs.readFileSync(botFile, 'utf8')
-      expect(content).toContain('faq')
+      expect(content).toContain('graph: faq')
       expect(content).toContain('queue_delay: 2000')
       expect(content).toContain('simulate_typing:')
     })
@@ -764,5 +709,4 @@ goto: show-hours`)
       expect(fs.existsSync(customPath)).toBe(true)
     })
   })
-
 })

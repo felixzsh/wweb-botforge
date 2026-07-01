@@ -8,13 +8,8 @@ export interface BotSettingsConfig {
   admin_numbers?: string[]
 }
 
-export interface FlowRefConfig {
-  id: string
-  priority?: number
-}
-
 export interface BotConfig {
-  flows?: FlowRefConfig[]
+  graph?: string
   settings?: BotSettingsConfig
 }
 
@@ -44,23 +39,22 @@ export interface ActionConfig {
   cooldown_reply?: string
 }
 
-export interface FlowBranchConfig {
-  when?: string | string[]
+export interface EdgeConfig {
+  match?: string | string[]
   fuzzy_threshold?: number
   goto: string
 }
 
-export interface FlowStepConfig {
+export interface NodeConfig {
   action: string
-  branches?: FlowBranchConfig[]
+  edges?: EdgeConfig[]
 }
 
-export interface FlowConfig {
-  entry_step: string
-  triggers?: string | string[] | Array<{ phrases: string | string[]; fuzzy_threshold?: number }>
+export interface GraphConfig {
+  root: string
   timeout?: number
-  fallback_step?: string
-  steps: Record<string, FlowStepConfig>
+  fallback_node?: string
+  nodes: Record<string, NodeConfig>
 }
 
 export interface ConfigFile {
@@ -70,6 +64,6 @@ export interface ConfigFile {
   apiEnabled?: boolean
   sessionTimeout?: number
   actions?: Record<string, ActionConfig>
-  flows?: Record<string, FlowConfig>
+  graphs?: Record<string, GraphConfig>
   bots: Record<string, BotConfig>
 }

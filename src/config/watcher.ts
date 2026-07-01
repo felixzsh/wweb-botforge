@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { loadConfig, getConfigPath } from './yaml'
 import { BotFleet } from '../fleet'
-import { mapActionCatalog, mapFlowCatalog, mapBotsFromConfig } from './mapper'
+import { mapActionCatalog, mapGraphCatalog, mapBotsFromConfig } from './mapper'
 import { getLogger } from '../helpers/logger'
 
 export class ConfigWatcher {
@@ -69,10 +69,10 @@ export class ConfigWatcher {
 
       const configFile = await loadConfig(this.configPath)
       const newActionCatalog = mapActionCatalog(configFile.actions || {})
-      const newFlowCatalog = mapFlowCatalog(configFile.flows || {})
+      const newGraphCatalog = mapGraphCatalog(configFile.graphs || {})
       const loadedBots = mapBotsFromConfig(configFile.bots)
 
-      this.fleet.reloadCatalogs(newActionCatalog, newFlowCatalog)
+      this.fleet.reloadCatalogs(newActionCatalog, newGraphCatalog)
 
       const existingBots = this.fleet.getBots()
       const existingIds = new Set(existingBots.keys())

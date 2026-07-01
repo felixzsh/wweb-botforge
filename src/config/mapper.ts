@@ -1,8 +1,8 @@
-import { Bot, BotSettings, FlowRef, createBot, createDefaultSettings } from '../bot'
-import { validateId, validatePriority, validateTypingDelay, validateQueueDelay } from '../helpers/validation'
-import { BotConfig, BotSettingsConfig, FlowRefConfig, ActionConfig, WebhookActionConfig, LocationActionConfig, FlowConfig, FlowStepConfig, FlowBranchConfig } from './schema'
+import { Bot, BotSettings, createBot, createDefaultSettings } from '../bot'
+import { validateId, validateTypingDelay, validateQueueDelay } from '../helpers/validation'
+import { BotConfig, BotSettingsConfig, ActionConfig, WebhookActionConfig, LocationActionConfig, GraphConfig, NodeConfig, EdgeConfig } from './schema'
 import { ActionDef, ActionCatalog, LocationAction } from '../action/action'
-import { FlowCatalog, FlowDef, FlowStep, FlowBranch, FuzzyTrigger } from '../flow/flow'
+import { GraphCatalog, GraphDef, Node, Edge } from '../graph/graph'
 
 export function mapActionCatalog(config: Record<string, ActionConfig>): ActionCatalog {
   const catalog: ActionCatalog = new Map()
@@ -58,83 +58,59 @@ function mapLocationAction(config: LocationActionConfig): LocationAction {
   }
 }
 
-export function mapFlowCatalog(config: Record<string, FlowConfig>): FlowCatalog {
-  const catalog: FlowCatalog = new Map()
+export function mapGraphCatalog(config: Record<string, GraphConfig>): GraphCatalog {
+  const catalog: GraphCatalog = new Map()
 
-  for (const [id, flowConfig] of Object.entries(config)) {
-    catalog.set(id, mapFlow(id, flowConfig))
+  for (const [id, graphConfig] of Object.entries(config)) {
+    catalog.set(id, mapGraph(id, graphConfig))
   }
 
   return catalog
 }
 
-function mapFlow(id: string, config: FlowConfig): FlowDef {
-  if (!config.steps[config.entry_step]) {
-    throw new Error(`Flow "${id}" entry step "${config.entry_step}" not found`)
+function mapGraph(id: string, config: GraphConfig): GraphDef {
+  if (!config.nodes[config.root]) {
+    throw new Error(`Graph "${id}" root node "${config.root}" not found`)
   }
 
-  const steps: Record<string, FlowStep> = {}
-  for (const [stepId, stepConfig] of Object.entries(config.steps)) {
-    steps[stepId] = mapStep(stepConfig)
+  const nodes: Record<string, Node> = {}
+  for (const [nodeId, nodeConfig] of Object.entries(config.nodes)) {
+    nodes[nodeId] = mapNode(nodeConfig)
   }
 
-  if (config.fallback_step && !steps[config.fallback_step]) {
-    throw new Error(`Flow "${id}" fallback step "${config.fallback_step}" not found`)
+  if (config.fallback_node && !nodes[config.fallback_node]) {
+    throw new Error(`Graph "${id}" fallback node "${config.fallback_node}" not found`)
   }
 
   return {
     id,
-    entryStep: config.entry_step,
-    triggers: config.triggers ? mapTriggers(config.triggers) : undefined,
+    root: config.root,
     timeout: config.timeout,
-    fallbackStep: config.fallback_step,
-    steps,
+    fallbackNode: config.fallback_node,
+    nodes,
   }
 }
 
-function mapStep(config: FlowStepConfig): FlowStep {
+function mapNode(config: NodeConfig): Node {
   return {
     action: config.action,
-    branches: (config.branches || []).map(mapBranch),
+    edges: (config.edges || []).map(mapEdge),
   }
 }
 
-function mapTriggers(
-  triggers: string | string[] | Array<{ phrases: string | string[]; fuzzy_threshold?: number }>
-): FuzzyTrigger[] {
-  if (typeof triggers === 'string') {
-    return [{ phrases: splitPhrases(triggers) }]
-  }
-
-  if (triggers.length === 0) {
-    return []
-  }
-
-  if (typeof triggers[0] === 'string') {
-    return (triggers as string[]).map(text => ({ phrases: splitPhrases(text) }))
-  }
-
-  return (triggers as Array<{ phrases: string | string[]; fuzzy_threshold?: number }>).map(item => ({
-    phrases: typeof item.phrases === 'string'
-      ? splitPhrases(item.phrases)
-      : (item.phrases as string[]).flatMap(splitPhrases),
-    fuzzyThreshold: item.fuzzy_threshold,
-  }))
-}
-
-function mapBranch(config: FlowBranchConfig): FlowBranch {
+function mapEdge(config: EdgeConfig): Edge {
   return {
-    when: config.when ? mapWhen(config.when) : undefined,
+    match: config.match ? mapMatch(config.match) : undefined,
     fuzzyThreshold: config.fuzzy_threshold,
     goto: config.goto,
   }
 }
 
-function mapWhen(when: string | string[]): string[] {
-  if (typeof when === 'string') {
-    return splitPhrases(when)
+function mapMatch(match: string | string[]): string[] {
+  if (typeof match === 'string') {
+    return splitPhrases(match)
   }
-  return when.flatMap(splitPhrases)
+  return match.flatMap(splitPhrases)
 }
 
 function splitPhrases(value: string): string[] {
@@ -152,24 +128,13 @@ export function mapConfigToBot(id: string, config: BotConfig): Bot {
   validateId(id, 'Bot')
 
   const settings = config.settings ? mapSettings(config.settings) : createDefaultSettings()
-  const flows = (config.flows || []).map(mapFlowRef)
+  const graph = config.graph ?? ''
 
   return createBot({
     id,
     settings,
-    flows,
+    graph,
   })
-}
-
-export function mapFlowRef(config: FlowRefConfig): FlowRef {
-  if (config.priority !== undefined) {
-    validatePriority(config.priority)
-  }
-
-  return {
-    id: config.id,
-    priority: config.priority ?? 1,
-  }
 }
 
 export function mapSettings(config: BotSettingsConfig): BotSettings {

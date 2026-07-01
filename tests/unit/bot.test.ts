@@ -19,15 +19,14 @@ describe('Bot', () => {
       expect(bot.settings).toBe(settings)
     })
 
-    it('should create a Bot with flows', () => {
+    it('should create a Bot with a graph', () => {
       const bot = createBot({
         id: 'test-bot',
         settings,
-        flows: [{ id: 'faq-menu', priority: 1 }],
+        graph: 'faq-menu',
       })
 
-      expect(bot.flows).toHaveLength(1)
-      expect(bot.flows[0].id).toBe('faq-menu')
+      expect(bot.graph).toBe('faq-menu')
     })
 
     it('should throw error for invalid bot ID', () => {

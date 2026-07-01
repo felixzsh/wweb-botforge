@@ -1,8 +1,0 @@
-bots:
-  test-bot:
-    flows:
-      - id: broken-flow
-flows:
-  broken-flow:
-    entry_step: start
-    steps: {}

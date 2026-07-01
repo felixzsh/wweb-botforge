@@ -43,10 +43,10 @@ describe('Live reload integration', () => {
     }
   }
 
-  function writeFlows(flows: Record<string, string>) {
-    const dir = path.join(tempDir, 'flows')
+  function writeGraphs(graphs: Record<string, string>) {
+    const dir = path.join(tempDir, 'graphs')
     fs.mkdirSync(dir, { recursive: true })
-    for (const [id, yaml] of Object.entries(flows)) {
+    for (const [id, yaml] of Object.entries(graphs)) {
       fs.writeFileSync(path.join(dir, `${id}.yml`), yaml)
     }
   }
@@ -66,7 +66,7 @@ describe('Live reload integration', () => {
   async function sendMessage(from: string, content: string): Promise<void> {
     const bot = fleet.getBots().values().next().value
     if (!bot) return
-    const executor = fleet.getFlowExecutor()
+    const executor = fleet.getGraphExecutor()
     if (!executor) return
     await executor.handleMessage(bot, makeMessage(from, content))
   }
@@ -113,10 +113,10 @@ describe('Live reload integration', () => {
 
   it('replies with updated action text after reload', async () => {
     writeActions({ greet: 'Hello' })
-    writeFlows({
-      faq: `entry_step: greet\ntriggers: "hello"\nsteps:\n  greet:\n    action: greet\n    branches: []`,
+    writeGraphs({
+      faq: `root: greet\nnodes:\n  greet:\n    action: greet\n    edges:\n      - match: "again"\n        goto: greet\n      - match: "bye"\n        goto: greet`,
     })
-    writeBots({ testbot: 'flows:\n  - id: faq\n    priority: 10' })
+    writeBots({ testbot: 'graph: faq' })
     writeMainConfig()
 
     const config = await loadConfig(configPath)
@@ -130,101 +130,97 @@ describe('Live reload integration', () => {
     await watcher.reload()
 
     sentMessages = []
-    await sendMessage('user1', 'hello')
+    await sendMessage('user1', 'again')
     expect(replyContains('Hi there')).toBe(true)
   })
 
-  it('matches new branches after reload', async () => {
+  it('matches new edges after reload', async () => {
     writeActions({ greet: 'Main Menu', hours: 'Open 9-18', prices: 'From $10', invalid: 'Invalid', farewell: 'Bye' })
-    writeFlows({
-      faq: `entry_step: menu\ntriggers: "menu"\nsteps:\n  menu:\n    action: greet\n    branches:\n      - when: "1, hours"\n        goto: hours\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  hours:\n    action: hours\n    branches:\n      - when: "menu, back"\n        goto: menu\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  invalid:\n    action: invalid\n    branches:\n      - goto: menu\n  end:\n    action: farewell\n    branches: []`,
+    writeGraphs({
+      faq: `root: menu\nnodes:\n  menu:\n    action: greet\n    edges:\n      - match: "1, hours"\n        goto: hours\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  hours:\n    action: hours\n    edges:\n      - match: "menu, back"\n        goto: menu\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  invalid:\n    action: invalid\n    edges:\n      - goto: menu\n  farewell:\n    action: farewell\n    edges: []`,
     })
-    writeBots({ testbot: 'flows:\n  - id: faq\n    priority: 10' })
+    writeBots({ testbot: 'graph: faq' })
     writeMainConfig()
 
     const config = await loadConfig(configPath)
     await fleet.start(config)
     watcher = new ConfigWatcher(fleet, configPath)
 
-    await sendMessage('user2', 'menu')
     await sendMessage('user2', '1')
     expect(replyContains('Open 9-18')).toBe(true)
 
-    writeFlows({
-      faq: `entry_step: menu\ntriggers: "menu"\nsteps:\n  menu:\n    action: greet\n    branches:\n      - when: "1, hours"\n        goto: hours\n      - when: "2, prices"\n        goto: prices\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  hours:\n    action: hours\n    branches:\n      - when: "menu, back"\n        goto: menu\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  prices:\n    action: prices\n    branches:\n      - when: "menu, back"\n        goto: menu\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  invalid:\n    action: invalid\n    branches:\n      - goto: menu\n  end:\n    action: farewell\n    branches: []`,
+    writeGraphs({
+      faq: `root: menu\nnodes:\n  menu:\n    action: greet\n    edges:\n      - match: "1, hours"\n        goto: hours\n      - match: "2, prices"\n        goto: prices\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  hours:\n    action: hours\n    edges:\n      - match: "menu, back"\n        goto: menu\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  prices:\n    action: prices\n    edges:\n      - match: "menu, back"\n        goto: menu\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  invalid:\n    action: invalid\n    edges:\n      - goto: menu\n  farewell:\n    action: farewell\n    edges: []`,
     })
     await watcher.reload()
 
     sentMessages = []
-    await sendMessage('user2', 'menu')
     await sendMessage('user2', '2')
     expect(replyContains('From $10')).toBe(true)
   })
 
-  it('applies both new actions and new branches after reload', async () => {
+  it('applies both new actions and new edges after reload', async () => {
     writeActions({ menu_action: 'Old Menu', farewell: 'Bye' })
-    writeFlows({
-      faq: `entry_step: menu\ntriggers: "menu"\nsteps:\n  menu:\n    action: menu_action\n    branches:\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  invalid:\n    action: menu_action\n    branches:\n      - goto: menu\n  end:\n    action: farewell\n    branches: []`,
+    writeGraphs({
+      faq: `root: menu\nnodes:\n  menu:\n    action: menu_action\n    edges:\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  invalid:\n    action: menu_action\n    edges:\n      - goto: menu\n  farewell:\n    action: farewell\n    edges: []`,
     })
-    writeBots({ testbot: 'flows:\n  - id: faq\n    priority: 10' })
+    writeBots({ testbot: 'graph: faq' })
     writeMainConfig()
 
     const config = await loadConfig(configPath)
     await fleet.start(config)
     watcher = new ConfigWatcher(fleet, configPath)
 
-    await sendMessage('user3', 'menu')
+    await sendMessage('user3', 'first')
     expect(replyContains('Old Menu')).toBe(true)
 
     sentMessages = []
     writeActions({ menu_action: 'New Menu', pricing_action: 'From $50', farewell: 'Bye' })
-    writeFlows({
-      faq: `entry_step: menu\ntriggers: "menu"\nsteps:\n  menu:\n    action: menu_action\n    branches:\n      - when: "1, pricing"\n        goto: pricing\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  pricing:\n    action: pricing_action\n    branches:\n      - when: "menu, back"\n        goto: menu\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  invalid:\n    action: menu_action\n    branches:\n      - goto: menu\n  end:\n    action: farewell\n    branches: []`,
+    writeGraphs({
+      faq: `root: menu\nnodes:\n  menu:\n    action: menu_action\n    edges:\n      - match: "1, pricing"\n        goto: pricing\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  pricing:\n    action: pricing_action\n    edges:\n      - match: "menu, back"\n        goto: menu\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  invalid:\n    action: menu_action\n    edges:\n      - goto: menu\n  farewell:\n    action: farewell\n    edges: []`,
     })
     await watcher.reload()
 
     sentMessages = []
-    await sendMessage('user3', 'menu')
+    await sendMessage('user3', 'first')
     expect(replyContains('New Menu')).toBe(true)
 
     await sendMessage('user3', '1')
     expect(replyContains('From $50')).toBe(true)
   })
 
-  it('active flow session handles new branches added via reload', async () => {
+  it('active session handles new edges added via reload', async () => {
     writeActions({ greet: 'Menu', hours: 'Open 9-18', prices: 'From $10', invalid: 'Invalid', farewell: 'Bye' })
-    writeFlows({
-      faq: `entry_step: menu\ntriggers: "menu"\nsteps:\n  menu:\n    action: greet\n    branches:\n      - when: "1, hours"\n        goto: hours\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  hours:\n    action: hours\n    branches:\n      - when: "menu, back"\n        goto: menu\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  invalid:\n    action: invalid\n    branches:\n      - goto: menu\n  end:\n    action: farewell\n    branches: []`,
+    writeGraphs({
+      faq: `root: menu\nnodes:\n  menu:\n    action: greet\n    edges:\n      - match: "1, hours"\n        goto: hours\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  hours:\n    action: hours\n    edges:\n      - match: "menu, back"\n        goto: menu\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  invalid:\n    action: invalid\n    edges:\n      - goto: menu\n  farewell:\n    action: farewell\n    edges: []`,
     })
-    writeBots({ testbot: 'flows:\n  - id: faq\n    priority: 10' })
+    writeBots({ testbot: 'graph: faq' })
     writeMainConfig()
 
     const config = await loadConfig(configPath)
     await fleet.start(config)
     watcher = new ConfigWatcher(fleet, configPath)
 
-    await sendMessage('user4', 'menu')
     await sendMessage('user4', '1')
     expect(replyContains('Open 9-18')).toBe(true)
 
     sentMessages = []
-    writeFlows({
-      faq: `entry_step: menu\ntriggers: "menu"\nsteps:\n  menu:\n    action: greet\n    branches:\n      - when: "1, hours"\n        goto: hours\n      - when: "2, prices"\n        goto: prices\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  hours:\n    action: hours\n    branches:\n      - when: "menu, back"\n        goto: menu\n      - when: "2, prices"\n        goto: prices\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  prices:\n    action: prices\n    branches:\n      - when: "menu, back"\n        goto: menu\n      - when: "0, exit"\n        goto: end\n      - goto: invalid\n  invalid:\n    action: invalid\n    branches:\n      - goto: menu\n  end:\n    action: farewell\n    branches: []`,
+    writeGraphs({
+      faq: `root: menu\nnodes:\n  menu:\n    action: greet\n    edges:\n      - match: "1, hours"\n        goto: hours\n      - match: "2, prices"\n        goto: prices\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  hours:\n    action: hours\n    edges:\n      - match: "menu, back"\n        goto: menu\n      - match: "2, prices"\n        goto: prices\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  prices:\n    action: prices\n    edges:\n      - match: "menu, back"\n        goto: menu\n      - match: "0, exit"\n        goto: farewell\n      - goto: invalid\n  invalid:\n    action: invalid\n    edges:\n      - goto: menu\n  farewell:\n    action: farewell\n    edges: []`,
     })
     await watcher.reload()
 
     sentMessages = []
-    await sendMessage('user4', 'menu')
     await sendMessage('user4', '2')
     expect(replyContains('From $10')).toBe(true)
   })
 
   it('removes bot from fleet when bot config is deleted', async () => {
     writeActions({ greet: 'Hello', farewell: 'Bye' })
-    writeFlows({
-      faq: `entry_step: greet\ntriggers: "hello"\nsteps:\n  greet:\n    action: greet\n    branches:\n      - goto: end\n  end:\n    action: farewell\n    branches: []`,
+    writeGraphs({
+      faq: `root: greet\nnodes:\n  greet:\n    action: greet\n    edges:\n      - goto: farewell\n  farewell:\n    action: farewell\n    edges: []`,
     })
-    writeBots({ testbot: 'flows:\n  - id: faq\n    priority: 10', keeper: 'flows:\n  - id: faq\n    priority: 5' })
+    writeBots({ testbot: 'graph: faq', keeper: 'graph: faq' })
     writeMainConfig()
 
     const config = await loadConfig(configPath)
@@ -244,10 +240,10 @@ describe('Live reload integration', () => {
 
   it('adds new bot to fleet via reload', async () => {
     writeActions({ greet: 'Hello' })
-    writeFlows({
-      faq: `entry_step: greet\ntriggers: "hello"\nsteps:\n  greet:\n    action: greet\n    branches: []`,
+    writeGraphs({
+      faq: `root: greet\nnodes:\n  greet:\n    action: greet\n    edges: []`,
     })
-    writeBots({ dummy: 'flows:\n  - id: faq\n    priority: 10' })
+    writeBots({ dummy: 'graph: faq' })
     writeMainConfig()
 
     const config = await loadConfig(configPath)
@@ -256,7 +252,7 @@ describe('Live reload integration', () => {
 
     expect(fleet.getBots().has('dummy')).toBe(true)
 
-    writeBots({ dummy: 'flows:\n  - id: faq\n    priority: 10', newbot: 'flows:\n  - id: faq\n    priority: 10' })
+    writeBots({ dummy: 'graph: faq', newbot: 'graph: faq' })
     await watcher.reload()
 
     expect(fleet.getBots().has('newbot')).toBe(true)
