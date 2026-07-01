@@ -1,5 +1,6 @@
 import { Bot } from '../bot'
-import { IncomingMessage, WebhookPayload } from '../messages/contracts'
+import { IncomingMessage } from '../messages/contracts'
+import { WebhookPayload } from '../actions/webhook'
 import { ActionCatalog, ActionExecutionContext } from '../actions/action'
 import { GraphCatalog, GraphDef, Node, Edge, GraphState } from './graph'
 import { executeAction, getAction } from '../actions/action'

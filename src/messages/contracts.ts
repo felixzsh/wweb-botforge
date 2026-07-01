@@ -47,13 +47,3 @@ export interface SessionInfo {
   lastQR?: string
   error?: string
 }
-
-export interface WebhookPayload {
-  sender: string
-  message: string
-  timestamp: string
-  botId: string
-  botName: string
-  webhookName: string
-  metadata: Record<string, any>
-}

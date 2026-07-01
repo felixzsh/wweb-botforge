@@ -1,5 +1,15 @@
 import { getLogger } from '../helpers/logger'
 
+export interface WebhookPayload {
+  sender: string
+  message: string
+  timestamp: string
+  botId: string
+  botName: string
+  webhookName: string
+  metadata: Record<string, any>
+}
+
 export interface WebhookCall {
   url: string
   method: 'GET' | 'POST' | 'PUT' | 'PATCH'
