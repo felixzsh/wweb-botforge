@@ -1,7 +1,7 @@
 import { Bot, BotSettings, createBot, createDefaultSettings } from '../bot'
 import { validateId, validateTypingDelay, validateQueueDelay } from './validation'
 import { BotConfig, BotSettingsConfig, ActionConfig, WebhookActionConfig, LocationActionConfig, GraphConfig, NodeConfig, EdgeConfig } from './schema'
-import { ActionDef, ActionCatalog, LocationAction } from '../action/action'
+import { ActionDef, ActionCatalog, LocationAction } from '../actions/action'
 import { GraphCatalog, GraphDef, Node, Edge } from '../graph/graph'
 
 export function mapActionCatalog(config: Record<string, ActionConfig>): ActionCatalog {

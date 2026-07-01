@@ -1,4 +1,4 @@
-import { sendWebhookRequest, WebhookCall } from '../../../src/action/webhook'
+import { sendWebhookRequest, WebhookCall } from '../../../src/actions/webhook'
 
 describe('sendWebhookRequest', () => {
   let fetchMock: jest.Mock

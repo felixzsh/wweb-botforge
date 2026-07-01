@@ -1,4 +1,4 @@
-import { executeAction, resolveAction, ActionExecutionContext } from '../../../src/action/action'
+import { executeAction, resolveAction, ActionExecutionContext } from '../../../src/actions/action'
 import { mapActionCatalog } from '../../../src/config/mapper'
 import { ActionConfig } from '../../../src/config/schema'
 
