@@ -93,6 +93,7 @@ graphs:
         action: menu
         edges:
           - match: "1, hours, schedule, time, hours"
+            fuzzy_threshold: 0.3    # 0.3=strict, 0.6=moderate (default), 0.9=loose
             goto: hours
           - match: "2, catalog, product, brochure"
             goto: catalog
