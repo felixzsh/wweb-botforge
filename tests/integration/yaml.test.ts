@@ -62,7 +62,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
 
         const config = await loadConfig(fixturePath)
 
-        expect(config.session_timeout).toBe(300)
+        expect(config.default_timeout).toBe(300)
         expect(config.log_level).toBe('info')
         expect(config.actions).toBeDefined()
         expect(config.graphs).toBeDefined()
@@ -331,7 +331,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
       fs.mkdirSync(botsDir)
 
       fs.writeFileSync(configPath, `
-session_timeout: 600
+default_timeout: 600
 bots:
   support-bot:
     graph: faq
@@ -459,7 +459,7 @@ reply: "Original reply from directory"
       fs.mkdirSync(graphsDir)
 
       fs.writeFileSync(configPath, `
-session_timeout: 120
+default_timeout: 120
 bots:
   test-bot:
     graph: faq-menu
@@ -666,7 +666,7 @@ goto: hours-node`)
 
     it('should not modify existing config.yml', async () => {
       await saveConfig({
-        session_timeout: 999,
+        default_timeout: 999,
         bots: { existing: {} },
       }, configPath)
 

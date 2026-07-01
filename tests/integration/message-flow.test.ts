@@ -43,7 +43,7 @@ describe('Message flow end-to-end', () => {
 
   function makeConfig(overrides?: Partial<ConfigFile>): ConfigFile {
     return {
-      session_timeout: 300,
+      default_timeout: 300,
       actions: {},
       graphs: {},
       bots: {

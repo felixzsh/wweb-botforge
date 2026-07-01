@@ -41,7 +41,7 @@ describe('Fleet lifecycle integration', () => {
 
   function makeConfig(overrides?: Partial<ConfigFile>): ConfigFile {
     return {
-      session_timeout: 300,
+      default_timeout: 300,
       bots: {
         'bot-1': {
           settings: { queue_delay: 0, simulate_typing: false },

@@ -71,7 +71,7 @@ Configure system-wide settings at the top level of `config.yml`:
 chromium_path: "/usr/bin/chromium"  # Path to Chromium/Chrome browser
 api_port: 3000                     # REST API port (set to enable the API)
 log_level: "info"                  # Global log level
-session_timeout: 300               # Global default timeout for graph sessions (seconds)
+default_timeout: 300               # Global default timeout for graph sessions (seconds)
 ```
 
 ### Architecture
@@ -253,7 +253,7 @@ This means the user's first message is never discarded — it can match a root e
 
 - **`match`** — comma-separated phrases. Fuzzy-matched against the user's message with the configured threshold.
 - **`fuzzy_threshold`** — controls strictness. `0.3` = strict, `0.6` = moderate (default), `0.9` = loose.
-- **`timeout`** — seconds of inactivity before the session expires. Defaults to global `session_timeout`.
+- **`timeout`** — seconds of inactivity before the session expires. Defaults to global `default_timeout`.
 - **`fallback_node`** — where to redirect if no edge matches. Without one, mismatched messages are silently ignored.
 - **`edges: []`** — a node with no edges does not destroy the session; the user can still navigate to any previously visited node from its own edges. Sessions only end via timeout.
 

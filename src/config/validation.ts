@@ -126,9 +126,9 @@ function validateConfigFile(config: Record<string, unknown>, ctx: FileContext): 
     ctx.add('log_level must be one of: info, debug, warn, error', 'log_level')
   }
 
-  if (config.session_timeout !== undefined) {
-    if (typeof config.session_timeout !== 'number' || !Number.isInteger(config.session_timeout) || config.session_timeout < 0) {
-      ctx.add('session_timeout must be a non-negative integer', 'session_timeout')
+  if (config.default_timeout !== undefined) {
+    if (typeof config.default_timeout !== 'number' || !Number.isInteger(config.default_timeout) || config.default_timeout < 0) {
+      ctx.add('default_timeout must be a non-negative integer', 'default_timeout')
     }
   }
 }

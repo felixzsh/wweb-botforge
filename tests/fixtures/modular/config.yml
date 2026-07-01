@@ -1,2 +1,2 @@
-session_timeout: 300
+default_timeout: 300
 log_level: "debug"
