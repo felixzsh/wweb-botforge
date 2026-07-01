@@ -41,6 +41,7 @@ export function registerChannel(bot: Bot, channel: MessageChannel): Bot {
 }
 
 export function createDefaultSettings(): BotSettings {
+  // TODO: simulateTyping, typingDelay, readReceipts are reserved for future implementation
   return {
     simulateTyping: true,
     typingDelay: 1000,

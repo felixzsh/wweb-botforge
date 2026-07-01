@@ -301,9 +301,6 @@ bots:
     graph: faq-support
     settings:
       queue_delay: 1500
-      simulate_typing: true
-      typing_delay: 1000
-      read_receipts: true
       ignore_groups: true
       ignored_senders:
         - "status@broadcast"

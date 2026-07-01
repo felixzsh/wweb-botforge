@@ -233,8 +233,6 @@ bots:
   support:
     graph: support
     settings:
-      simulate_typing: true
-      typing_delay: 1500
       queue_delay: 500
       ignore_groups: true
       ignored_senders:

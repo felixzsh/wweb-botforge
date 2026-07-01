@@ -183,9 +183,6 @@ Each bot has an ID (the key). Stored in \`bots/<id>.yml\`.
 graph: support
 settings:
   queue_delay: 1500
-  simulate_typing: true
-  typing_delay: 1000
-  read_receipts: true
   ignore_groups: true
   ignored_senders:
     - "status@broadcast"
@@ -197,9 +194,6 @@ settings:
 | graph | string | - | Graph ID this bot owns |
 | settings | object | - | Bot behavior |
 | settings.queue_delay | number | 1000 | ms between outgoing messages |
-| settings.simulate_typing | boolean | true | Show typing indicator |
-| settings.typing_delay | number | 1000 | ms for typing simulation |
-| settings.read_receipts | boolean | true | Send read receipts |
 | settings.ignore_groups | boolean | true | Ignore group messages |
 | settings.ignored_senders | string[] | [] | Senders to ignore |
 | settings.admin_numbers | string[] | [] | Admin phone numbers |
