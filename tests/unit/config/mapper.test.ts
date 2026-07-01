@@ -3,87 +3,99 @@ import { BotConfig, BotSettingsConfig, ActionConfig, GraphConfig } from '../../.
 
 describe('Mapper', () => {
   describe('mapActionCatalog', () => {
-    it('should map simple reply actions', () => {
+    it('should map simple message step', () => {
       const config: Record<string, ActionConfig> = {
-        greet: { reply: 'Hello!' },
+        greet: { steps: [{ message: { text: 'Hello!' } }] },
       }
 
       const catalog = mapActionCatalog(config)
 
       expect(catalog.has('greet')).toBe(true)
-      expect(catalog.get('greet')?.reply).toBe('Hello!')
+      const action = catalog.get('greet')!
+      expect(action.steps).toHaveLength(1)
+      expect('message' in action.steps[0]).toBe(true)
+      expect((action.steps[0] as any).message.text).toBe('Hello!')
     })
 
-    it('should map webhook actions with defaults', () => {
+    it('should map webhook steps with defaults', () => {
       const config: Record<string, ActionConfig> = {
         notify: {
-          webhook: {
-            url: 'https://example.com/notify',
-          },
+          steps: [{
+            webhook: {
+              url: 'https://example.com/notify',
+            },
+          }],
         },
       }
 
       const catalog = mapActionCatalog(config)
 
-      const action = catalog.get('notify')
-      expect(action?.webhook?.url).toBe('https://example.com/notify')
-      expect(action?.webhook?.method).toBe('POST')
-      expect(action?.webhook?.timeout).toBe(5000)
-      expect(action?.webhook?.retries).toBe(3)
-      expect(action?.webhook?.headers).toEqual({})
+      const action = catalog.get('notify')!
+      const step = action.steps[0] as any
+      expect(step.webhook.url).toBe('https://example.com/notify')
+      expect(step.webhook.method).toBe('POST')
+      expect(step.webhook.timeout).toBe(5000)
+      expect(step.webhook.retries).toBe(3)
+      expect(step.webhook.headers).toEqual({})
     })
 
-    it('should map composite actions with reply and webhook', () => {
+    it('should map composite pipeline (message + webhook)', () => {
       const config: Record<string, ActionConfig> = {
         escalate: {
-          reply: 'Connecting you to a human.',
-          webhook: {
-            name: 'escalate',
-            url: 'https://example.com/escalate',
-            method: 'POST',
-            headers: { Authorization: 'Bearer token' },
-            timeout: 10000,
-            retry: 5,
-          },
+          steps: [
+            { message: { text: 'Connecting you to a human.' } },
+            {
+              webhook: {
+                name: 'escalate',
+                url: 'https://example.com/escalate',
+                method: 'POST',
+                headers: { Authorization: 'Bearer token' },
+                timeout: 10000,
+                retry: 5,
+              },
+            },
+          ],
         },
       }
 
       const catalog = mapActionCatalog(config)
 
-      const action = catalog.get('escalate')
-      expect(action?.reply).toBe('Connecting you to a human.')
-      expect(action?.webhook?.name).toBe('escalate')
-      expect(action?.webhook?.retries).toBe(5)
+      const action = catalog.get('escalate')!
+      expect(action.steps).toHaveLength(2)
+      expect((action.steps[0] as any).message.text).toBe('Connecting you to a human.')
+      expect((action.steps[1] as any).webhook.name).toBe('escalate')
+      expect((action.steps[1] as any).webhook.retries).toBe(5)
     })
 
-    it('should throw if action has neither reply nor webhook nor location', () => {
+    it('should throw if action has no steps and no on_blocked', () => {
       const config: Record<string, ActionConfig> = {
         empty: {},
       }
 
-      expect(() => mapActionCatalog(config)).toThrow('Action "empty" must define reply, webhook, location, or a combination')
+      expect(() => mapActionCatalog(config)).toThrow('Action "empty" must define steps or a cooldown guard with on_blocked')
     })
 
-    it('should map location-only actions', () => {
+    it('should map location-only action', () => {
       const config: Record<string, ActionConfig> = {
         send_store: {
-          location: {
-            latitude: 19.4326,
-            longitude: -99.1332,
-            name: 'Store',
-            address: 'Reforma 123',
-            url: 'https://maps.example.com/store',
-            description: 'Open Mon-Fri',
-          },
+          steps: [{
+            location: {
+              latitude: 19.4326,
+              longitude: -99.1332,
+              name: 'Store',
+              address: 'Reforma 123',
+              url: 'https://maps.example.com/store',
+              description: 'Open Mon-Fri',
+            },
+          }],
         },
       }
 
       const catalog = mapActionCatalog(config)
 
-      const action = catalog.get('send_store')
-      expect(action?.reply).toBeUndefined()
-      expect(action?.webhook).toBeUndefined()
-      expect(action?.location).toEqual({
+      const action = catalog.get('send_store')!
+      expect(action.steps).toHaveLength(1)
+      expect((action.steps[0] as any).location).toEqual({
         latitude: 19.4326,
         longitude: -99.1332,
         name: 'Store',
@@ -93,23 +105,52 @@ describe('Mapper', () => {
       })
     })
 
-    it('should map composite actions with reply and location', () => {
+    it('should map composite pipeline (message + location)', () => {
       const config: Record<string, ActionConfig> = {
         send_office: {
-          reply: 'Here is our office.',
-          location: {
-            latitude: 19.4326,
-            longitude: -99.1332,
-          },
+          steps: [
+            { message: { text: 'Here is our office.' } },
+            {
+              location: {
+                latitude: 19.4326,
+                longitude: -99.1332,
+              },
+            },
+          ],
         },
       }
 
       const catalog = mapActionCatalog(config)
 
-      const action = catalog.get('send_office')
-      expect(action?.reply).toBe('Here is our office.')
-      expect(action?.location?.latitude).toBe(19.4326)
-      expect(action?.location?.longitude).toBe(-99.1332)
+      const action = catalog.get('send_office')!
+      expect((action.steps[0] as any).message.text).toBe('Here is our office.')
+      expect((action.steps[1] as any).location.latitude).toBe(19.4326)
+      expect((action.steps[1] as any).location.longitude).toBe(-99.1332)
+    })
+
+    it('should map a cooldown guard with on_blocked pipeline', () => {
+      const config: Record<string, ActionConfig> = {
+        escalate: {
+          guards: {
+            cooldown: {
+              duration: 120,
+              on_blocked: [
+                { message: { text: 'Please wait before requesting again.' } },
+              ],
+            },
+          },
+          steps: [
+            { message: { text: 'Escalating...' } },
+          ],
+        },
+      }
+
+      const catalog = mapActionCatalog(config)
+      const action = catalog.get('escalate')!
+
+      expect(action.guards?.cooldown?.duration).toBe(120)
+      expect(action.guards?.cooldown?.onBlocked).toHaveLength(1)
+      expect((action.guards?.cooldown?.onBlocked![0] as any).message.text).toBe('Please wait before requesting again.')
     })
   })
 

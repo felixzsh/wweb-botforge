@@ -32,31 +32,63 @@ describe('GraphExecutor', () => {
     } as unknown as OutboxService
 
     const actions: Record<string, ActionConfig> = {
-      greet: { reply: 'Menu:\n1. Hours\n2. Prices\n0. Exit' },
-      hours: { reply: 'Open Mon-Fri 9-18h' },
-      prices: { reply: 'From $10/mo' },
-      invalid: { reply: 'Invalid option' },
-      farewell: { reply: 'Goodbye!' },
-      escalate: { reply: 'Escalating to human.', cooldown: 30, cooldown_reply: 'Please wait, action on cooldown.' },
-      cool_reply: { reply: 'Done!', cooldown: 30 },
-      webhook_greet: { reply: 'Webhook sent', webhook: { url: 'https://example.com/hook', retry: 1 } },
-      webhook_fail: { reply: 'Failed webhook', webhook: { url: 'https://example.com/fail', retry: 1 } },
-      webhook_only: { webhook: { url: 'https://example.com/hook-only', retry: 1 } },
-      send_office: {
-        reply: 'Here is our office.',
-        location: {
-          latitude: 19.4326,
-          longitude: -99.1332,
-          name: 'Main Office',
-          address: 'Av. Reforma 123',
+      greet: { steps: [{ message: { text: 'Menu:\n1. Hours\n2. Prices\n0. Exit' } }] },
+      hours: { steps: [{ message: { text: 'Open Mon-Fri 9-18h' } }] },
+      prices: { steps: [{ message: { text: 'From $10/mo' } }] },
+      invalid: { steps: [{ message: { text: 'Invalid option' } }] },
+      farewell: { steps: [{ message: { text: 'Goodbye!' } }] },
+      escalate: {
+        guards: {
+          cooldown: {
+            duration: 30,
+            on_blocked: [{ message: { text: 'Please wait, action on cooldown.' } }],
+          },
         },
+        steps: [{ message: { text: 'Escalating to human.' } }],
+      },
+      cool_reply: {
+        guards: {
+          cooldown: {
+            duration: 30,
+            on_blocked: [],
+          },
+        },
+        steps: [{ message: { text: 'Done!' } }],
+      },
+      webhook_greet: {
+        steps: [
+          { message: { text: 'Webhook sent' } },
+          { webhook: { url: 'https://example.com/hook', retry: 1 } },
+        ],
+      },
+      webhook_fail: {
+        steps: [
+          { message: { text: 'Failed webhook' } },
+          { webhook: { url: 'https://example.com/fail', retry: 1 } },
+        ],
+      },
+      webhook_only: { steps: [{ webhook: { url: 'https://example.com/hook-only', retry: 1 } }] },
+      send_office: {
+        steps: [
+          { message: { text: 'Here is our office.' } },
+          {
+            location: {
+              latitude: 19.4326,
+              longitude: -99.1332,
+              name: 'Main Office',
+              address: 'Av. Reforma 123',
+            },
+          },
+        ],
       },
       send_store_only: {
-        location: {
-          latitude: 19.4326,
-          longitude: -99.1332,
-          name: 'Store',
-        },
+        steps: [{
+          location: {
+            latitude: 19.4326,
+            longitude: -99.1332,
+            name: 'Store',
+          },
+        }],
       },
     }
 

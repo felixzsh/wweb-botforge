@@ -78,46 +78,69 @@ default_timeout: 300
 
 ### Actions
 
-Each action has an ID (the key). Stored in \`actions/<id>.yml\`.
+Each action has an ID (the key). Stored in \`actions/<id>.yml\`. An action is a **pipeline of ordered steps** with optional **guards** for rate limiting.
 
 \`\`\`yaml
-# Simple reply
-reply: "Hello!"
+# Simple message step
+steps:
+  - message:
+      text: "Hello!"
 
-# Reply with webhook
-reply: "Processing..."
-webhook:
-  name: my-webhook
-  url: "https://api.example.com/hook"
-  method: POST
-  headers:
-    Authorization: "Bearer token"
-  timeout: 10000
-  retry: 3
+# Pipeline: message + webhook
+steps:
+  - message:
+      text: "Processing..."
+  - webhook:
+      name: my-webhook
+      url: "https://api.example.com/hook"
+      method: POST
+      headers:
+        Authorization: "Bearer token"
+      timeout: 10000
+      retry: 3
 
-# Cooldown — per-sender rate limiting
-cooldown: 120
-cooldown_reply: "Please wait {{variables.remaining}} seconds"
+# Cooldown guard — per-sender rate limiting
+guards:
+  cooldown:
+    duration: 120
+    on_blocked:
+      - message:
+          text: "Please wait before requesting again."
+steps:
+  - message:
+      text: "Processing request..."
 
-# Webhook-only (no reply)
-webhook:
-  url: "https://crm.example.com/leads"
-  method: POST
+# Webhook-only (no message)
+steps:
+  - webhook:
+      url: "https://crm.example.com/leads"
+      method: POST
 \`\`\`
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| reply | string | no* | Reply text (supports templates) |
-| webhook | object | no* | HTTP request config |
-| webhook.url | string | yes (if webhook) | Target URL |
-| webhook.method | string | "POST" | GET, POST, PUT, PATCH |
-| webhook.headers | object | {} | HTTP headers |
-| webhook.timeout | number | 5000 | Request timeout (ms) |
-| webhook.retry | number | 3 | Retry count |
-| cooldown | number | - | Cooldown seconds per sender |
-| cooldown_reply | string | - | Message during cooldown |
+**Step types:**
 
-An action must define \`reply\`, \`webhook\`, or both.
+| Step | Field | Type | Required | Description |
+|---|---|---|---|---|
+| message | text | string | yes | Message text (supports templates) |
+| message | to | string | no | Recipient override (default = sender) |
+| webhook | url | string | yes | Target URL |
+| webhook | method | string | "POST" | GET, POST, PUT, PATCH |
+| webhook | headers | object | {} | HTTP headers |
+| webhook | timeout | number | 5000 | Request timeout (ms) |
+| webhook | retry | number | 3 | Retry count |
+| location | latitude | number | yes | -90 to 90 |
+| location | longitude | number | yes | -180 to 180 |
+| location | name | string | no | Location name |
+| location | address | string | no | Location address |
+
+**Guards:**
+
+| Guard | Field | Type | Required | Description |
+|---|---|---|---|---|
+| cooldown | duration | number | yes | Cooldown seconds per sender |
+| cooldown | on_blocked | array | no | Pipeline to run when blocked |
+
+An action must define \`steps\` (at least one) or a \`cooldown\` guard with \`on_blocked\`.
 
 ### Graphs
 
@@ -254,31 +277,41 @@ log_level: "info"
 \`~/.config/wweb-botforge/actions/greet.yml\`:
 
 \`\`\`yaml
-reply: "Hev {{senderName}}! How can I help you today?"
+steps:
+  - message:
+      text: "Hev {{senderName}}! How can I help you today?"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/menu.yml\`:
 
 \`\`\`yaml
-reply: "Main menu:\\n1. Hours\\n2. Contact\\n0. Exit"
+steps:
+  - message:
+      text: "Main menu:\\n1. Hours\\n2. Contact\\n0. Exit"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/hours.yml\`:
 
 \`\`\`yaml
-reply: "Mon-Fri 9am-6pm"
+steps:
+  - message:
+      text: "Mon-Fri 9am-6pm"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/farewell.yml\`:
 
 \`\`\`yaml
-reply: "Thanks, have a great day!"
+steps:
+  - message:
+      text: "Thanks, have a great day!"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/invalid.yml\`:
 
 \`\`\`yaml
-reply: "Invalid option. Choose a number from the menu."
+steps:
+  - message:
+      text: "Invalid option. Choose a number from the menu."
 \`\`\`
 
 \`~/.config/wweb-botforge/graphs/support.yml\`:

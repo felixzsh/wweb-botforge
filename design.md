@@ -188,18 +188,27 @@ default_timeout: 300
 
 actions:
   hello_reply:
-    reply: "Hello {{ sender }}! You said: {{ message }}"
+    steps:
+      - message:
+          text: "Hello {{ sender }}! You said: {{ message }}"
 
   notify_slack:
-    webhook:
-      url: https://hooks.slack.com/...
-      method: POST
-      retry: 3
+    steps:
+      - webhook:
+          url: https://hooks.slack.com/...
+          method: POST
+          retry: 3
 
   with_cooldown:
-    reply: "Processing..."
-    cooldown: 60
-    cooldown_reply: "Please wait {{ variables.remaining }} seconds"
+    guards:
+      cooldown:
+        duration: 60
+        on_blocked:
+          - message:
+              text: "Please wait {{ variables.remaining }} seconds"
+    steps:
+      - message:
+          text: "Processing..."
 
 graphs:
   support:

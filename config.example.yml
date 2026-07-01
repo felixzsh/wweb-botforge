@@ -11,74 +11,90 @@ default_timeout: 300               # Global default timeout for graph sessions (
 # Action Catalog — reusable actions that graphs reference by id
 # Actions are universal: not tied to any specific bot or graph
 actions:
-  # Simple reply action
+  # Simple message action
   greet:
-    reply: "Hello! Welcome to our support chat. How can I help you today?"
+    steps:
+      - message:
+          text: "Hello! Welcome to our support chat. How can I help you today?"
 
   # Menu action with options
   menu:
-    reply: "Main menu:\n1. Hours & schedule\n2. Product catalog\n3. Talk to a human\n4. Pricing\n0. Exit"
+    steps:
+      - message:
+          text: "Main menu:\n1. Hours & schedule\n2. Product catalog\n3. Talk to a human\n4. Pricing\n0. Exit"
 
   # Action with cooldown — same sender can't re-trigger within cooldown period
   escalate:
-    reply: "Connecting you to a human agent. One moment please."
-    webhook:
-      name: escalate-human
-      url: "https://api.example.com/support/escalate"
-      method: POST
-      headers:
-        Authorization: "Bearer your-api-token"
-      timeout: 10000
-      retry: 3
-    cooldown: 120                  # Seconds before same sender can trigger this again
-    cooldown_reply: "You already requested a human agent. Please wait, one will connect shortly."
+    guards:
+      cooldown:
+        duration: 120                # Seconds before same sender can trigger this again
+        on_blocked:
+          - message:
+              text: "You already requested a human agent. Please wait, one will connect shortly."
+    steps:
+      - message:
+          text: "Connecting you to a human agent. One moment please."
+      - webhook:
+          name: escalate-human
+          url: "https://api.example.com/support/escalate"
+          method: POST
+          headers:
+            Authorization: "Bearer your-api-token"
+          timeout: 10000
+          retry: 3
 
   # Webhook-only action
   lead-notify:
-    webhook:
-      name: lead-capture
-      url: "https://crm.example.com/leads"
-      method: POST
-      headers:
-        X-API-Key: "your-crm-key"
-      timeout: 5000
-      retry: 2
+    steps:
+      - webhook:
+          name: lead-capture
+          url: "https://crm.example.com/leads"
+          method: POST
+          headers:
+            X-API-Key: "your-crm-key"
+          timeout: 5000
+          retry: 2
 
   hours:
-    reply: "Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
+    steps:
+      - message:
+          text: "Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
 
   catalog:
-    reply: "Here's our product catalog: https://example.com/catalog.pdf"
+    steps:
+      - message:
+          text: "Here's our product catalog: https://example.com/catalog.pdf"
 
   pricing:
-    reply: "Our pricing starts at $29/month for the basic plan. Would you like more details?"
+    steps:
+      - message:
+          text: "Our pricing starts at $29/month for the basic plan. Would you like more details?"
 
   invalid:
-    reply: "That option is not valid. Please choose a number from the menu."
+    steps:
+      - message:
+          text: "That option is not valid. Please choose a number from the menu."
 
   farewell:
-    reply: "Thank you! Have a great day. If you need anything else, just write 'menu'."
+    steps:
+      - message:
+          text: "Thank you! Have a great day. If you need anything else, just write 'menu'."
 
   pong:
-    reply: "pong!"
+    steps:
+      - message:
+          text: "pong!"
 
-  # Send a WhatsApp location pin (combined with a text reply)
+  # Send a WhatsApp location pin (combined with a text message)
   send-office:
-    reply: "Here is our office."
-    location:
-      latitude: 19.4326
-      longitude: -99.1332
-      name: "Main Office"
-      address: "Av. Reforma 123, CDMX"
-      url: "https://maps.example.com/office"
-      description: "Open Mon-Fri 9-18h"
-
-  # Location-only action (no text reply)
-  send-store-only:
-    location:
-      latitude: 19.4326
-      longitude: -99.1332
-      name: "Store"
+    steps:
+      - message:
+          text: "Here is our office."
+      - location:
+          latitude: 19.4326
+          longitude: -99.1332
+          name: "Main Office"
+          address: "Av. Reforma 123, CDMX"
 
 # Graph Catalog — conversation state machines owned by a single bot
 # Each graph has a root node, optional timeout, optional fallback_node, and a map of nodes

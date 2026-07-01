@@ -1,9 +1,8 @@
 import { Bot } from '../bot'
 import { IncomingMessage } from '../messages/contracts'
 import { WebhookPayload } from '../actions/webhook'
-import { ActionCatalog, ActionExecutionContext } from '../actions/action'
+import { ActionCatalog, ActionExecutionContext, ActionStep, ActionDef, resolveAction } from '../actions/action'
 import { GraphCatalog, GraphDef, Node, Edge, GraphState } from './graph'
-import { executeAction, getAction } from '../actions/action'
 import { resolveVars } from '../actions/action'
 import { GraphStateService } from './state'
 import { OutboxService } from '../messages/outbox'
@@ -271,88 +270,109 @@ export class GraphExecutor {
       variables,
     }
 
-    if (this.isActionOnCooldown(bot, node.action, message.from)) {
-      const action = getAction(this.actionCatalog, node.action)
-      if (action.cooldownReply) {
-        const reply = resolveVars(action.cooldownReply, context)
-        this.outboxService.enqueue(bot.id, message.from, reply)
-        this.logger.info(`Cooldown reply sent for action "${node.action}" to ${message.from}`)
-        return true
+    const action = resolveAction(this.actionCatalog, node.action)
+
+    if (this.isActionOnCooldown(action, message.from)) {
+      const onBlocked = action.guards?.cooldown?.onBlocked
+      if (onBlocked && onBlocked.length > 0) {
+        for (const step of onBlocked) {
+          await this.runStep(bot, message, step, context)
+        }
+        this.logger.info(`Cooldown on_blocked pipeline ran for action "${node.action}" to ${message.from}`)
+      } else {
+        this.logger.warn(`Action "${node.action}" on cooldown, no on_blocked defined, skipping`)
       }
-      this.logger.warn(`Action "${node.action}" on cooldown, no cooldown_reply defined, skipping`)
-      return false
+      return true
     }
 
-    const result = executeAction(this.actionCatalog, node.action, context)
-    this.setActionCooldown(node.action, message.from)
-
-    if (result.reply) {
-      this.outboxService.enqueue(bot.id, message.from, result.reply)
+    for (const step of action.steps) {
+      await this.runStep(bot, message, step, context)
     }
 
-    if (result.location) {
+    this.setActionCooldown(action, message.from)
+
+    return true
+  }
+
+  private async runStep(
+    bot: Bot,
+    message: IncomingMessage,
+    step: ActionStep,
+    context: ActionExecutionContext
+  ): Promise<void> {
+    if ('message' in step) {
+      const to = step.message.to ? resolveVars(step.message.to, context) : message.from
+      const text = resolveVars(step.message.text, context)
+      this.outboxService.enqueue(bot.id, to, text)
+      this.logger.debug(`  message step → to=${to} text="${text.substring(0, 40)}"`)
+      return
+    }
+
+    if ('location' in step) {
       this.outboxService.enqueue(
         bot.id,
         message.from,
         '',
         {
           type: 'location',
-          latitude: result.location.latitude,
-          longitude: result.location.longitude,
-          name: result.location.name,
-          address: result.location.address,
-          url: result.location.url,
-          description: result.location.description,
+          latitude: step.location.latitude,
+          longitude: step.location.longitude,
+          name: step.location.name,
+          address: step.location.address,
+          url: step.location.url,
+          description: step.location.description,
         }
       )
+      this.logger.debug(`  location step → lat=${step.location.latitude} lng=${step.location.longitude}`)
+      return
     }
 
-    if (result.webhook) {
+    if ('webhook' in step) {
       try {
-        const payload = this.buildWebhookPayload(bot, message, result.webhook.name || 'unnamed')
+        const payload = this.buildWebhookPayload(bot, message, step.webhook.name || 'unnamed')
+        const resolvedUrl = resolveVars(step.webhook.url, context)
         await sendWebhookRequest({
-          url: result.webhook.url,
-          method: result.webhook.method,
-          headers: result.webhook.headers,
+          url: resolvedUrl,
+          method: step.webhook.method,
+          headers: step.webhook.headers,
           body: payload,
-          timeout: result.webhook.timeout,
-          retries: result.webhook.retries,
+          timeout: step.webhook.timeout,
+          retries: step.webhook.retries,
         })
       } catch (error) {
         this.logger.error(`Failed to trigger webhook action for bot "${bot.id}":`, error)
       }
+      return
     }
-
-    return true
   }
 
-  private isActionOnCooldown(bot: Bot, actionId: string, sender: string): boolean {
+  private isActionOnCooldown(action: ActionDef, sender: string): boolean {
     if (!this.cooldownService) {
       return false
     }
 
-    const action = getAction(this.actionCatalog, actionId)
-    if (!action.cooldown || action.cooldown <= 0) {
+    const cooldown = action.guards?.cooldown
+    if (!cooldown || cooldown.duration <= 0) {
       return false
     }
 
-    const cooldownMs = action.cooldown * 1000
-    const cooldownKey = `action:${actionId}`
+    const cooldownMs = cooldown.duration * 1000
+    const cooldownKey = `action:${action.id}`
 
     return this.cooldownService.isOnCooldown(sender, cooldownKey, cooldownMs)
   }
 
-  private setActionCooldown(actionId: string, sender: string): void {
+  private setActionCooldown(action: ActionDef, sender: string): void {
     if (!this.cooldownService) {
       return
     }
 
-    const action = getAction(this.actionCatalog, actionId)
-    if (!action.cooldown || action.cooldown <= 0) {
+    const cooldown = action.guards?.cooldown
+    if (!cooldown || cooldown.duration <= 0) {
       return
     }
 
-    this.cooldownService.setCooldown(sender, `action:${actionId}`)
+    this.cooldownService.setCooldown(sender, `action:${action.id}`)
   }
 
   private buildWebhookPayload(bot: Bot, message: IncomingMessage, webhookName: string): WebhookPayload {

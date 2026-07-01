@@ -9,7 +9,9 @@ bots:
       extra_nested: { a: 1 }
 actions:
   greet:
-    reply: "Hello!"
+    steps:
+      - message:
+          text: "Hello!"
     unknown_action_field: "ignored"
 graphs:
   simple-graph:

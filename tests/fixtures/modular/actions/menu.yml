@@ -1,1 +1,3 @@
-reply: "Main menu:\n1. Hours & schedule\n2. Contact us\n0. Exit"
+steps:
+  - message:
+      text: "Main menu:\n1. Hours & schedule\n2. Contact us\n0. Exit"

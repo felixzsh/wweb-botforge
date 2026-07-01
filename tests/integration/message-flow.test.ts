@@ -58,7 +58,7 @@ describe('Message flow end-to-end', () => {
 
   it('should execute root action on first message', async () => {
     await fleet.start(makeConfig({
-      actions: { greet: { reply: 'Hello {{sender}}!' } },
+      actions: { greet: { steps: [{ message: { text: 'Hello {{sender}}!' } }] } },
       graphs: {
         main: {
           root: 'start',
@@ -95,8 +95,8 @@ describe('Message flow end-to-end', () => {
   it('should transition between nodes on matching edge', async () => {
     await fleet.start(makeConfig({
       actions: {
-        menu: { reply: '1. Hours\n2. Info' },
-        hours: { reply: 'Open 9-18h' },
+        menu: { steps: [{ message: { text: '1. Hours\n2. Info' } }] },
+        hours: { steps: [{ message: { text: 'Open 9-18h' } }] },
       },
       graphs: {
         faq: {
@@ -153,7 +153,7 @@ describe('Message flow end-to-end', () => {
 
   it('should ignore messages from self', async () => {
     await fleet.start(makeConfig({
-      actions: { greet: { reply: 'Hello!' } },
+      actions: { greet: { steps: [{ message: { text: 'Hello!' } }] } },
       graphs: {
         main: {
           root: 'start',

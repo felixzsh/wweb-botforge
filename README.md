@@ -92,7 +92,7 @@ Bot
 
 ### Actions
 
-Actions are the building blocks. Each action can have a `reply` (text response), a `webhook` (HTTP call to external services), and optional `cooldown` / `cooldown_reply`.
+Actions are the building blocks, defined as a **pipeline of ordered steps**. Each action can have an optional `guards` block (for rate-limiting) and a `steps` array that runs in sequence.
 
 Replies support template variables:
 - `{{sender}}` — the sender's phone number
@@ -103,47 +103,67 @@ Replies support template variables:
 ```yaml
 actions:
   greet:
-    reply: "Hello! How can I help you?"
+    steps:
+      - message:
+          text: "Hello! How can I help you?"
 
   escalate:
-    reply: "Connecting you to a human agent."
-    webhook:
-      name: escalate-human
-      url: "https://api.example.com/support/escalate"
-      method: POST
-      headers:
-        Authorization: "Bearer your-api-token"
-      timeout: 10000
-      retry: 3
-    cooldown: 120
-    cooldown_reply: "You already requested a human agent. Please wait."
+    guards:
+      cooldown:
+        duration: 120
+        on_blocked:
+          - message:
+              text: "You already requested a human agent. Please wait."
+    steps:
+      - message:
+          text: "Connecting you to a human agent."
+      - webhook:
+          name: escalate-human
+          url: "https://api.example.com/support/escalate"
+          method: POST
+          headers:
+            Authorization: "Bearer your-api-token"
+          timeout: 10000
+          retry: 3
 
   lead-notify:
-    webhook:
-      name: lead-capture
-      url: "https://crm.example.com/leads"
-      method: POST
-      headers:
-        X-API-Key: "your-crm-key"
+    steps:
+      - webhook:
+          name: lead-capture
+          url: "https://crm.example.com/leads"
+          method: POST
+          headers:
+            X-API-Key: "your-crm-key"
 
-  # Send a WhatsApp location pin (combined with a text reply)
+  # Send a WhatsApp location pin (combined with a text message)
   send-office:
-    reply: "Here is our office."
-    location:
-      latitude: 19.4326
-      longitude: -99.1332
-      name: "Main Office"
-      address: "Av. Reforma 123, CDMX"
-      url: "https://maps.example.com/office"
-      description: "Open Mon-Fri 9-18h"
+    steps:
+      - message:
+          text: "Here is our office."
+      - location:
+          latitude: 19.4326
+          longitude: -99.1332
+          name: "Main Office"
+          address: "Av. Reforma 123, CDMX"
+          url: "https://maps.example.com/office"
+          description: "Open Mon-Fri 9-18h"
 
-  # Location-only action (no text reply)
+  # Location-only action (no text message)
   send-store-only:
-    location:
-      latitude: 19.4326
-      longitude: -99.1332
-      name: "Store"
+    steps:
+      - location:
+          latitude: 19.4326
+          longitude: -99.1332
+          name: "Store"
 ```
+
+**Step types:**
+
+| Step | Description |
+|---|---|
+| `message` | Sends a text message (optionally to a different recipient via `to`) |
+| `webhook` | Fires an HTTP request |
+| `location` | Sends a WhatsApp location pin |
 
 When a webhook fires, it sends a JSON payload:
 
@@ -259,34 +279,42 @@ This means the user's first message is never discarded — it can match a root e
 
 ### Cooldowns
 
-Set a `cooldown` (seconds) on any action to prevent the same sender from triggering it repeatedly. Optionally provide a `cooldown_reply` that gets sent instead of the normal reply during the cooldown period.
+Set a `guards.cooldown.duration` (seconds) on any action to prevent the same sender from triggering it repeatedly. Provide an `on_blocked` pipeline that runs when the guard blocks the action.
 
 ```yaml
 actions:
   escalate:
-    reply: "Connecting you to an agent."
-    webhook:
-      name: escalate-human
-      url: "https://api.example.com/support/escalate"
-    cooldown: 120
-    cooldown_reply: "You already requested an agent. Please wait."
+    guards:
+      cooldown:
+        duration: 120
+        on_blocked:
+          - message:
+              text: "You already requested an agent. Please wait."
+    steps:
+      - message:
+          text: "Connecting you to an agent."
+      - webhook:
+          name: escalate-human
+          url: "https://api.example.com/support/escalate"
 ```
 
-Cooldowns are per-sender, per-action — different senders are tracked independently.
+Cooldowns are per-sender, per-action — different senders are tracked independently. The `on_blocked` pipeline can contain any step types (message, webhook, location).
 
 ### Location Actions
 
-Send a WhatsApp location pin to the user. An action may be `location`-only or combined with `reply`/`webhook`.
+Send a WhatsApp location pin to the user. A `location` step can be combined with other steps in the pipeline.
 
 ```yaml
 actions:
   send-office:
-    reply: "Here is our office."
-    location:
-      latitude: 19.4326
-      longitude: -99.1332
-      name: "Main Office"
-      address: "Av. Reforma 123, CDMX"
+    steps:
+      - message:
+          text: "Here is our office."
+      - location:
+          latitude: 19.4326
+          longitude: -99.1332
+          name: "Main Office"
+          address: "Av. Reforma 123, CDMX"
 ```
 
 Required: `latitude` (-90 to 90), `longitude` (-180 to 180). Optional: `name`, `address`, `url`, `description`.

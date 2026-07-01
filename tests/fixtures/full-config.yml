@@ -5,62 +5,86 @@ default_timeout: 300
 
 actions:
   greet:
-    reply: "Hello! How can I help you today?"
+    steps:
+      - message:
+          text: "Hello! How can I help you today?"
 
   escalate:
-    reply: "Connecting you to a human agent."
-    webhook:
-      name: escalate-human
-      url: "https://api.example.com/support/escalate"
-      method: POST
-      headers:
-        Authorization: "Bearer token"
-      timeout: 10000
-      retry: 3
-    cooldown: 120
-    cooldown_reply: "You already requested a human agent. Please wait."
+    guards:
+      cooldown:
+        duration: 120
+        on_blocked:
+          - message:
+              text: "You already requested a human agent. Please wait."
+    steps:
+      - message:
+          text: "Connecting you to a human agent."
+      - webhook:
+          name: escalate-human
+          url: "https://api.example.com/support/escalate"
+          method: POST
+          headers:
+            Authorization: "Bearer token"
+          timeout: 10000
+          retry: 3
 
   lead-notify:
-    webhook:
-      name: lead-capture
-      url: "https://crm.example.com/leads"
-      method: POST
-      headers:
-        X-API-Key: "key"
-      timeout: 5000
-      retry: 2
+    steps:
+      - webhook:
+          name: lead-capture
+          url: "https://crm.example.com/leads"
+          method: POST
+          headers:
+            X-API-Key: "key"
+          timeout: 5000
+          retry: 2
 
   menu:
-    reply: "Main menu:\n1. Hours\n2. Pricing\n0. Exit"
+    steps:
+      - message:
+          text: "Main menu:\n1. Hours\n2. Pricing\n0. Exit"
 
   hours:
-    reply: "Mon-Fri 9am-6pm, Sat 10am-2pm"
+    steps:
+      - message:
+          text: "Mon-Fri 9am-6pm, Sat 10am-2pm"
 
   pricing:
-    reply: "Our pricing starts at $29/month."
+    steps:
+      - message:
+          text: "Our pricing starts at $29/month."
 
   invalid:
-    reply: "That option is not valid."
+    steps:
+      - message:
+          text: "That option is not valid."
 
   farewell:
-    reply: "Thanks! Bye."
+    steps:
+      - message:
+          text: "Thanks! Bye."
 
   pong:
-    reply: "pong!"
+    steps:
+      - message:
+          text: "pong!"
 
   send-office:
-    reply: "Here is our office."
-    location:
-      latitude: 19.4326
-      longitude: -99.1332
-      name: "Main Office"
-      address: "Av. Reforma 123"
+    steps:
+      - message:
+          text: "Here is our office."
+      - location:
+          latitude: 19.4326
+          longitude: -99.1332
+          name: "Main Office"
+          address: "Av. Reforma 123"
 
   send-store-only:
-    location:
-      latitude: 19.4326
-      longitude: -99.1332
-      name: "Store"
+    steps:
+      - location:
+          latitude: 19.4326
+          longitude: -99.1332
+          name: "Store"
 
 graphs:
   faq-support:

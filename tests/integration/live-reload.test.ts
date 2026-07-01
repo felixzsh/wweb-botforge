@@ -39,7 +39,7 @@ describe('Live reload integration', () => {
     const dir = path.join(tempDir, 'actions')
     fs.mkdirSync(dir, { recursive: true })
     for (const [id, reply] of Object.entries(actions)) {
-      fs.writeFileSync(path.join(dir, `${id}.yml`), `reply: "${reply}"`)
+      fs.writeFileSync(path.join(dir, `${id}.yml`), `steps:\n  - message:\n      text: "${reply}"`)
     }
   }
 

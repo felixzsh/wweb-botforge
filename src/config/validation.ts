@@ -140,83 +140,163 @@ function validateActionFile(id: string, data: unknown, ctx: FileContext): Action
   }
 
   const a = data as Record<string, unknown>
-  const hasReply = a.reply !== undefined
-  const hasWebhook = a.webhook !== undefined
-  const hasLocation = a.location !== undefined
 
-  if (!hasReply && !hasWebhook && !hasLocation) {
-    ctx.add('Action must define reply, webhook, location, or a combination')
+  if (a.steps !== undefined && !Array.isArray(a.steps)) {
+    ctx.add('action.steps must be an array', 'steps')
     return null
   }
 
-  if (hasReply && typeof a.reply !== 'string') {
-    ctx.add('action.reply must be a string', 'reply')
+  if (a.guards !== undefined) {
+    if (typeof a.guards !== 'object' || a.guards === null || Array.isArray(a.guards)) {
+      ctx.add('action.guards must be an object', 'guards')
+      return null
+    }
+    validateGuards(a.guards as Record<string, unknown>, ctx)
   }
 
-  if (hasLocation) {
-    if (typeof a.location !== 'object' || a.location === null || Array.isArray(a.location)) {
-      ctx.add('action.location must be an object', 'location')
-    } else {
-      const loc = a.location as Record<string, unknown>
-      if (typeof loc.latitude !== 'number' || !Number.isFinite(loc.latitude)) {
-        ctx.add('action.location.latitude must be a number', 'latitude')
-      } else if (loc.latitude < -90 || loc.latitude > 90) {
-        ctx.add('action.location.latitude must be between -90 and 90', 'latitude')
-      }
-      if (typeof loc.longitude !== 'number' || !Number.isFinite(loc.longitude)) {
-        ctx.add('action.location.longitude must be a number', 'longitude')
-      } else if (loc.longitude < -180 || loc.longitude > 180) {
-        ctx.add('action.location.longitude must be between -180 and 180', 'longitude')
-      }
-      if (loc.name !== undefined && typeof loc.name !== 'string') {
-        ctx.add('action.location.name must be a string', 'name')
-      }
-      if (loc.address !== undefined && typeof loc.address !== 'string') {
-        ctx.add('action.location.address must be a string', 'address')
-      }
-      if (loc.url !== undefined && typeof loc.url !== 'string') {
-        ctx.add('action.location.url must be a string', 'url')
-      }
-      if (loc.description !== undefined && typeof loc.description !== 'string') {
-        ctx.add('action.location.description must be a string', 'description')
+  const hasSteps = Array.isArray(a.steps) && a.steps.length > 0
+  const cooldownGuard = a.guards && typeof a.guards === 'object'
+    ? (a.guards as Record<string, unknown>).cooldown : undefined
+  const hasOnBlocked = cooldownGuard && typeof cooldownGuard === 'object'
+    ? Array.isArray((cooldownGuard as Record<string, unknown>).on_blocked)
+      && ((cooldownGuard as Record<string, unknown>).on_blocked as unknown[]).length > 0
+    : false
+
+  if (!hasSteps && !hasOnBlocked) {
+    ctx.add('Action must define steps or a cooldown guard with on_blocked')
+    return null
+  }
+
+  if (Array.isArray(a.steps)) {
+    a.steps.forEach((step, idx) => {
+      validateStep(step, ctx, `steps[${idx}]`)
+    })
+  }
+
+  if (hasOnBlocked) {
+    const onBlocked = (cooldownGuard as Record<string, unknown>).on_blocked as unknown[]
+    onBlocked.forEach((step, idx) => {
+      validateStep(step, ctx, `guards.cooldown.on_blocked[${idx}]`)
+    })
+  }
+
+  return data as ActionConfig
+}
+
+function validateGuards(guards: Record<string, unknown>, ctx: FileContext): void {
+  if (guards.cooldown !== undefined) {
+    if (typeof guards.cooldown !== 'object' || guards.cooldown === null || Array.isArray(guards.cooldown)) {
+      ctx.add('action.guards.cooldown must be an object', 'cooldown')
+      return
+    }
+    const c = guards.cooldown as Record<string, unknown>
+    if (typeof c.duration !== 'number' || c.duration < 0) {
+      ctx.add('action.guards.cooldown.duration must be a non-negative number', 'duration')
+    }
+    if (c.on_blocked !== undefined) {
+      if (!Array.isArray(c.on_blocked)) {
+        ctx.add('action.guards.cooldown.on_blocked must be an array', 'on_blocked')
       }
     }
   }
+}
 
-  if (hasWebhook) {
-    if (typeof a.webhook !== 'object' || a.webhook === null || Array.isArray(a.webhook)) {
-      ctx.add('action.webhook must be an object', 'webhook')
-    } else {
-      const wh = a.webhook as Record<string, unknown>
-      if (typeof wh.url !== 'string') {
-        ctx.add('action.webhook.url must be a string', 'url')
-      }
-      if (wh.method !== undefined && !isValidHttpMethod(wh.method)) {
-        ctx.add('action.webhook.method must be GET, POST, PUT, or PATCH', 'method')
-      }
-      if (wh.timeout !== undefined && (typeof wh.timeout !== 'number' || wh.timeout < 0)) {
-        ctx.add('action.webhook.timeout must be a non-negative number', 'timeout')
-      }
-      if (wh.retry !== undefined && (typeof wh.retry !== 'number' || wh.retry < 0 || !Number.isInteger(wh.retry))) {
-        ctx.add('action.webhook.retry must be a non-negative integer', 'retry')
-      }
-      if (wh.headers !== undefined && (typeof wh.headers !== 'object' || wh.headers === null || Array.isArray(wh.headers))) {
-        ctx.add('action.webhook.headers must be an object', 'headers')
-      }
-    }
+function validateStep(step: unknown, ctx: FileContext, path: string): void {
+  if (typeof step !== 'object' || step === null || Array.isArray(step)) {
+    ctx.add(`action.${path} must be an object`, path)
+    return
   }
 
-  if (a.cooldown !== undefined) {
-    if (typeof a.cooldown !== 'number' || a.cooldown < 0) {
-      ctx.add('action.cooldown must be a non-negative number', 'cooldown')
-    }
+  const s = step as Record<string, unknown>
+  const keys = Object.keys(s)
+  const validKeys = ['message', 'webhook', 'location']
+  const stepKeys = keys.filter(k => validKeys.includes(k))
+
+  if (stepKeys.length === 0) {
+    ctx.add(`action.${path} must have exactly one of: message, webhook, location`, path)
+    return
+  }
+  if (stepKeys.length > 1) {
+    ctx.add(`action.${path} must have exactly one of: message, webhook, location (found: ${stepKeys.join(', ')})`, path)
+    return
   }
 
-  if (a.cooldown_reply !== undefined && typeof a.cooldown_reply !== 'string') {
-    ctx.add('action.cooldown_reply must be a string', 'cooldown_reply')
+  if (s.message !== undefined) {
+    validateMessageStep(s.message, ctx, `${path}.message`)
   }
+  if (s.webhook !== undefined) {
+    validateWebhookStep(s.webhook, ctx, `${path}.webhook`)
+  }
+  if (s.location !== undefined) {
+    validateLocationStep(s.location, ctx, `${path}.location`)
+  }
+}
 
-  return hasReply || hasWebhook || hasLocation ? (data as ActionConfig) : null
+function validateMessageStep(msg: unknown, ctx: FileContext, path: string): void {
+  if (typeof msg !== 'object' || msg === null || Array.isArray(msg)) {
+    ctx.add(`action.${path} must be an object`, path)
+    return
+  }
+  const m = msg as Record<string, unknown>
+  if (typeof m.text !== 'string' || !m.text) {
+    ctx.add(`action.${path}.text is required and must be a non-empty string`, `${path}.text`)
+  }
+  if (m.to !== undefined && typeof m.to !== 'string') {
+    ctx.add(`action.${path}.to must be a string`, `${path}.to`)
+  }
+}
+
+function validateWebhookStep(wh: unknown, ctx: FileContext, path: string): void {
+  if (typeof wh !== 'object' || wh === null || Array.isArray(wh)) {
+    ctx.add(`action.${path} must be an object`, path)
+    return
+  }
+  const w = wh as Record<string, unknown>
+  if (typeof w.url !== 'string') {
+    ctx.add(`action.${path}.url must be a string`, `${path}.url`)
+  }
+  if (w.method !== undefined && !isValidHttpMethod(w.method)) {
+    ctx.add(`action.${path}.method must be GET, POST, PUT, or PATCH`, `${path}.method`)
+  }
+  if (w.timeout !== undefined && (typeof w.timeout !== 'number' || w.timeout < 0)) {
+    ctx.add(`action.${path}.timeout must be a non-negative number`, `${path}.timeout`)
+  }
+  if (w.retry !== undefined && (typeof w.retry !== 'number' || w.retry < 0 || !Number.isInteger(w.retry))) {
+    ctx.add(`action.${path}.retry must be a non-negative integer`, `${path}.retry`)
+  }
+  if (w.headers !== undefined && (typeof w.headers !== 'object' || w.headers === null || Array.isArray(w.headers))) {
+    ctx.add(`action.${path}.headers must be an object`, `${path}.headers`)
+  }
+}
+
+function validateLocationStep(loc: unknown, ctx: FileContext, path: string): void {
+  if (typeof loc !== 'object' || loc === null || Array.isArray(loc)) {
+    ctx.add(`action.${path} must be an object`, path)
+    return
+  }
+  const l = loc as Record<string, unknown>
+  if (typeof l.latitude !== 'number' || !Number.isFinite(l.latitude)) {
+    ctx.add(`action.${path}.latitude must be a number`, `${path}.latitude`)
+  } else if (l.latitude < -90 || l.latitude > 90) {
+    ctx.add(`action.${path}.latitude must be between -90 and 90`, `${path}.latitude`)
+  }
+  if (typeof l.longitude !== 'number' || !Number.isFinite(l.longitude)) {
+    ctx.add(`action.${path}.longitude must be a number`, `${path}.longitude`)
+  } else if (l.longitude < -180 || l.longitude > 180) {
+    ctx.add(`action.${path}.longitude must be between -180 and 180`, `${path}.longitude`)
+  }
+  if (l.name !== undefined && typeof l.name !== 'string') {
+    ctx.add(`action.${path}.name must be a string`, `${path}.name`)
+  }
+  if (l.address !== undefined && typeof l.address !== 'string') {
+    ctx.add(`action.${path}.address must be a string`, `${path}.address`)
+  }
+  if (l.url !== undefined && typeof l.url !== 'string') {
+    ctx.add(`action.${path}.url must be a string`, `${path}.url`)
+  }
+  if (l.description !== undefined && typeof l.description !== 'string') {
+    ctx.add(`action.${path}.description must be a string`, `${path}.description`)
+  }
 }
 
 function validateGraphFile(id: string, data: unknown, ctx: FileContext, allNodes: Set<string>): GraphConfig | null {

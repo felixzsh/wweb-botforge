@@ -28,13 +28,27 @@ export interface LocationAction {
   description?: string
 }
 
+export interface MessageStep {
+  text: string
+  to?: string
+}
+
+export type ActionStep =
+  | { message: MessageStep }
+  | { webhook: WebhookAction }
+  | { location: LocationAction }
+
+export interface CooldownGuard {
+  duration: number
+  onBlocked?: ActionStep[]
+}
+
 export interface ActionDef {
   id: string
-  reply?: string
-  webhook?: WebhookAction
-  location?: LocationAction
-  cooldown?: number
-  cooldownReply?: string
+  guards?: {
+    cooldown?: CooldownGuard
+  }
+  steps: ActionStep[]
 }
 
 export type ActionCatalog = Map<string, ActionDef>
@@ -48,44 +62,12 @@ export interface ActionExecutionContext {
   variables: Record<string, any>
 }
 
-export interface ActionExecutionResult {
-  reply?: string
-  webhook?: WebhookAction
-  location?: LocationAction
-}
-
 export function resolveAction(catalog: ActionCatalog, id: string): ActionDef {
   const action = catalog.get(id)
   if (!action) {
     throw new Error(`Action "${id}" not found in catalog`)
   }
   return action
-}
-
-export function executeAction(
-  catalog: ActionCatalog,
-  actionId: string,
-  context: ActionExecutionContext
-): ActionExecutionResult {
-  const action = resolveAction(catalog, actionId)
-  const result: ActionExecutionResult = {}
-
-  if (action.reply) {
-    result.reply = resolveVars(action.reply, context)
-  }
-
-  if (action.webhook) {
-    result.webhook = {
-      ...action.webhook,
-      url: resolveVars(action.webhook.url, context),
-    }
-  }
-
-  if (action.location) {
-    result.location = { ...action.location }
-  }
-
-  return result
 }
 
 export function getAction(catalog: ActionCatalog, actionId: string): ActionDef {

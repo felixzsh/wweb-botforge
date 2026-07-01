@@ -81,17 +81,16 @@ describe('YAML Configuration Loading Integration Tests', () => {
         expect(catalog.has('pong')).toBe(true)
 
         const escalate = catalog.get('escalate')!
-        expect(escalate.reply).toBe('Connecting you to a human agent.')
-        expect(escalate.webhook?.name).toBe('escalate-human')
-        expect(escalate.webhook?.method).toBe('POST')
-        expect(escalate.webhook?.timeout).toBe(10000)
-        expect(escalate.webhook?.retries).toBe(3)
-        expect(escalate.cooldown).toBe(120)
-        expect(escalate.cooldownReply).toBe('You already requested a human agent. Please wait.')
+        expect(escalate.guards?.cooldown?.duration).toBe(120)
+        expect(escalate.steps[0] as any).toEqual({ message: { text: 'Connecting you to a human agent.' } })
+        expect((escalate.steps[1] as any).webhook.name).toBe('escalate-human')
+        expect((escalate.steps[1] as any).webhook.method).toBe('POST')
+        expect((escalate.steps[1] as any).webhook.timeout).toBe(10000)
+        expect((escalate.steps[1] as any).webhook.retries).toBe(3)
 
         const leadNotify = catalog.get('lead-notify')!
-        expect(leadNotify.webhook?.url).toBe('https://crm.example.com/leads')
-        expect(leadNotify.reply).toBeUndefined()
+        expect((leadNotify.steps[0] as any).webhook.url).toBe('https://crm.example.com/leads')
+        expect(leadNotify.steps).toHaveLength(1)
       })
 
       it('should map all graphs from full config', async () => {
@@ -145,13 +144,13 @@ describe('YAML Configuration Loading Integration Tests', () => {
   })
 
   describe('Action Validation', () => {
-    it('should throw when action has neither reply, webhook, nor location', async () => {
+    it('should throw when action has no steps and no on_blocked', async () => {
       const fixturePath = path.join(__dirname, '../fixtures/action-empty.yml')
 
       const config = await loadConfig(fixturePath)
 
       expect(() => mapActionCatalog(config.actions!)).toThrow(
-        'Action "broken-action" must define reply, webhook, location, or a combination'
+        'Action "broken-action" must define steps or a cooldown guard with on_blocked'
       )
     })
 
@@ -162,11 +161,11 @@ describe('YAML Configuration Loading Integration Tests', () => {
       const catalog = mapActionCatalog(config.actions!)
 
       const action = catalog.get('notify')!
-      expect(action.webhook?.url).toBe('https://example.com/hook')
-      expect(action.webhook?.method).toBe('POST')
-      expect(action.webhook?.timeout).toBe(5000)
-      expect(action.webhook?.retries).toBe(3)
-      expect(action.webhook?.headers).toEqual({})
+      expect((action.steps[0] as any).webhook.url).toBe('https://example.com/hook')
+      expect((action.steps[0] as any).webhook.method).toBe('POST')
+      expect((action.steps[0] as any).webhook.timeout).toBe(5000)
+      expect((action.steps[0] as any).webhook.retries).toBe(3)
+      expect((action.steps[0] as any).webhook.headers).toEqual({})
     })
   })
 
@@ -269,7 +268,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
       const config = await loadConfig(fixturePath)
 
       expect(config.actions?.greet).toBeDefined()
-      expect(config.actions?.greet.reply).toBe('Hello! Welcome to our support chat. How can I help you?')
+      expect(config.actions?.greet.steps?.[0]?.message?.text).toBe('Hello! Welcome to our support chat. How can I help you?')
       expect(config.actions?.menu).toBeDefined()
       expect(config.actions?.hours).toBeDefined()
       expect(config.actions?.invalid).toBeDefined()
@@ -368,7 +367,9 @@ bots:
     graph: test-graph
 actions:
   greet:
-    reply: "Overridden reply"
+    steps:
+      - message:
+          text: "Overridden reply"
 graphs:
   test-graph:
     root: start
@@ -379,11 +380,13 @@ graphs:
 `)
 
       fs.writeFileSync(path.join(actionsDir, 'greet.yml'), `
-reply: "Original reply from directory"
+steps:
+  - message:
+      text: "Original reply from directory"
 `)
 
       const config = await loadConfig(configPath)
-      expect(config.actions?.greet.reply).toBe('Overridden reply')
+      expect(config.actions?.greet.steps?.[0]?.message?.text).toBe('Overridden reply')
     })
   })
 
@@ -466,7 +469,9 @@ bots:
 `)
 
       fs.writeFileSync(path.join(actionsDir, 'greet.yml'), `
-reply: "Hello! Choose an option"
+steps:
+  - message:
+      text: "Hello! Choose an option"
 `)
 
       fs.writeFileSync(path.join(graphsDir, 'faq-menu.yml'), `
@@ -481,7 +486,7 @@ nodes:
 
       expect(config.actions).toBeDefined()
       expect(config.actions?.greet).toBeDefined()
-      expect(config.actions?.greet.reply).toBe('Hello! Choose an option')
+      expect(config.actions?.greet.steps?.[0]?.message?.text).toBe('Hello! Choose an option')
 
       expect(config.graphs).toBeDefined()
       expect(config.graphs?.['faq-menu']).toBeDefined()
@@ -539,7 +544,9 @@ nodes:
     graph: demo
 actions:
   greet:
-    reply: "Hello"
+    steps:
+      - message:
+          text: "Hello"
 graphs:
   demo:
     root: start

@@ -1,1 +1,3 @@
-reply: "That option is not valid. Choose a number from the menu."
+steps:
+  - message:
+      text: "That option is not valid. Choose a number from the menu."

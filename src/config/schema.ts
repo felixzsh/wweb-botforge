@@ -31,12 +31,29 @@ export interface LocationActionConfig {
   description?: string
 }
 
-export interface ActionConfig {
-  reply?: string
+export interface ActionMessageConfig {
+  text: string
+  to?: string
+}
+
+export interface ActionStepConfig {
+  message?: ActionMessageConfig
   webhook?: WebhookActionConfig
   location?: LocationActionConfig
-  cooldown?: number
-  cooldown_reply?: string
+}
+
+export interface ActionCooldownGuardConfig {
+  duration: number
+  on_blocked?: ActionStepConfig[]
+}
+
+export interface ActionGuardsConfig {
+  cooldown?: ActionCooldownGuardConfig
+}
+
+export interface ActionConfig {
+  guards?: ActionGuardsConfig
+  steps?: ActionStepConfig[]
 }
 
 export interface EdgeConfig {

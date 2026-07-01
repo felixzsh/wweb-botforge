@@ -27,6 +27,13 @@ const baseConfig = `bots:
     graph: any-graph
     settings:
       queue_delay: 1000
+graphs:
+  any-graph:
+    root: start
+    nodes:
+      start:
+        action: any-action
+        edges: []
 `
 
 describe('Location action validation', () => {
@@ -41,11 +48,12 @@ describe('Location action validation', () => {
 
   it('accepts a valid location-only action', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'send-store': `location:
-  latitude: 19.4326
-  longitude: -99.1332
-  name: Store
-  address: Reforma 123
+      'send-store': `steps:
+  - location:
+      latitude: 19.4326
+      longitude: -99.1332
+      name: Store
+      address: Reforma 123
 `,
     })
     tmpDir = dir
@@ -58,11 +66,13 @@ describe('Location action validation', () => {
 
   it('accepts a valid reply + location action', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'send-office': `reply: "Here is our office."
-location:
-  latitude: 19.4326
-  longitude: -99.1332
-  name: Office
+      'send-office': `steps:
+  - message:
+      text: "Here is our office."
+  - location:
+      latitude: 19.4326
+      longitude: -99.1332
+      name: Office
 `,
     })
     tmpDir = dir
@@ -75,8 +85,9 @@ location:
 
   it('rejects missing latitude', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  longitude: -99.1332
+      'bad-loc': `steps:
+  - location:
+      longitude: -99.1332
 `,
     })
     tmpDir = dir
@@ -88,8 +99,9 @@ location:
 
   it('rejects missing longitude', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  latitude: 19.4326
+      'bad-loc': `steps:
+  - location:
+      latitude: 19.4326
 `,
     })
     tmpDir = dir
@@ -101,9 +113,10 @@ location:
 
   it('rejects non-numeric latitude', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  latitude: "north"
-  longitude: -99.1332
+      'bad-loc': `steps:
+  - location:
+      latitude: "north"
+      longitude: -99.1332
 `,
     })
     tmpDir = dir
@@ -115,9 +128,10 @@ location:
 
   it('rejects latitude above 90', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  latitude: 91
-  longitude: 0
+      'bad-loc': `steps:
+  - location:
+      latitude: 91
+      longitude: 0
 `,
     })
     tmpDir = dir
@@ -129,9 +143,10 @@ location:
 
   it('rejects latitude below -90', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  latitude: -91
-  longitude: 0
+      'bad-loc': `steps:
+  - location:
+      latitude: -91
+      longitude: 0
 `,
     })
     tmpDir = dir
@@ -143,9 +158,10 @@ location:
 
   it('rejects longitude above 180', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  latitude: 0
-  longitude: 181
+      'bad-loc': `steps:
+  - location:
+      latitude: 0
+      longitude: 181
 `,
     })
     tmpDir = dir
@@ -157,9 +173,10 @@ location:
 
   it('rejects longitude below -180', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  latitude: 0
-  longitude: -181
+      'bad-loc': `steps:
+  - location:
+      latitude: 0
+      longitude: -181
 `,
     })
     tmpDir = dir
@@ -171,40 +188,44 @@ location:
 
   it('rejects non-string name', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location:
-  latitude: 0
-  longitude: 0
-  name: 123
+      'bad-loc': `steps:
+  - location:
+      latitude: 0
+      longitude: 0
+      name: 123
 `,
     })
     tmpDir = dir
 
     const result = await validateConfig(configPath)
 
-    expect(result.errors.some(e => /action\.location\.name/.test(e.message))).toBe(true)
+    expect(result.errors.some(e => /location\.name/.test(e.message))).toBe(true)
   })
 
   it('rejects location that is not an object', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'bad-loc': `location: "not an object"
+      'bad-loc': `steps:
+  - location: "not an object"
 `,
     })
     tmpDir = dir
 
     const result = await validateConfig(configPath)
 
-    expect(result.errors.some(e => /action\.location must be an object/.test(e.message))).toBe(true)
+    expect(result.errors.some(e => /location must be an object/.test(e.message))).toBe(true)
   })
 
-  it('rejects action with no reply/webhook/location', async () => {
+  it('rejects action with no steps and no on_blocked', async () => {
     const { tmpDir: dir, configPath } = await setupTempConfig(baseConfig, {
-      'empty-action': `cooldown: 30
+      'empty-action': `guards:
+  cooldown:
+    duration: 30
 `,
     })
     tmpDir = dir
 
     const result = await validateConfig(configPath)
 
-    expect(result.errors.some(e => /Action must define/.test(e.message))).toBe(true)
+    expect(result.errors.some(e => /Action must define steps/.test(e.message))).toBe(true)
   })
 })

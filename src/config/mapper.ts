@@ -1,7 +1,7 @@
 import { Bot, BotSettings, createBot, createDefaultSettings } from '../bot'
 import { validateId, validateTypingDelay, validateQueueDelay } from './validation'
-import { BotConfig, BotSettingsConfig, ActionConfig, WebhookActionConfig, LocationActionConfig, GraphConfig, NodeConfig, EdgeConfig } from './schema'
-import { ActionDef, ActionCatalog, LocationAction } from '../actions/action'
+import { BotConfig, BotSettingsConfig, ActionConfig, ActionStepConfig, ActionMessageConfig, ActionGuardsConfig, WebhookActionConfig, LocationActionConfig, GraphConfig, NodeConfig, EdgeConfig } from './schema'
+import { ActionDef, ActionCatalog, LocationAction, ActionStep, MessageStep, CooldownGuard } from '../actions/action'
 import { GraphCatalog, GraphDef, Node, Edge } from '../graph/graph'
 
 export function mapActionCatalog(config: Record<string, ActionConfig>): ActionCatalog {
@@ -15,18 +15,42 @@ export function mapActionCatalog(config: Record<string, ActionConfig>): ActionCa
 }
 
 function mapAction(id: string, config: ActionConfig): ActionDef {
-  if (!config.reply && !config.webhook && !config.location) {
-    throw new Error(`Action "${id}" must define reply, webhook, location, or a combination`)
+  const hasSteps = (config.steps?.length ?? 0) > 0
+  const hasOnBlocked = (config.guards?.cooldown?.on_blocked?.length ?? 0) > 0
+
+  if (!hasSteps && !hasOnBlocked) {
+    throw new Error(`Action "${id}" must define steps or a cooldown guard with on_blocked`)
   }
 
   return {
     id,
-    reply: config.reply,
-    webhook: config.webhook ? mapWebhookAction(config.webhook) : undefined,
-    location: config.location ? mapLocationAction(config.location) : undefined,
-    cooldown: config.cooldown,
-    cooldownReply: config.cooldown_reply,
+    guards: config.guards ? mapGuards(config.guards) : undefined,
+    steps: (config.steps ?? []).map(mapStep),
   }
+}
+
+function mapStep(config: ActionStepConfig): ActionStep {
+  if (config.message) return { message: mapMessage(config.message) }
+  if (config.webhook) return { webhook: mapWebhookAction(config.webhook) }
+  return { location: mapLocationAction(config.location!) }
+}
+
+function mapMessage(config: ActionMessageConfig): MessageStep {
+  return {
+    text: config.text,
+    to: config.to,
+  }
+}
+
+function mapGuards(config: ActionGuardsConfig): { cooldown?: CooldownGuard } {
+  const result: { cooldown?: CooldownGuard } = {}
+  if (config.cooldown) {
+    result.cooldown = {
+      duration: config.cooldown.duration,
+      onBlocked: config.cooldown.on_blocked?.map(mapStep),
+    }
+  }
+  return result
 }
 
 function mapWebhookAction(config: WebhookActionConfig): {

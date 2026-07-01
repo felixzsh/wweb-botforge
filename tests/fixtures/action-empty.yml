@@ -3,8 +3,9 @@ bots:
     graph: broken-graph
 actions:
   broken-action:
-    cooldown: 30
-    cooldown_reply: "Wait"
+    guards:
+      cooldown:
+        duration: 30
 graphs:
   broken-graph:
     root: start

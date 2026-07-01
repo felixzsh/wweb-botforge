@@ -3,8 +3,9 @@ bots:
     graph: notify-graph
 actions:
   notify:
-    webhook:
-      url: "https://example.com/hook"
+    steps:
+      - webhook:
+          url: "https://example.com/hook"
 graphs:
   notify-graph:
     root: trigger
