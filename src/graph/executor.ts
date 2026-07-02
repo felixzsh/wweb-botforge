@@ -273,11 +273,20 @@ export class GraphExecutor {
     const action = resolveAction(this.actionCatalog, node.action)
 
     if (this.isActionOnCooldown(action, message.from)) {
+      const onBlockedExecutedKey = `on_blocked.executed:${action.id}`
+      const cooldown = action.guards?.cooldown
+
+      if (cooldown && this.cooldownService?.isOnCooldown(message.from, onBlockedExecutedKey, cooldown.duration * 1000)) {
+        this.logger.debug(`  on_blocked pipeline already ran this cooldown for action "${node.action}", skipping`)
+        return true
+      }
+
       const onBlocked = action.guards?.cooldown?.onBlocked
       if (onBlocked && onBlocked.length > 0) {
         for (const step of onBlocked) {
           await this.runStep(bot, message, step, context)
         }
+        this.cooldownService?.setCooldown(message.from, onBlockedExecutedKey)
         this.logger.info(`Cooldown on_blocked pipeline ran for action "${node.action}" to ${message.from}`)
       } else {
         this.logger.warn(`Action "${node.action}" on cooldown, no on_blocked defined, skipping`)
@@ -290,6 +299,7 @@ export class GraphExecutor {
     }
 
     this.setActionCooldown(action, message.from)
+    this.cooldownService?.removeCooldown(message.from, `on_blocked.executed:${action.id}`)
 
     return true
   }

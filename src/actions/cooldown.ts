@@ -61,4 +61,11 @@ export class CooldownService {
   clearSenderCooldowns(sender: string): void {
     this.cooldowns.delete(sender)
   }
+
+  removeCooldown(sender: string, key: string): void {
+    const senderCooldowns = this.cooldowns.get(sender)
+    if (senderCooldowns) {
+      senderCooldowns.delete(key)
+    }
+  }
 }
