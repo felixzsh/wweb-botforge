@@ -102,15 +102,15 @@ function mapGraph(id: string, config: GraphConfig): GraphDef {
     nodes[nodeId] = mapNode(nodeConfig)
   }
 
-  if (config.fallback_node && !nodes[config.fallback_node]) {
-    throw new Error(`Graph "${id}" fallback node "${config.fallback_node}" not found`)
+  if (config.fallback && !nodes[config.fallback]) {
+    throw new Error(`Graph "${id}" fallback node "${config.fallback}" not found`)
   }
 
   return {
     id,
     root: config.root,
     timeout: config.timeout,
-    fallbackNode: config.fallback_node,
+    fallbackNode: config.fallback,
     nodes,
   }
 }

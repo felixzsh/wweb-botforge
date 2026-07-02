@@ -149,7 +149,7 @@ Each graph has an ID (the key). Stored in \`graphs/<id>.yml\`.
 \`\`\`yaml
 root: menu
 timeout: 300
-fallback_node: invalid
+fallback: invalid
 nodes:
   menu:
     action: menu
@@ -176,7 +176,7 @@ nodes:
 |---|---|---|---|
 | root | string | yes | Starting node ID |
 | timeout | number | global default | Session TTL (seconds) |
-| fallback_node | string | - | Node for unmatched input |
+| fallback | string | - | Node for unmatched input |
 
 Graphs have **no entry triggers**. When a sender has no active session, the bot automatically creates a session at \`root\`, executes the root action, and then re-applies the original message against the root's edges.
 
@@ -260,7 +260,7 @@ bots:
 2. **One graph per bot** — keep the whole conversation for a single bot inside one graph.
 3. **Cooldown on human-escalation actions** — prevent spam-triggering manual agent handoffs.
 4. **Use edges: [] for end-of-conversation nodes** — sessions will still expire on timeout, but a user can still reach previously visited nodes.
-5. **Fallback node** — always configure a \`fallback_node\` to handle unexpected user input.
+5. **Fallback node** — always configure a \`fallback\` to handle unexpected user input.
 6. **Fuzzy thresholds** — \`0.3\` for commands (strict), \`0.6\` default for conversation, \`0.9\` for loose matching.
 
 ---
@@ -319,7 +319,7 @@ steps:
 \`\`\`yaml
 root: greet
 timeout: 300
-fallback_node: invalid
+fallback: invalid
 nodes:
   greet:
     action: greet

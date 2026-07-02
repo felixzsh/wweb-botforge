@@ -7,7 +7,7 @@ actions:
 graphs:
   broken-graph:
     root: start
-    fallback_node: nonexistent
+    fallback: nonexistent
     nodes:
       start:
         action: greet

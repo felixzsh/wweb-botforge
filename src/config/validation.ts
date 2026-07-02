@@ -331,11 +331,11 @@ function validateGraphFile(id: string, data: unknown, ctx: FileContext, allNodes
     ctx.add(`graph.root "${g.root}" not found in nodes`, 'root')
   }
 
-  if (g.fallback_node !== undefined) {
-    if (typeof g.fallback_node !== 'string') {
-      ctx.add('graph.fallback_node must be a string', 'fallback_node')
-    } else if (!nodes[g.fallback_node]) {
-      ctx.add(`graph.fallback_node "${g.fallback_node}" not found in nodes`, 'fallback_node')
+  if (g.fallback !== undefined) {
+    if (typeof g.fallback !== 'string') {
+      ctx.add('graph.fallback must be a string', 'fallback')
+    } else if (!nodes[g.fallback]) {
+      ctx.add(`graph.fallback "${g.fallback}" not found in nodes`, 'fallback')
     }
   }
 

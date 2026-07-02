@@ -281,7 +281,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
 
       expect(config.graphs?.faq).toBeDefined()
       expect(config.graphs?.faq.root).toBe('menu')
-      expect(config.graphs?.faq.fallback_node).toBe('invalid')
+      expect(config.graphs?.faq.fallback).toBe('invalid')
     })
 
     it('should load bots from adjacent bots/ directory', async () => {

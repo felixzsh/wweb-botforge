@@ -90,7 +90,7 @@ graphs:
   faq-support:
     root: menu
     timeout: 300
-    fallback_node: invalid
+    fallback: invalid
     nodes:
       menu:
         action: menu

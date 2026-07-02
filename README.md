@@ -181,14 +181,14 @@ When a request fires, it sends a JSON payload:
 
 ### Graphs
 
-Graphs define multi-step conversations. Each graph has a `root` node, optional `timeout`, optional `fallback_node` for unmatched input, and a map of `nodes` connected by `edges`.
+Graphs define multi-step conversations. Each graph has a `root` node, optional `timeout`, optional `fallback` for unmatched input, and a map of `nodes` connected by `edges`.
 
 ```yaml
 graphs:
   faq-support:
     root: menu
     timeout: 300                   # Session TTL (seconds) — session dies after inactivity
-    fallback_node: invalid         # Where to go if user sends an unexpected response
+    fallback: invalid         # Where to go if user sends an unexpected response
     nodes:
       menu:
         action: menu
@@ -274,7 +274,7 @@ This means the user's first message is never discarded — it can match a root e
 - **`match`** — comma-separated phrases. Fuzzy-matched against the user's message with the configured threshold.
 - **`fuzzy_threshold`** — controls strictness. `0.3` = strict, `0.6` = moderate (default), `0.9` = loose.
 - **`timeout`** — seconds of inactivity before the session expires. Defaults to global `default_timeout`.
-- **`fallback_node`** — where to redirect if no edge matches. Without one, mismatched messages are silently ignored.
+- **`fallback`** — where to redirect if no edge matches. Without one, mismatched messages are silently ignored.
 - **`edges: []`** — a node with no edges does not destroy the session; the user can still navigate to any previously visited node from its own edges. Sessions only end via timeout.
 
 ### Cooldowns

@@ -70,7 +70,7 @@ export interface NodeConfig {
 export interface GraphConfig {
   root: string
   timeout?: number
-  fallback_node?: string
+  fallback?: string
   nodes: Record<string, NodeConfig>
 }
 

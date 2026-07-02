@@ -68,7 +68,7 @@ Domain concepts are plain TypeScript interfaces with no behavior:
 | `Bot` | Bot identity, settings, single graph reference, channel reference |
 | `MessageChannel` | Transport abstraction: send, onMessage, connect, disconnect, lifecycle events |
 | `IncomingMessage` / `OutgoingMessage` | Normalized message format independent of WhatsApp wire format |
-| `GraphDef` | Graph definition: root, timeout, fallback_node, nodes |
+| `GraphDef` | Graph definition: root, timeout, fallback, nodes |
 | `Node` | A node within a graph: action reference + edge conditions |
 | `Edge` | Edge: fuzzy-matched phrases + target node |
 | `ActionDef` | What happens when an action fires: optional message body + optional request + optional location |
@@ -122,7 +122,7 @@ WhatsApp message
 - **No active session**: The bot creates a session at the graph's `root` node,
   executes the root action, and re-applies the user's original message against
   the root edges. The first message is never discarded.
-- **Fallback**: Unmatched input falls through to `fallback_node` if configured.
+- **Fallback**: Unmatched input falls through to `fallback` if configured.
 - **Timeout**: Sessions expire after configurable idle timeout (`default_timeout`
   or per-graph `timeout`). Any subsequent message starts a new session at root.
 - **No terminal nodes**: A node with `edges: []` does not destroy the session;
@@ -214,7 +214,7 @@ graphs:
   support:
     root: ask_issue
     timeout: 120
-    fallback_node: didnt_understand
+    fallback: didnt_understand
     nodes:
       ask_issue:
         action: ask_what_issue

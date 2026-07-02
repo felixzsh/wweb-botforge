@@ -96,7 +96,7 @@ describe('GraphExecutor', () => {
       'faq-menu': {
         root: 'menu',
         timeout: 300,
-        fallback_node: 'invalid',
+        fallback: 'invalid',
         nodes: {
           menu: {
             action: 'greet',
@@ -158,7 +158,7 @@ describe('GraphExecutor', () => {
       },
       'has-fallback': {
         root: 'menu',
-        fallback_node: 'fallback',
+        fallback: 'fallback',
         nodes: {
           menu: {
             action: 'greet',

@@ -97,13 +97,13 @@ actions:
           address: "Av. Reforma 123, CDMX"
 
 # Graph Catalog — conversation state machines owned by a single bot
-# Each graph has a root node, optional timeout, optional fallback_node, and a map of nodes
+# Each graph has a root node, optional timeout, optional fallback, and a map of nodes
 graphs:
   # FAQ support graph with navigation menu
   faq-support:
     root: menu
     timeout: 300                   # Session TTL (seconds) — session dies after inactivity
-    fallback_node: invalid         # Where to go if user sends an unexpected response
+    fallback: invalid         # Where to go if user sends an unexpected response
     nodes:
       menu:
         action: menu
@@ -221,6 +221,6 @@ bots:
 # - fuzzy_threshold: 0.3=strict, 0.6=moderate (default), 0.9=loose
 # - Action cooldowns prevent spam (per sender per action)
 # - Graph sessions automatically expire after timeout seconds of inactivity
-# - fallback_node handles unexpected user responses without breaking the graph
+# - fallback handles unexpected user responses without breaking the graph
 # - Action reply templates support {{sender}}, {{message}}, {{bot.id}}, {{variables.name}}
 # - Location actions send a WhatsApp location pin; fields: latitude, longitude, name, address, url, description

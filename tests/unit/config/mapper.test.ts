@@ -261,7 +261,7 @@ describe('Mapper', () => {
         'faq-menu': {
           root: 'menu',
           timeout: 300,
-          fallback_node: 'invalid',
+          fallback: 'invalid',
           nodes: {
             menu: {
               action: 'greet',
@@ -365,7 +365,7 @@ describe('Mapper', () => {
       const config: Record<string, GraphConfig> = {
         broken: {
           root: 'start',
-          fallback_node: 'missing',
+          fallback: 'missing',
           nodes: {
             start: {
               action: 'greet',

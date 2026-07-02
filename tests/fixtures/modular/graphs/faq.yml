@@ -1,5 +1,5 @@
 root: menu
-fallback_node: invalid
+fallback: invalid
 nodes:
   menu:
     action: menu
