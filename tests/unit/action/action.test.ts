@@ -51,16 +51,16 @@ describe('Action', () => {
       expect((action.steps[0] as any).message.text).toBe('Hello!')
     })
 
-    it('should map a webhook step', () => {
+    it('should map a request step', () => {
       const config: Record<string, ActionConfig> = {
-        track: { steps: [{ webhook: { url: 'https://api.example.com/hook' } }] },
+        track: { steps: [{ request: { url: 'https://api.example.com/hook' } }] },
       }
       const catalog = mapActionCatalog(config)
       const action = catalog.get('track')!
 
       expect(action.steps).toHaveLength(1)
-      expect('webhook' in action.steps[0]).toBe(true)
-      expect((action.steps[0] as any).webhook.url).toBe('https://api.example.com/hook')
+      expect('request' in action.steps[0]).toBe(true)
+      expect((action.steps[0] as any).request.url).toBe('https://api.example.com/hook')
     })
 
     it('should map a location step', () => {
@@ -120,7 +120,7 @@ describe('Action', () => {
           },
           steps: [
             { message: { text: 'Escalating...' } },
-            { webhook: { url: 'https://api.example.com/escalate' } },
+            { request: { url: 'https://api.example.com/escalate' } },
           ],
         },
       }

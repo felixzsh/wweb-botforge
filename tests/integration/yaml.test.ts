@@ -83,13 +83,13 @@ describe('YAML Configuration Loading Integration Tests', () => {
         const escalate = catalog.get('escalate')!
         expect(escalate.guards?.cooldown?.duration).toBe(120)
         expect(escalate.steps[0] as any).toEqual({ message: { text: 'Connecting you to a human agent.' } })
-        expect((escalate.steps[1] as any).webhook.name).toBe('escalate-human')
-        expect((escalate.steps[1] as any).webhook.method).toBe('POST')
-        expect((escalate.steps[1] as any).webhook.timeout).toBe(10000)
-        expect((escalate.steps[1] as any).webhook.retries).toBe(3)
+        expect((escalate.steps[1] as any).request.name).toBe('escalate-human')
+        expect((escalate.steps[1] as any).request.method).toBe('POST')
+        expect((escalate.steps[1] as any).request.timeout).toBe(10000)
+        expect((escalate.steps[1] as any).request.retries).toBe(3)
 
         const leadNotify = catalog.get('lead-notify')!
-        expect((leadNotify.steps[0] as any).webhook.url).toBe('https://crm.example.com/leads')
+        expect((leadNotify.steps[0] as any).request.url).toBe('https://crm.example.com/leads')
         expect(leadNotify.steps).toHaveLength(1)
       })
 
@@ -154,18 +154,18 @@ describe('YAML Configuration Loading Integration Tests', () => {
       )
     })
 
-    it('should apply webhook defaults for minimal webhook action', async () => {
-      const fixturePath = path.join(__dirname, '../fixtures/action-webhook-minimal.yml')
+    it('should apply request defaults for minimal request action', async () => {
+      const fixturePath = path.join(__dirname, '../fixtures/action-request-minimal.yml')
 
       const config = await loadConfig(fixturePath)
       const catalog = mapActionCatalog(config.actions!)
 
       const action = catalog.get('notify')!
-      expect((action.steps[0] as any).webhook.url).toBe('https://example.com/hook')
-      expect((action.steps[0] as any).webhook.method).toBe('POST')
-      expect((action.steps[0] as any).webhook.timeout).toBe(5000)
-      expect((action.steps[0] as any).webhook.retries).toBe(3)
-      expect((action.steps[0] as any).webhook.headers).toEqual({})
+      expect((action.steps[0] as any).request.url).toBe('https://example.com/hook')
+      expect((action.steps[0] as any).request.method).toBe('POST')
+      expect((action.steps[0] as any).request.timeout).toBe(5000)
+      expect((action.steps[0] as any).request.retries).toBe(3)
+      expect((action.steps[0] as any).request.headers).toEqual({})
     })
   })
 

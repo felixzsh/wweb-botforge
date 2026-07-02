@@ -19,7 +19,7 @@ actions:
     steps:
       - message:
           text: "Connecting you to a human agent."
-      - webhook:
+      - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
           method: POST
@@ -30,7 +30,7 @@ actions:
 
   lead-notify:
     steps:
-      - webhook:
+      - request:
           name: lead-capture
           url: "https://crm.example.com/leads"
           method: POST

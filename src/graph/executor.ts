@@ -1,13 +1,13 @@
 import { Bot } from '../bot'
 import { IncomingMessage } from '../messages/contracts'
-import { WebhookPayload } from '../actions/webhook'
+import { RequestPayload } from '../actions/request'
 import { ActionCatalog, ActionExecutionContext, ActionStep, ActionDef, resolveAction } from '../actions/action'
 import { GraphCatalog, GraphDef, Node, Edge, GraphState } from './graph'
 import { resolveVars } from '../actions/action'
 import { GraphStateService } from './state'
 import { OutboxService } from '../messages/outbox'
 import { CooldownService } from '../actions/cooldown'
-import { sendWebhookRequest } from '../actions/webhook'
+import { sendRequest } from '../actions/request'
 import { matchFuzzyVerbose } from '../helpers/fuzzy'
 import { getLogger } from '../helpers/logger'
 
@@ -337,20 +337,20 @@ export class GraphExecutor {
       return
     }
 
-    if ('webhook' in step) {
+    if ('request' in step) {
       try {
-        const payload = this.buildWebhookPayload(bot, message, step.webhook.name || 'unnamed')
-        const resolvedUrl = resolveVars(step.webhook.url, context)
-        await sendWebhookRequest({
+        const payload = this.buildRequestPayload(bot, message, step.request.name || 'unnamed')
+        const resolvedUrl = resolveVars(step.request.url, context)
+        await sendRequest({
           url: resolvedUrl,
-          method: step.webhook.method,
-          headers: step.webhook.headers,
+          method: step.request.method,
+          headers: step.request.headers,
           body: payload,
-          timeout: step.webhook.timeout,
-          retries: step.webhook.retries,
+          timeout: step.request.timeout,
+          retries: step.request.retries,
         })
       } catch (error) {
-        this.logger.error(`Failed to trigger webhook action for bot "${bot.id}":`, error)
+        this.logger.error(`Failed to execute request step for bot "${bot.id}":`, error)
       }
       return
     }
@@ -385,14 +385,14 @@ export class GraphExecutor {
     this.cooldownService.setCooldown(sender, `action:${action.id}`)
   }
 
-  private buildWebhookPayload(bot: Bot, message: IncomingMessage, webhookName: string): WebhookPayload {
+  private buildRequestPayload(bot: Bot, message: IncomingMessage, requestName: string): RequestPayload {
     return {
       sender: message.from,
       message: message.content,
       timestamp: message.timestamp.toISOString(),
       botId: bot.id,
       botName: bot.id,
-      webhookName,
+      requestName,
       metadata: message.metadata || {},
     }
   }

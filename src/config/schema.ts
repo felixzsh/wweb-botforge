@@ -13,7 +13,7 @@ export interface BotConfig {
   settings?: BotSettingsConfig
 }
 
-export interface WebhookActionConfig {
+export interface RequestStepConfig {
   name?: string
   url: string
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH'
@@ -38,7 +38,7 @@ export interface ActionMessageConfig {
 
 export interface ActionStepConfig {
   message?: ActionMessageConfig
-  webhook?: WebhookActionConfig
+  request?: RequestStepConfig
   location?: LocationActionConfig
 }
 

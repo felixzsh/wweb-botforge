@@ -1,16 +1,16 @@
 import { getLogger } from '../helpers/logger'
 
-export interface WebhookPayload {
+export interface RequestPayload {
   sender: string
   message: string
   timestamp: string
   botId: string
   botName: string
-  webhookName: string
+  requestName: string
   metadata: Record<string, any>
 }
 
-export interface WebhookCall {
+export interface RequestCall {
   url: string
   method: 'GET' | 'POST' | 'PUT' | 'PATCH'
   headers: Record<string, string>
@@ -19,7 +19,7 @@ export interface WebhookCall {
   retries: number
 }
 
-export async function sendWebhookRequest(call: WebhookCall): Promise<void> {
+export async function sendRequest(call: RequestCall): Promise<void> {
   const logger = getLogger()
   const maxRetries = call.retries || 1
   let lastError: Error | null = null
@@ -40,18 +40,18 @@ export async function sendWebhookRequest(call: WebhookCall): Promise<void> {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      logger.info(`Webhook request successful: ${call.url}`)
+      logger.debug(`Request successful: ${call.url}`)
       return
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
       if (attempt < maxRetries) {
         const backoffMs = Math.pow(2, attempt - 1) * 1000
-        logger.warn(`Webhook request failed (attempt ${attempt}/${maxRetries}), retrying in ${backoffMs}ms:`, lastError.message)
+        logger.warn(`Request failed (attempt ${attempt}/${maxRetries}), retrying in ${backoffMs}ms:`, lastError.message)
         await new Promise(resolve => setTimeout(resolve, backoffMs))
       }
     }
   }
 
-  throw new Error(`Webhook request failed after ${maxRetries} attempts: ${lastError?.message}`)
+  throw new Error(`Request failed after ${maxRetries} attempts: ${lastError?.message}`)
 }

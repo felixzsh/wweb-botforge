@@ -28,7 +28,7 @@ WhatsApp message
         -> resolve template variables ({{sender}}, {{message}}, etc.)
         -> check cooldown
         -> enqueue reply -> OutboxService -> WhatsAppChannel.send()
-        -> fire webhook -> sendWebhookRequest()
+        -> fire request -> sendRequestRequest()
 \`\`\`
 
 ---
@@ -86,12 +86,12 @@ steps:
   - message:
       text: "Hello!"
 
-# Pipeline: message + webhook
+# Pipeline: message + request
 steps:
   - message:
       text: "Processing..."
-  - webhook:
-      name: my-webhook
+  - request:
+      name: my-request
       url: "https://api.example.com/hook"
       method: POST
       headers:
@@ -110,9 +110,9 @@ steps:
   - message:
       text: "Processing request..."
 
-# Webhook-only (no message)
+# Request-only (no message)
 steps:
-  - webhook:
+  - request:
       url: "https://crm.example.com/leads"
       method: POST
 \`\`\`
@@ -123,11 +123,11 @@ steps:
 |---|---|---|---|---|
 | message | text | string | yes | Message text (supports templates) |
 | message | to | string | no | Recipient override (default = sender) |
-| webhook | url | string | yes | Target URL |
-| webhook | method | string | "POST" | GET, POST, PUT, PATCH |
-| webhook | headers | object | {} | HTTP headers |
-| webhook | timeout | number | 5000 | Request timeout (ms) |
-| webhook | retry | number | 3 | Retry count |
+| request | url | string | yes | Target URL |
+| request | method | string | "POST" | GET, POST, PUT, PATCH |
+| request | headers | object | {} | HTTP headers |
+| request | timeout | number | 5000 | Request timeout (ms) |
+| request | retry | number | 3 | Retry count |
 | location | latitude | number | yes | -90 to 90 |
 | location | longitude | number | yes | -180 to 180 |
 | location | name | string | no | Location name |

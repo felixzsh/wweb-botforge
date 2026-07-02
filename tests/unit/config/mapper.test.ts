@@ -17,11 +17,11 @@ describe('Mapper', () => {
       expect((action.steps[0] as any).message.text).toBe('Hello!')
     })
 
-    it('should map webhook steps with defaults', () => {
+    it('should map request steps with defaults', () => {
       const config: Record<string, ActionConfig> = {
         notify: {
           steps: [{
-            webhook: {
+            request: {
               url: 'https://example.com/notify',
             },
           }],
@@ -32,20 +32,20 @@ describe('Mapper', () => {
 
       const action = catalog.get('notify')!
       const step = action.steps[0] as any
-      expect(step.webhook.url).toBe('https://example.com/notify')
-      expect(step.webhook.method).toBe('POST')
-      expect(step.webhook.timeout).toBe(5000)
-      expect(step.webhook.retries).toBe(3)
-      expect(step.webhook.headers).toEqual({})
+      expect(step.request.url).toBe('https://example.com/notify')
+      expect(step.request.method).toBe('POST')
+      expect(step.request.timeout).toBe(5000)
+      expect(step.request.retries).toBe(3)
+      expect(step.request.headers).toEqual({})
     })
 
-    it('should map composite pipeline (message + webhook)', () => {
+    it('should map composite pipeline (message + request)', () => {
       const config: Record<string, ActionConfig> = {
         escalate: {
           steps: [
             { message: { text: 'Connecting you to a human.' } },
             {
-              webhook: {
+              request: {
                 name: 'escalate',
                 url: 'https://example.com/escalate',
                 method: 'POST',
@@ -63,8 +63,8 @@ describe('Mapper', () => {
       const action = catalog.get('escalate')!
       expect(action.steps).toHaveLength(2)
       expect((action.steps[0] as any).message.text).toBe('Connecting you to a human.')
-      expect((action.steps[1] as any).webhook.name).toBe('escalate')
-      expect((action.steps[1] as any).webhook.retries).toBe(5)
+      expect((action.steps[1] as any).request.name).toBe('escalate')
+      expect((action.steps[1] as any).request.retries).toBe(5)
     })
 
     it('should throw if action has no steps and no on_blocked', () => {

@@ -10,7 +10,7 @@ export function resolveVars(text: string, context: ActionExecutionContext): stri
     })
 }
 
-export interface WebhookAction {
+export interface RequestStep {
   name?: string
   url: string
   method: 'GET' | 'POST' | 'PUT' | 'PATCH'
@@ -35,7 +35,7 @@ export interface MessageStep {
 
 export type ActionStep =
   | { message: MessageStep }
-  | { webhook: WebhookAction }
+  | { request: RequestStep }
   | { location: LocationAction }
 
 export interface CooldownGuard {

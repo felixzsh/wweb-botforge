@@ -55,19 +55,19 @@ describe('GraphExecutor', () => {
         },
         steps: [{ message: { text: 'Done!' } }],
       },
-      webhook_greet: {
+      request_greet: {
         steps: [
-          { message: { text: 'Webhook sent' } },
-          { webhook: { url: 'https://example.com/hook', retry: 1 } },
+          { message: { text: 'Request sent' } },
+          { request: { url: 'https://example.com/hook', retry: 1 } },
         ],
       },
-      webhook_fail: {
+      request_fail: {
         steps: [
-          { message: { text: 'Failed webhook' } },
-          { webhook: { url: 'https://example.com/fail', retry: 1 } },
+          { message: { text: 'Failed request' } },
+          { request: { url: 'https://example.com/fail', retry: 1 } },
         ],
       },
-      webhook_only: { steps: [{ webhook: { url: 'https://example.com/hook-only', retry: 1 } }] },
+      request_only: { steps: [{ request: { url: 'https://example.com/hook-only', retry: 1 } }] },
       send_office: {
         steps: [
           { message: { text: 'Here is our office.' } },
@@ -187,29 +187,29 @@ describe('GraphExecutor', () => {
           },
         },
       },
-      'webhook-flow': {
+      'request-flow': {
         root: 'start',
         nodes: {
           start: {
-            action: 'webhook_greet',
+            action: 'request_greet',
             edges: [],
           },
         },
       },
-      'webhook-fail': {
+      'request-fail': {
         root: 'start',
         nodes: {
           start: {
-            action: 'webhook_fail',
+            action: 'request_fail',
             edges: [],
           },
         },
       },
-      'webhook-only': {
+      'request-only': {
         root: 'start',
         nodes: {
           start: {
-            action: 'webhook_only',
+            action: 'request_only',
             edges: [],
           },
         },
@@ -556,7 +556,7 @@ describe('GraphExecutor', () => {
     })
   })
 
-  describe('webhook actions', () => {
+  describe('request actions', () => {
     let fetchMock: jest.Mock
     let originalFetch: typeof global.fetch
 
@@ -573,33 +573,33 @@ describe('GraphExecutor', () => {
       global.fetch = originalFetch
     })
 
-    it('should execute webhook action on root entry', async () => {
+    it('should execute request action on root entry', async () => {
       fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
 
-      bot = { ...bot, graph: 'webhook-flow' }
+      bot = { ...bot, graph: 'request-flow' }
 
       const handled = await executor.handleMessage(bot, makeMessage('hi'))
 
       expect(handled).toBe(true)
-      expect(sentMessages[0].content).toBe('Webhook sent')
+      expect(sentMessages[0].content).toBe('Request sent')
       expect(fetchMock).toHaveBeenCalledWith(
         'https://example.com/hook',
         expect.objectContaining({ method: 'POST' })
       )
     })
 
-    it('should not throw when webhook request fails', async () => {
+    it('should not throw when request fails', async () => {
       fetchMock.mockRejectedValue(new Error('Connection refused'))
 
-      bot = { ...bot, graph: 'webhook-fail' }
+      bot = { ...bot, graph: 'request-fail' }
 
       const handled = await executor.handleMessage(bot, makeMessage('hi'))
 
       expect(handled).toBe(true)
-      expect(sentMessages[0].content).toBe('Failed webhook')
+      expect(sentMessages[0].content).toBe('Failed request')
     })
 
-    it('should execute webhook-only action without reply', async () => {
+    it('should execute request-only action without reply', async () => {
       fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
 
       const defaultExec = new GraphExecutor(
@@ -609,7 +609,7 @@ describe('GraphExecutor', () => {
         outboxService
       )
 
-      bot = { ...bot, graph: 'webhook-only' }
+      bot = { ...bot, graph: 'request-only' }
 
       const handled = await defaultExec.handleMessage(bot, makeMessage('hi'))
 

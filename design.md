@@ -36,9 +36,9 @@ src/
 ├── action/
 │   ├── action.ts         Action domain types + pure execution functions
 │   ├── cooldown.ts       CooldownService: in-memory per-sender rate limiting
-│   └── webhook.ts        sendWebhookRequest: fetch + retry + exponential backoff
+│   └── request.ts        sendRequestRequest: fetch + retry + exponential backoff
 ├── messages/
-│   ├── contracts.ts      Messaging domain (MessageChannel, IncomingMessage, OutgoingMessage, WebhookPayload)
+│   ├── contracts.ts      Messaging domain (MessageChannel, IncomingMessage, OutgoingMessage, RequestPayload)
 │   ├── inbox.ts          InboxService: message listener registration & filtering
 │   └── outbox.ts         OutboxService: per-bot FIFO message queue with delays
 ├── api/
@@ -71,7 +71,7 @@ Domain concepts are plain TypeScript interfaces with no behavior:
 | `GraphDef` | Graph definition: root, timeout, fallback_node, nodes |
 | `Node` | A node within a graph: action reference + edge conditions |
 | `Edge` | Edge: fuzzy-matched phrases + target node |
-| `ActionDef` | What happens when an action fires: optional reply text + optional webhook + optional location |
+| `ActionDef` | What happens when an action fires: optional reply text + optional request + optional location |
 | `GraphState` | Runtime state for an in-progress graph session (sender, current node, timeout) |
 | `ConfigFile` | Raw YAML shape: global settings + actions + graphs + bots |
 
@@ -108,7 +108,7 @@ WhatsApp message
           → resolve template variables
           → check cooldown
           → enqueue reply → OutboxService → WhatsAppChannel.send()
-          → fire webhook → sendWebhookRequest()
+          → fire request → sendRequestRequest()
 ```
 
 ### Graph State Machine
@@ -194,7 +194,7 @@ actions:
 
   notify_slack:
     steps:
-      - webhook:
+      - request:
           url: https://hooks.slack.com/...
           method: POST
           retry: 3

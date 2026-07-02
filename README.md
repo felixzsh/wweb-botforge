@@ -14,7 +14,7 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 - **Multiple Bots**: Run several WhatsApp bots from one server
 - **YAML Configuration**: Define bot behavior in simple YAML files
 - **Actions & Graphs**: Build conversation state machines with fuzzy-matched edges
-- **Webhooks**: Connect to your existing apps via HTTP
+- **Requests**: Connect to your existing apps via HTTP
 - **REST API**: Send messages programmatically (optional)
 - **Systemd Service**: Run as a proper system service with auto-restart
 
@@ -78,7 +78,7 @@ default_timeout: 300               # Global default timeout for graph sessions (
 
 BotForge uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
 
-- **Actions**: Reusable behaviors — text replies, webhook calls, cooldowns. Not tied to any specific bot.
+- **Actions**: Reusable behaviors — text replies, request calls, cooldowns. Not tied to any specific bot.
 - **Graphs**: Conversation state machines. A graph owns a set of nodes connected by fuzzy-matched edges. Each bot references exactly one graph.
 - **Bots**: WhatsApp numbers that reference a single graph and have per-bot settings.
 
@@ -117,7 +117,7 @@ actions:
     steps:
       - message:
           text: "Connecting you to a human agent."
-      - webhook:
+      - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
           method: POST
@@ -128,7 +128,7 @@ actions:
 
   lead-notify:
     steps:
-      - webhook:
+      - request:
           name: lead-capture
           url: "https://crm.example.com/leads"
           method: POST
@@ -162,10 +162,10 @@ actions:
 | Step | Description |
 |---|---|
 | `message` | Sends a text message (optionally to a different recipient via `to`) |
-| `webhook` | Fires an HTTP request |
+| `request` | Fires an HTTP request |
 | `location` | Sends a WhatsApp location pin |
 
-When a webhook fires, it sends a JSON payload:
+When a request fires, it sends a JSON payload:
 
 ```json
 {
@@ -174,7 +174,7 @@ When a webhook fires, it sends a JSON payload:
   "timestamp": "2025-01-09T01:45:00Z",
   "botId": "support-bot",
   "botName": "support-bot",
-  "webhookName": "lead-capture",
+  "requestName": "lead-capture",
   "metadata": {}
 }
 ```
@@ -293,12 +293,12 @@ actions:
     steps:
       - message:
           text: "Connecting you to an agent."
-      - webhook:
+      - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
 ```
 
-Cooldowns are per-sender, per-action — different senders are tracked independently. The `on_blocked` pipeline can contain any step types (message, webhook, location).
+Cooldowns are per-sender, per-action — different senders are tracked independently. The `on_blocked` pipeline can contain any step types (message, request, location).
 
 ### Location Actions
 
@@ -373,10 +373,10 @@ systemctl --user disable wweb-botforge
 - Verify the bot's `graph` field references an existing graph
 - Test with exact phrases first, then tune `fuzzy_threshold`
 
-**Webhook not working?**
+**Request not working?**
 - Test your endpoint with tools like Postman
 - Check logs for timeout/connection errors
-- Verify webhook URL and headers
+- Verify request URL and headers
 
 ## License
 

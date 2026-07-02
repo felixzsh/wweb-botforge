@@ -209,23 +209,23 @@ function validateStep(step: unknown, ctx: FileContext, path: string): void {
 
   const s = step as Record<string, unknown>
   const keys = Object.keys(s)
-  const validKeys = ['message', 'webhook', 'location']
+  const validKeys = ['message', 'request', 'location']
   const stepKeys = keys.filter(k => validKeys.includes(k))
 
   if (stepKeys.length === 0) {
-    ctx.add(`action.${path} must have exactly one of: message, webhook, location`, path)
+    ctx.add(`action.${path} must have exactly one of: message, request, location`, path)
     return
   }
   if (stepKeys.length > 1) {
-    ctx.add(`action.${path} must have exactly one of: message, webhook, location (found: ${stepKeys.join(', ')})`, path)
+    ctx.add(`action.${path} must have exactly one of: message, request, location (found: ${stepKeys.join(', ')})`, path)
     return
   }
 
   if (s.message !== undefined) {
     validateMessageStep(s.message, ctx, `${path}.message`)
   }
-  if (s.webhook !== undefined) {
-    validateWebhookStep(s.webhook, ctx, `${path}.webhook`)
+  if (s.request !== undefined) {
+    validateRequestStep(s.request, ctx, `${path}.request`)
   }
   if (s.location !== undefined) {
     validateLocationStep(s.location, ctx, `${path}.location`)
@@ -246,7 +246,7 @@ function validateMessageStep(msg: unknown, ctx: FileContext, path: string): void
   }
 }
 
-function validateWebhookStep(wh: unknown, ctx: FileContext, path: string): void {
+function validateRequestStep(wh: unknown, ctx: FileContext, path: string): void {
   if (typeof wh !== 'object' || wh === null || Array.isArray(wh)) {
     ctx.add(`action.${path} must be an object`, path)
     return

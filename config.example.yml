@@ -34,7 +34,7 @@ actions:
     steps:
       - message:
           text: "Connecting you to a human agent. One moment please."
-      - webhook:
+      - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
           method: POST
@@ -43,10 +43,10 @@ actions:
           timeout: 10000
           retry: 3
 
-  # Webhook-only action
+  # request-only action
   lead-notify:
     steps:
-      - webhook:
+      - request:
           name: lead-capture
           url: "https://crm.example.com/leads"
           method: POST

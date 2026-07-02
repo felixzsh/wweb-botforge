@@ -1,6 +1,6 @@
 import { Bot, BotSettings, createBot, createDefaultSettings } from '../bot'
 import { validateId, validateTypingDelay, validateQueueDelay } from './validation'
-import { BotConfig, BotSettingsConfig, ActionConfig, ActionStepConfig, ActionMessageConfig, ActionGuardsConfig, WebhookActionConfig, LocationActionConfig, GraphConfig, NodeConfig, EdgeConfig } from './schema'
+import { BotConfig, BotSettingsConfig, ActionConfig, ActionStepConfig, ActionMessageConfig, ActionGuardsConfig, RequestStepConfig, LocationActionConfig, GraphConfig, NodeConfig, EdgeConfig } from './schema'
 import { ActionDef, ActionCatalog, LocationAction, ActionStep, MessageStep, CooldownGuard } from '../actions/action'
 import { GraphCatalog, GraphDef, Node, Edge } from '../graph/graph'
 
@@ -31,7 +31,7 @@ function mapAction(id: string, config: ActionConfig): ActionDef {
 
 function mapStep(config: ActionStepConfig): ActionStep {
   if (config.message) return { message: mapMessage(config.message) }
-  if (config.webhook) return { webhook: mapWebhookAction(config.webhook) }
+  if (config.request) return { request: mapRequestStep(config.request) }
   return { location: mapLocationAction(config.location!) }
 }
 
@@ -53,7 +53,7 @@ function mapGuards(config: ActionGuardsConfig): { cooldown?: CooldownGuard } {
   return result
 }
 
-function mapWebhookAction(config: WebhookActionConfig): {
+function mapRequestStep(config: RequestStepConfig): {
   name?: string
   url: string
   method: 'GET' | 'POST' | 'PUT' | 'PATCH'

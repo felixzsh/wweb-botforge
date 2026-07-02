@@ -1,6 +1,6 @@
-import { sendWebhookRequest, WebhookCall } from '../../../src/actions/webhook'
+import { sendRequest, RequestCall } from '../../../src/actions/request'
 
-describe('sendWebhookRequest', () => {
+describe('sendRequest', () => {
   let fetchMock: jest.Mock
   let originalFetch: typeof global.fetch
 
@@ -20,7 +20,7 @@ describe('sendWebhookRequest', () => {
   it('should succeed on 200 response', async () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -28,14 +28,14 @@ describe('sendWebhookRequest', () => {
       retries: 1,
     }
 
-    await expect(sendWebhookRequest(call)).resolves.toBeUndefined()
+    await expect(sendRequest(call)).resolves.toBeUndefined()
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it('should throw on HTTP error', async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' })
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -43,7 +43,7 @@ describe('sendWebhookRequest', () => {
       retries: 1,
     }
 
-    await expect(sendWebhookRequest(call)).rejects.toThrow('HTTP 500')
+    await expect(sendRequest(call)).rejects.toThrow('HTTP 500')
   })
 
   it('should retry on network error and succeed', async () => {
@@ -51,7 +51,7 @@ describe('sendWebhookRequest', () => {
       .mockRejectedValueOnce(new Error('Network error'))
       .mockResolvedValueOnce({ ok: true, status: 200, statusText: 'OK' })
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -59,14 +59,14 @@ describe('sendWebhookRequest', () => {
       retries: 2,
     }
 
-    await expect(sendWebhookRequest(call)).resolves.toBeUndefined()
+    await expect(sendRequest(call)).resolves.toBeUndefined()
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it('should throw after all retries fail', async () => {
     fetchMock.mockRejectedValue(new Error('Network error'))
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -74,8 +74,8 @@ describe('sendWebhookRequest', () => {
       retries: 2,
     }
 
-    await expect(sendWebhookRequest(call)).rejects.toThrow(
-      'Webhook request failed after 2 attempts'
+    await expect(sendRequest(call)).rejects.toThrow(
+      'Request failed after 2 attempts'
     )
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
@@ -83,7 +83,7 @@ describe('sendWebhookRequest', () => {
   it('should send body as JSON', async () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -92,7 +92,7 @@ describe('sendWebhookRequest', () => {
       body: { message: 'hello' },
     }
 
-    await sendWebhookRequest(call)
+    await sendRequest(call)
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://example.com/webhook',
@@ -103,7 +103,7 @@ describe('sendWebhookRequest', () => {
   it('should not send body when undefined', async () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -111,7 +111,7 @@ describe('sendWebhookRequest', () => {
       retries: 1,
     }
 
-    await sendWebhookRequest(call)
+    await sendRequest(call)
 
     const callArgs = fetchMock.mock.calls[0][1]
     expect(callArgs.body).toBeUndefined()
@@ -120,7 +120,7 @@ describe('sendWebhookRequest', () => {
   it('should merge custom headers with Content-Type', async () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: { Authorization: 'Bearer token' },
@@ -128,7 +128,7 @@ describe('sendWebhookRequest', () => {
       retries: 1,
     }
 
-    await sendWebhookRequest(call)
+    await sendRequest(call)
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://example.com/webhook',
@@ -144,7 +144,7 @@ describe('sendWebhookRequest', () => {
   it('should default to 1 retry when retries is 0', async () => {
     fetchMock.mockRejectedValue(new Error('Network error'))
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -152,8 +152,8 @@ describe('sendWebhookRequest', () => {
       retries: 0,
     }
 
-    await expect(sendWebhookRequest(call)).rejects.toThrow(
-      'Webhook request failed after 1 attempts'
+    await expect(sendRequest(call)).rejects.toThrow(
+      'Request failed after 1 attempts'
     )
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
@@ -161,7 +161,7 @@ describe('sendWebhookRequest', () => {
   it('should handle non-Error thrown values', async () => {
     fetchMock.mockRejectedValue('string error')
 
-    const call: WebhookCall = {
+    const call: RequestCall = {
       url: 'https://example.com/webhook',
       method: 'POST',
       headers: {},
@@ -169,8 +169,8 @@ describe('sendWebhookRequest', () => {
       retries: 1,
     }
 
-    await expect(sendWebhookRequest(call)).rejects.toThrow(
-      'Webhook request failed after 1 attempts: string error'
+    await expect(sendRequest(call)).rejects.toThrow(
+      'Request failed after 1 attempts: string error'
     )
   })
 })
