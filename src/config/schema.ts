@@ -32,7 +32,7 @@ export interface LocationActionConfig {
 }
 
 export interface ActionMessageConfig {
-  text: string
+  body: string
   to?: string
 }
 

@@ -32,19 +32,19 @@ describe('GraphExecutor', () => {
     } as unknown as OutboxService
 
     const actions: Record<string, ActionConfig> = {
-      greet: { steps: [{ message: { text: 'Menu:\n1. Hours\n2. Prices\n0. Exit' } }] },
-      hours: { steps: [{ message: { text: 'Open Mon-Fri 9-18h' } }] },
-      prices: { steps: [{ message: { text: 'From $10/mo' } }] },
-      invalid: { steps: [{ message: { text: 'Invalid option' } }] },
-      farewell: { steps: [{ message: { text: 'Goodbye!' } }] },
+      greet: { steps: [{ message: { body: 'Menu:\n1. Hours\n2. Prices\n0. Exit' } }] },
+      hours: { steps: [{ message: { body: 'Open Mon-Fri 9-18h' } }] },
+      prices: { steps: [{ message: { body: 'From $10/mo' } }] },
+      invalid: { steps: [{ message: { body: 'Invalid option' } }] },
+      farewell: { steps: [{ message: { body: 'Goodbye!' } }] },
       escalate: {
         guards: {
           cooldown: {
             duration: 30,
-            on_blocked: [{ message: { text: 'Please wait, action on cooldown.' } }],
+            on_blocked: [{ message: { body: 'Please wait, action on cooldown.' } }],
           },
         },
-        steps: [{ message: { text: 'Escalating to human.' } }],
+        steps: [{ message: { body: 'Escalating to human.' } }],
       },
       cool_reply: {
         guards: {
@@ -53,24 +53,24 @@ describe('GraphExecutor', () => {
             on_blocked: [],
           },
         },
-        steps: [{ message: { text: 'Done!' } }],
+        steps: [{ message: { body: 'Done!' } }],
       },
       request_greet: {
         steps: [
-          { message: { text: 'Request sent' } },
+          { message: { body: 'Request sent' } },
           { request: { url: 'https://example.com/hook', retry: 1 } },
         ],
       },
       request_fail: {
         steps: [
-          { message: { text: 'Failed request' } },
+          { message: { body: 'Failed request' } },
           { request: { url: 'https://example.com/fail', retry: 1 } },
         ],
       },
       request_only: { steps: [{ request: { url: 'https://example.com/hook-only', retry: 1 } }] },
       send_office: {
         steps: [
-          { message: { text: 'Here is our office.' } },
+          { message: { body: 'Here is our office.' } },
           {
             location: {
               latitude: 19.4326,

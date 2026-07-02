@@ -7,7 +7,7 @@ actions:
   greet:
     steps:
       - message:
-          text: "Hello! How can I help you today?"
+          body: "Hello! How can I help you today?"
 
   escalate:
     guards:
@@ -15,10 +15,10 @@ actions:
         duration: 120
         on_blocked:
           - message:
-              text: "You already requested a human agent. Please wait."
+              body: "You already requested a human agent. Please wait."
     steps:
       - message:
-          text: "Connecting you to a human agent."
+          body: "Connecting you to a human agent."
       - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
@@ -42,37 +42,37 @@ actions:
   menu:
     steps:
       - message:
-          text: "Main menu:\n1. Hours\n2. Pricing\n0. Exit"
+          body: "Main menu:\n1. Hours\n2. Pricing\n0. Exit"
 
   hours:
     steps:
       - message:
-          text: "Mon-Fri 9am-6pm, Sat 10am-2pm"
+          body: "Mon-Fri 9am-6pm, Sat 10am-2pm"
 
   pricing:
     steps:
       - message:
-          text: "Our pricing starts at $29/month."
+          body: "Our pricing starts at $29/month."
 
   invalid:
     steps:
       - message:
-          text: "That option is not valid."
+          body: "That option is not valid."
 
   farewell:
     steps:
       - message:
-          text: "Thanks! Bye."
+          body: "Thanks! Bye."
 
   pong:
     steps:
       - message:
-          text: "pong!"
+          body: "pong!"
 
   send-office:
     steps:
       - message:
-          text: "Here is our office."
+          body: "Here is our office."
       - location:
           latitude: 19.4326
           longitude: -99.1332

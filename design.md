@@ -36,7 +36,7 @@ src/
 ├── action/
 │   ├── action.ts         Action domain types + pure execution functions
 │   ├── cooldown.ts       CooldownService: in-memory per-sender rate limiting
-│   └── request.ts        sendRequestRequest: fetch + retry + exponential backoff
+│   └── request.ts        sendRequest: fetch + retry + exponential backoff
 ├── messages/
 │   ├── contracts.ts      Messaging domain (MessageChannel, IncomingMessage, OutgoingMessage, RequestPayload)
 │   ├── inbox.ts          InboxService: message listener registration & filtering
@@ -71,7 +71,7 @@ Domain concepts are plain TypeScript interfaces with no behavior:
 | `GraphDef` | Graph definition: root, timeout, fallback_node, nodes |
 | `Node` | A node within a graph: action reference + edge conditions |
 | `Edge` | Edge: fuzzy-matched phrases + target node |
-| `ActionDef` | What happens when an action fires: optional reply text + optional request + optional location |
+| `ActionDef` | What happens when an action fires: optional message body + optional request + optional location |
 | `GraphState` | Runtime state for an in-progress graph session (sender, current node, timeout) |
 | `ConfigFile` | Raw YAML shape: global settings + actions + graphs + bots |
 
@@ -108,7 +108,7 @@ WhatsApp message
           → resolve template variables
           → check cooldown
           → enqueue reply → OutboxService → WhatsAppChannel.send()
-          → fire request → sendRequestRequest()
+          → fire request → sendRequest()
 ```
 
 ### Graph State Machine
@@ -190,7 +190,7 @@ actions:
   hello_reply:
     steps:
       - message:
-          text: "Hello {{ sender }}! You said: {{ message }}"
+          body: "Hello {{ sender }}! You said: {{ message }}"
 
   notify_slack:
     steps:
@@ -205,10 +205,10 @@ actions:
         duration: 60
         on_blocked:
           - message:
-              text: "Please wait {{ variables.remaining }} seconds"
+              body: "Please wait {{ variables.remaining }} seconds"
     steps:
       - message:
-          text: "Processing..."
+          body: "Processing..."
 
 graphs:
   support:

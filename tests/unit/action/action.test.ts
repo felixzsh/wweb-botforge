@@ -41,14 +41,14 @@ describe('Action', () => {
   describe('mapActionCatalog with pipeline steps', () => {
     it('should map a simple message step', () => {
       const config: Record<string, ActionConfig> = {
-        greet: { steps: [{ message: { text: 'Hello!' } }] },
+        greet: { steps: [{ message: { body: 'Hello!' } }] },
       }
       const catalog = mapActionCatalog(config)
       const action = catalog.get('greet')!
 
       expect(action.steps).toHaveLength(1)
       expect('message' in action.steps[0]).toBe(true)
-      expect((action.steps[0] as any).message.text).toBe('Hello!')
+      expect((action.steps[0] as any).message.body).toBe('Hello!')
     })
 
     it('should map a request step', () => {
@@ -87,7 +87,7 @@ describe('Action', () => {
       const config: Record<string, ActionConfig> = {
         send_office: {
           steps: [
-            { message: { text: 'Here is our office.' } },
+            { message: { body: 'Here is our office.' } },
             {
               location: {
                 latitude: 19.4326,
@@ -114,12 +114,12 @@ describe('Action', () => {
             cooldown: {
               duration: 120,
               on_blocked: [
-                { message: { text: 'You already requested this. Please wait.' } },
+                { message: { body: 'You already requested this. Please wait.' } },
               ],
             },
           },
           steps: [
-            { message: { text: 'Escalating...' } },
+            { message: { body: 'Escalating...' } },
             { request: { url: 'https://api.example.com/escalate' } },
           ],
         },
@@ -157,7 +157,7 @@ describe('Action', () => {
   describe('resolveAction', () => {
     it('should return action by id', () => {
       const config: Record<string, ActionConfig> = {
-        greet: { steps: [{ message: { text: 'Hello!' } }] },
+        greet: { steps: [{ message: { body: 'Hello!' } }] },
       }
       const catalog = mapActionCatalog(config)
 

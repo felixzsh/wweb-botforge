@@ -5,7 +5,7 @@ describe('Mapper', () => {
   describe('mapActionCatalog', () => {
     it('should map simple message step', () => {
       const config: Record<string, ActionConfig> = {
-        greet: { steps: [{ message: { text: 'Hello!' } }] },
+        greet: { steps: [{ message: { body: 'Hello!' } }] },
       }
 
       const catalog = mapActionCatalog(config)
@@ -14,7 +14,7 @@ describe('Mapper', () => {
       const action = catalog.get('greet')!
       expect(action.steps).toHaveLength(1)
       expect('message' in action.steps[0]).toBe(true)
-      expect((action.steps[0] as any).message.text).toBe('Hello!')
+      expect((action.steps[0] as any).message.body).toBe('Hello!')
     })
 
     it('should map request steps with defaults', () => {
@@ -43,7 +43,7 @@ describe('Mapper', () => {
       const config: Record<string, ActionConfig> = {
         escalate: {
           steps: [
-            { message: { text: 'Connecting you to a human.' } },
+            { message: { body: 'Connecting you to a human.' } },
             {
               request: {
                 name: 'escalate',
@@ -62,7 +62,7 @@ describe('Mapper', () => {
 
       const action = catalog.get('escalate')!
       expect(action.steps).toHaveLength(2)
-      expect((action.steps[0] as any).message.text).toBe('Connecting you to a human.')
+      expect((action.steps[0] as any).message.body).toBe('Connecting you to a human.')
       expect((action.steps[1] as any).request.name).toBe('escalate')
       expect((action.steps[1] as any).request.retries).toBe(5)
     })
@@ -109,7 +109,7 @@ describe('Mapper', () => {
       const config: Record<string, ActionConfig> = {
         send_office: {
           steps: [
-            { message: { text: 'Here is our office.' } },
+            { message: { body: 'Here is our office.' } },
             {
               location: {
                 latitude: 19.4326,
@@ -123,7 +123,7 @@ describe('Mapper', () => {
       const catalog = mapActionCatalog(config)
 
       const action = catalog.get('send_office')!
-      expect((action.steps[0] as any).message.text).toBe('Here is our office.')
+      expect((action.steps[0] as any).message.body).toBe('Here is our office.')
       expect((action.steps[1] as any).location.latitude).toBe(19.4326)
       expect((action.steps[1] as any).location.longitude).toBe(-99.1332)
     })
@@ -135,12 +135,12 @@ describe('Mapper', () => {
             cooldown: {
               duration: 120,
               on_blocked: [
-                { message: { text: 'Please wait before requesting again.' } },
+                { message: { body: 'Please wait before requesting again.' } },
               ],
             },
           },
           steps: [
-            { message: { text: 'Escalating...' } },
+            { message: { body: 'Escalating...' } },
           ],
         },
       }
@@ -150,7 +150,7 @@ describe('Mapper', () => {
 
       expect(action.guards?.cooldown?.duration).toBe(120)
       expect(action.guards?.cooldown?.onBlocked).toHaveLength(1)
-      expect((action.guards?.cooldown?.onBlocked![0] as any).message.text).toBe('Please wait before requesting again.')
+      expect((action.guards?.cooldown?.onBlocked![0] as any).message.body).toBe('Please wait before requesting again.')
     })
   })
 

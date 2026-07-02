@@ -238,8 +238,8 @@ function validateMessageStep(msg: unknown, ctx: FileContext, path: string): void
     return
   }
   const m = msg as Record<string, unknown>
-  if (typeof m.text !== 'string' || !m.text) {
-    ctx.add(`action.${path}.text is required and must be a non-empty string`, `${path}.text`)
+  if (typeof m.body !== 'string' || !m.body) {
+    ctx.add(`action.${path}.body is required and must be a non-empty string`, `${path}.body`)
   }
   if (m.to !== undefined && typeof m.to !== 'string') {
     ctx.add(`action.${path}.to must be a string`, `${path}.to`)

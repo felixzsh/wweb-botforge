@@ -82,7 +82,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
 
         const escalate = catalog.get('escalate')!
         expect(escalate.guards?.cooldown?.duration).toBe(120)
-        expect(escalate.steps[0] as any).toEqual({ message: { text: 'Connecting you to a human agent.' } })
+        expect(escalate.steps[0] as any).toEqual({ message: { body: 'Connecting you to a human agent.' } })
         expect((escalate.steps[1] as any).request.name).toBe('escalate-human')
         expect((escalate.steps[1] as any).request.method).toBe('POST')
         expect((escalate.steps[1] as any).request.timeout).toBe(10000)
@@ -268,7 +268,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
       const config = await loadConfig(fixturePath)
 
       expect(config.actions?.greet).toBeDefined()
-      expect(config.actions?.greet.steps?.[0]?.message?.text).toBe('Hello! Welcome to our support chat. How can I help you?')
+      expect(config.actions?.greet.steps?.[0]?.message?.body).toBe('Hello! Welcome to our support chat. How can I help you?')
       expect(config.actions?.menu).toBeDefined()
       expect(config.actions?.hours).toBeDefined()
       expect(config.actions?.invalid).toBeDefined()
@@ -369,7 +369,7 @@ actions:
   greet:
     steps:
       - message:
-          text: "Overridden reply"
+          body: "Overridden reply"
 graphs:
   test-graph:
     root: start
@@ -382,11 +382,11 @@ graphs:
       fs.writeFileSync(path.join(actionsDir, 'greet.yml'), `
 steps:
   - message:
-      text: "Original reply from directory"
+      body: "Original reply from directory"
 `)
 
       const config = await loadConfig(configPath)
-      expect(config.actions?.greet.steps?.[0]?.message?.text).toBe('Overridden reply')
+      expect(config.actions?.greet.steps?.[0]?.message?.body).toBe('Overridden reply')
     })
   })
 
@@ -471,7 +471,7 @@ bots:
       fs.writeFileSync(path.join(actionsDir, 'greet.yml'), `
 steps:
   - message:
-      text: "Hello! Choose an option"
+      body: "Hello! Choose an option"
 `)
 
       fs.writeFileSync(path.join(graphsDir, 'faq-menu.yml'), `
@@ -486,7 +486,7 @@ nodes:
 
       expect(config.actions).toBeDefined()
       expect(config.actions?.greet).toBeDefined()
-      expect(config.actions?.greet.steps?.[0]?.message?.text).toBe('Hello! Choose an option')
+      expect(config.actions?.greet.steps?.[0]?.message?.body).toBe('Hello! Choose an option')
 
       expect(config.graphs).toBeDefined()
       expect(config.graphs?.['faq-menu']).toBeDefined()
@@ -546,7 +546,7 @@ actions:
   greet:
     steps:
       - message:
-          text: "Hello"
+          body: "Hello"
 graphs:
   demo:
     root: start

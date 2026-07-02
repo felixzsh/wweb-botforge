@@ -37,7 +37,7 @@ function mapStep(config: ActionStepConfig): ActionStep {
 
 function mapMessage(config: ActionMessageConfig): MessageStep {
   return {
-    text: config.text,
+    body: config.body,
     to: config.to,
   }
 }

@@ -84,12 +84,12 @@ Each action has an ID (the key). Stored in \`actions/<id>.yml\`. An action is a 
 # Simple message step
 steps:
   - message:
-      text: "Hello!"
+      body: "Hello!"
 
 # Pipeline: message + request
 steps:
   - message:
-      text: "Processing..."
+      body: "Processing..."
   - request:
       name: my-request
       url: "https://api.example.com/hook"
@@ -105,10 +105,10 @@ guards:
     duration: 120
     on_blocked:
       - message:
-          text: "Please wait before requesting again."
+          body: "Please wait before requesting again."
 steps:
   - message:
-      text: "Processing request..."
+      body: "Processing request..."
 
 # Request-only (no message)
 steps:
@@ -121,7 +121,7 @@ steps:
 
 | Step | Field | Type | Required | Description |
 |---|---|---|---|---|
-| message | text | string | yes | Message text (supports templates) |
+| message | body | string | yes | Message body (supports templates) |
 | message | to | string | no | Recipient override (default = sender) |
 | request | url | string | yes | Target URL |
 | request | method | string | "POST" | GET, POST, PUT, PATCH |
@@ -279,7 +279,7 @@ log_level: "info"
 \`\`\`yaml
 steps:
   - message:
-      text: "Hev {{senderName}}! How can I help you today?"
+      body: "Hev {{senderName}}! How can I help you today?"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/menu.yml\`:
@@ -287,7 +287,7 @@ steps:
 \`\`\`yaml
 steps:
   - message:
-      text: "Main menu:\\n1. Hours\\n2. Contact\\n0. Exit"
+      body: "Main menu:\\n1. Hours\\n2. Contact\\n0. Exit"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/hours.yml\`:
@@ -295,7 +295,7 @@ steps:
 \`\`\`yaml
 steps:
   - message:
-      text: "Mon-Fri 9am-6pm"
+      body: "Mon-Fri 9am-6pm"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/farewell.yml\`:
@@ -303,7 +303,7 @@ steps:
 \`\`\`yaml
 steps:
   - message:
-      text: "Thanks, have a great day!"
+      body: "Thanks, have a great day!"
 \`\`\`
 
 \`~/.config/wweb-botforge/actions/invalid.yml\`:
@@ -311,7 +311,7 @@ steps:
 \`\`\`yaml
 steps:
   - message:
-      text: "Invalid option. Choose a number from the menu."
+      body: "Invalid option. Choose a number from the menu."
 \`\`\`
 
 \`~/.config/wweb-botforge/graphs/support.yml\`:

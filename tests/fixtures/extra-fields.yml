@@ -11,7 +11,7 @@ actions:
   greet:
     steps:
       - message:
-          text: "Hello!"
+          body: "Hello!"
     unknown_action_field: "ignored"
 graphs:
   simple-graph:

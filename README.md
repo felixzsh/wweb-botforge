@@ -105,7 +105,7 @@ actions:
   greet:
     steps:
       - message:
-          text: "Hello! How can I help you?"
+          body: "Hello! How can I help you?"
 
   escalate:
     guards:
@@ -113,10 +113,10 @@ actions:
         duration: 120
         on_blocked:
           - message:
-              text: "You already requested a human agent. Please wait."
+              body: "You already requested a human agent. Please wait."
     steps:
       - message:
-          text: "Connecting you to a human agent."
+          body: "Connecting you to a human agent."
       - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
@@ -139,7 +139,7 @@ actions:
   send-office:
     steps:
       - message:
-          text: "Here is our office."
+          body: "Here is our office."
       - location:
           latitude: 19.4326
           longitude: -99.1332
@@ -289,10 +289,10 @@ actions:
         duration: 120
         on_blocked:
           - message:
-              text: "You already requested an agent. Please wait."
+              body: "You already requested an agent. Please wait."
     steps:
       - message:
-          text: "Connecting you to an agent."
+          body: "Connecting you to an agent."
       - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
@@ -309,7 +309,7 @@ actions:
   send-office:
     steps:
       - message:
-          text: "Here is our office."
+          body: "Here is our office."
       - location:
           latitude: 19.4326
           longitude: -99.1332

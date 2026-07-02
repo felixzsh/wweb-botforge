@@ -15,13 +15,13 @@ actions:
   greet:
     steps:
       - message:
-          text: "Hello! Welcome to our support chat. How can I help you today?"
+          body: "Hello! Welcome to our support chat. How can I help you today?"
 
   # Menu action with options
   menu:
     steps:
       - message:
-          text: "Main menu:\n1. Hours & schedule\n2. Product catalog\n3. Talk to a human\n4. Pricing\n0. Exit"
+          body: "Main menu:\n1. Hours & schedule\n2. Product catalog\n3. Talk to a human\n4. Pricing\n0. Exit"
 
   # Action with cooldown — same sender can't re-trigger within cooldown period
   escalate:
@@ -30,10 +30,10 @@ actions:
         duration: 120                # Seconds before same sender can trigger this again
         on_blocked:
           - message:
-              text: "You already requested a human agent. Please wait, one will connect shortly."
+              body: "You already requested a human agent. Please wait, one will connect shortly."
     steps:
       - message:
-          text: "Connecting you to a human agent. One moment please."
+          body: "Connecting you to a human agent. One moment please."
       - request:
           name: escalate-human
           url: "https://api.example.com/support/escalate"
@@ -58,38 +58,38 @@ actions:
   hours:
     steps:
       - message:
-          text: "Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
+          body: "Our support hours:\n• Monday-Friday: 9:00 AM - 6:00 PM\n• Saturday: 10:00 AM - 2:00 PM\n• Sunday: Closed"
 
   catalog:
     steps:
       - message:
-          text: "Here's our product catalog: https://example.com/catalog.pdf"
+          body: "Here's our product catalog: https://example.com/catalog.pdf"
 
   pricing:
     steps:
       - message:
-          text: "Our pricing starts at $29/month for the basic plan. Would you like more details?"
+          body: "Our pricing starts at $29/month for the basic plan. Would you like more details?"
 
   invalid:
     steps:
       - message:
-          text: "That option is not valid. Please choose a number from the menu."
+          body: "That option is not valid. Please choose a number from the menu."
 
   farewell:
     steps:
       - message:
-          text: "Thank you! Have a great day. If you need anything else, just write 'menu'."
+          body: "Thank you! Have a great day. If you need anything else, just write 'menu'."
 
   pong:
     steps:
       - message:
-          text: "pong!"
+          body: "pong!"
 
   # Send a WhatsApp location pin (combined with a text message)
   send-office:
     steps:
       - message:
-          text: "Here is our office."
+          body: "Here is our office."
       - location:
           latitude: 19.4326
           longitude: -99.1332

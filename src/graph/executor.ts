@@ -312,7 +312,7 @@ export class GraphExecutor {
   ): Promise<void> {
     if ('message' in step) {
       const to = step.message.to ? resolveVars(step.message.to, context) : message.from
-      const text = resolveVars(step.message.text, context)
+      const text = resolveVars(step.message.body, context)
       this.outboxService.enqueue(bot.id, to, text)
       this.logger.debug(`  message step → to=${to} text="${text.substring(0, 40)}"`)
       return

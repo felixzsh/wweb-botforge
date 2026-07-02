@@ -29,7 +29,7 @@ export interface LocationAction {
 }
 
 export interface MessageStep {
-  text: string
+  body: string
   to?: string
 }
 
