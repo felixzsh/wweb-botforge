@@ -26,6 +26,9 @@ export async function sendRequest(call: RequestCall): Promise<void> {
   let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), call.timeout)
+
     try {
       const response = await fetch(call.url, {
         method: call.method,
@@ -34,8 +37,10 @@ export async function sendRequest(call: RequestCall): Promise<void> {
           ...call.headers,
         },
         body: call.body !== undefined ? JSON.stringify(call.body) : undefined,
-        signal: AbortSignal.timeout(call.timeout),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -44,6 +49,7 @@ export async function sendRequest(call: RequestCall): Promise<void> {
       logger.debug(`Request successful: ${call.url}`)
       return
     } catch (error) {
+      clearTimeout(timeoutId)
       lastError = error instanceof Error ? error : new Error(String(error))
 
       if (attempt < maxRetries) {
