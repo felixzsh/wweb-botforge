@@ -70,9 +70,10 @@ default_timeout: 300
 ### Global Settings
 
 | Field | Type | Default | Description |
-|---|---|---|---|
+|---|---|---|---|---|
 | chromium_path | string | - | Path to Chromium/Chrome |
 | api_port | number | 3000 | REST API port (if set, API runs on this port) |
+| api_key | string | - | REST API key (optional — if set, all /api/* requests require \`Authorization: Bearer <key>\`) |
 | log_level | string | "info" | info, debug, warn, error |
 | default_timeout | number | 300 | Default graph session TTL (seconds) |
 
@@ -361,6 +362,185 @@ settings:
   ignore_groups: true
   ignored_senders:
     - "status@broadcast"
+\`\`\`
+
+---
+
+## REST API Reference
+
+When \`api_port\` is set in config, the daemon starts an HTTP API at \`http://localhost:<api_port>\`.
+
+### Authentication
+
+If \`api_key\` is configured in \`config.yml\`, every \`/api/*\` request (except \`/api/health\`) must include:
+
+\`\`\`
+Authorization: Bearer <api_key>
+\`\`\`
+
+If \`api_key\` is not set, the API is open (suitable for localhost-only or reverse-proxy-controlled setups).
+
+### Endpoints
+
+#### GET /api/health
+
+Liveness probe. Always responds without authentication.
+
+\`\`\`json
+{ "status": "ok", "timestamp": "2025-01-01T00:00:00.000Z", "service": "WWeb BotForge API" }
+\`\`\`
+
+#### GET /api/status
+
+Detailed status of all bots with session state.
+
+\`\`\`bash
+curl http://localhost:3000/api/status
+\`\`\`
+
+\`\`\`json
+{
+  "running": true,
+  "bots": [
+    {
+      "id": "support-bot",
+      "graph": "faq-support",
+      "phone": "521234567890@c.us",
+      "session": { "state": "connected", "lastQR": false, "error": null }
+    }
+  ],
+  "total": 1
+}
+\`\`\`
+
+#### GET /api/bots
+
+List all bots with their configuration.
+
+\`\`\`bash
+curl http://localhost:3000/api/bots
+\`\`\`
+
+\`\`\`json
+{ "bots": [{ "id": "support-bot", "phone": "...", "graph": "faq-support", "settings": {} }], "total": 1 }
+\`\`\`
+
+#### GET /api/bots/:botId
+
+Single bot info.
+
+\`\`\`bash
+curl http://localhost:3000/api/bots/support-bot
+\`\`\`
+
+#### POST /api/messages/send
+
+Enqueue an outgoing WhatsApp message.
+
+\`\`\`bash
+curl -X POST http://localhost:3000/api/messages/send \\
+  -H 'Content-Type: application/json' \\
+  -d '{"botId": "support-bot", "to": "521234567890@c.us", "content": "Hello from the API!", "metadata": {"source": "webhook"}}'
+\`\`\`
+
+\`\`\`json
+{ "success": true, "messageId": "uuid", "botId": "support-bot", "queued": true }
+\`\`\`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| botId | string | yes | Bot ID to send from |
+| to | string | yes | Recipient WhatsApp ID (number@c.us) |
+| content | string | yes | Message body (supports templates) |
+| metadata | object | no | Arbitrary metadata attached to the message |
+
+#### GET /api/messages/queue
+
+All message queues status.
+
+\`\`\`bash
+curl http://localhost:3000/api/messages/queue
+\`\`\`
+
+#### GET /api/messages/queue/:botId
+
+Per-bot queue status.
+
+\`\`\`bash
+curl http://localhost:3000/api/messages/queue/support-bot
+\`\`\`
+
+#### GET /api/sessions
+
+List all registered WhatsApp sessions.
+
+\`\`\`bash
+curl http://localhost:3000/api/sessions
+\`\`\`
+
+#### POST /api/sessions/:id
+
+Register/initiate a WhatsApp session. If the session already exists and is pending, returns current state. If already connected, returns 409.
+
+\`\`\`bash
+curl -X POST http://localhost:3000/api/sessions/support-bot
+\`\`\`
+
+\`\`\`json
+{ "success": true, "id": "support-bot", "session": { "state": "pending" } }
+\`\`\`
+
+#### GET /api/sessions/:id
+
+Get session info by bot ID.
+
+\`\`\`bash
+curl http://localhost:3000/api/sessions/support-bot
+\`\`\`
+
+#### DELETE /api/sessions/:id
+
+Remove/disconnect a WhatsApp session.
+
+\`\`\`bash
+curl -X DELETE http://localhost:3000/api/sessions/support-bot
+\`\`\`
+
+#### GET /api/sessions/:id/events
+
+Server-Sent Events (SSE) stream for session lifecycle. Useful for QR authentication programmatically.
+
+\`\`\`bash
+curl -N http://localhost:3000/api/sessions/support-bot/events
+\`\`\`
+
+Events:
+
+| event type | data | description |
+|---|---|---|
+| \`qr\` | \`{ "qr": "base64..." }\` | QR code for authentication |
+| \`ready\` | \`{ "phone": "521234567890@c.us" }\` | Session connected |
+| \`auth_failure\` | \`{ "error": "..." }\` | Authentication failed |
+| \`disconnected\` | \`{}\` | Session disconnected |
+
+#### POST /api/config/reload
+
+Trigger a hot reload of the configuration from disk.
+
+\`\`\`bash
+curl -X POST http://localhost:3000/api/config/reload
+\`\`\`
+
+#### GET /api/config/status
+
+Check if the config file watcher is active.
+
+\`\`\`bash
+curl http://localhost:3000/api/config/status
+\`\`\`
+
+\`\`\`json
+{ "watching": true }
 \`\`\`
 
 ---

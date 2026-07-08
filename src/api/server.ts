@@ -14,6 +14,7 @@ import { getLogger } from '../helpers/logger'
 export class ApiServer {
   private app: express.Application
   private port: number
+  private apiKey?: string
   private outboxService: OutboxService
   private bots: Map<string, Bot>
   private fleet?: BotFleet
@@ -25,16 +26,19 @@ export class ApiServer {
     bots: Map<string, Bot>,
     port: number = 3000,
     fleet?: BotFleet,
-    configWatcher?: ConfigWatcher
+    configWatcher?: ConfigWatcher,
+    apiKey?: string
   ) {
     this.app = express()
     this.port = port
+    this.apiKey = apiKey
     this.outboxService = outboxService
     this.bots = bots
     this.fleet = fleet
     this.configWatcher = configWatcher
 
     this.setupMiddleware()
+    this.setupAuth()
     this.setupRoutes()
   }
 
@@ -55,6 +59,22 @@ export class ApiServer {
       } else {
         next()
       }
+    })
+  }
+
+  private setupAuth(): void {
+    if (!this.apiKey) return
+
+    this.app.use('/api', (req, res, next) => {
+      if (req.path === '/health') return next()
+
+      const auth = req.headers.authorization
+      if (auth !== `Bearer ${this.apiKey}`) {
+        res.status(401).json({ error: 'Unauthorized — provide Authorization: Bearer <api_key>' })
+        return
+      }
+
+      next()
     })
   }
 
