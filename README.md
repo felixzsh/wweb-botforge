@@ -95,7 +95,7 @@ Bot
 Actions are the building blocks, defined as a **pipeline of ordered steps**. Each action can have an optional `guards` block (for rate-limiting) and a `steps` array that runs in sequence.
 
 Replies support template variables:
-- `{{sender}}` — the sender's phone number
+- `{{senderPhone}}` — the sender's phone number
 - `{{message}}` — the incoming message text
 - `{{bot.id}}` — the bot's ID
 - `{{variables.name}}` — graph session variables
@@ -169,7 +169,8 @@ When a request fires, it sends a JSON payload:
 
 ```json
 {
-  "sender": "521234567890",
+  "senderPhone": "521234567890",
+  "senderName": "John Doe",
   "message": "I'm interested in your product",
   "timestamp": "2025-01-09T01:45:00Z",
   "botId": "support-bot",

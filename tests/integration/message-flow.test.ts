@@ -58,7 +58,7 @@ describe('Message flow end-to-end', () => {
 
   it('should execute root action on first message', async () => {
     await fleet.start(makeConfig({
-      actions: { greet: { steps: [{ message: { body: 'Hello {{sender}}!' } }] } },
+      actions: { greet: { steps: [{ message: { body: 'Hello {{senderPhone}}!' } }] } },
       graphs: {
         main: {
           root: 'start',

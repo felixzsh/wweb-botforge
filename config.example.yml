@@ -223,5 +223,5 @@ bots:
 # - Action cooldowns prevent spam (per sender per action)
 # - Graph sessions automatically expire after timeout seconds of inactivity
 # - fallback handles unexpected user responses without breaking the graph
-# - Action reply templates support {{sender}}, {{message}}, {{bot.id}}, {{variables.name}}
+# - Action reply templates support {{senderPhone}}, {{senderName}}, {{message}}, {{bot.id}}, {{variables.name}}
 # - Location actions send a WhatsApp location pin; fields: latitude, longitude, name, address, url, description

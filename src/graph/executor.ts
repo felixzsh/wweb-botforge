@@ -264,7 +264,7 @@ export class GraphExecutor {
     const context: ActionExecutionContext = {
       botId: bot.id,
       botName: bot.id,
-      sender: message.from,
+      senderPhone: message.from,
       senderName: message.senderName,
       message: message.content,
       variables,
@@ -387,7 +387,8 @@ export class GraphExecutor {
 
   private buildRequestPayload(bot: Bot, message: IncomingMessage, requestName: string): RequestPayload {
     return {
-      sender: message.from,
+      senderPhone: message.from,
+      senderName: message.senderName,
       message: message.content,
       timestamp: message.timestamp.toISOString(),
       botId: bot.id,

@@ -7,13 +7,13 @@ describe('Action', () => {
     const context: ActionExecutionContext = {
       botId: 'bot-1',
       botName: 'Test Bot',
-      sender: '521234567890',
+      senderPhone: '521234567890',
       message: 'hello',
       variables: { name: 'Felix' },
     }
 
-    it('should resolve {{sender}}', () => {
-      expect(resolveVars('Hi {{sender}}!', context)).toBe('Hi 521234567890!')
+    it('should resolve {{senderPhone}}', () => {
+      expect(resolveVars('Hi {{senderPhone}}!', context)).toBe('Hi 521234567890!')
     })
 
     it('should resolve {{variables.name}}', () => {
@@ -29,7 +29,7 @@ describe('Action', () => {
       expect(resolveVars('Hi {{senderName}}!', ctx)).toBe('Hi Marcos!')
     })
 
-    it('should fallback senderName to sender when senderName is missing', () => {
+    it('should fallback senderName to senderPhone when senderName is missing', () => {
       expect(resolveVars('Hi {{senderName}}!', context)).toBe('Hi 521234567890!')
     })
 

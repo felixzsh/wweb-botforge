@@ -232,7 +232,7 @@ Action replies support variable interpolation:
 
 | Variable | Description |
 |---|---|
-| \`{{sender}}\` | Sender phone number |
+| \`{{senderPhone}}\` | Sender phone number |
 | \`{{senderName}}\` | Sender pushname (if available) |
 | \`{{message}}\` | Raw message body |
 | \`{{bot.id}}\` | Bot ID |

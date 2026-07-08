@@ -1,7 +1,8 @@
 import { getLogger } from '../helpers/logger'
 
 export interface RequestPayload {
-  sender: string
+  senderPhone: string
+  senderName?: string
   message: string
   timestamp: string
   botId: string
