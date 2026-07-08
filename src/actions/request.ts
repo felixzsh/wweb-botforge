@@ -54,7 +54,7 @@ export async function sendRequest(call: RequestCall): Promise<void> {
 
       if (attempt < maxRetries) {
         const backoffMs = Math.pow(2, attempt - 1) * 1000
-        logger.warn(`Request failed (attempt ${attempt}/${maxRetries}), retrying in ${backoffMs}ms:`, lastError.message)
+        logger.warn(`Request failed (attempt ${attempt}/${maxRetries}), retrying in ${backoffMs}ms: ${lastError.message}`)
         await new Promise(resolve => setTimeout(resolve, backoffMs))
       }
     }

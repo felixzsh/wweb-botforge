@@ -49,7 +49,8 @@ export class InboxService {
       await this.graphExecutor.handleMessage(bot, message)
 
     } catch (error) {
-      this.logger.error(`Error handling message for bot "${bot.id}":`, error)
+      const msg = error instanceof Error ? error.message : String(error)
+      this.logger.error(`Error handling message for bot "${bot.id}": ${msg}`)
     }
   }
 

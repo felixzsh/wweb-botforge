@@ -35,7 +35,8 @@ export class ConfigWatcher {
         if (this.debounceTimer) clearTimeout(this.debounceTimer)
         this.debounceTimer = setTimeout(() => {
           this.reload().catch(err => {
-            this.logger.error('Config reload error:', err)
+            const msg = err instanceof Error ? err.message : String(err)
+            this.logger.error(`Config reload error: ${msg}`)
           })
         }, 500)
       })
@@ -43,7 +44,8 @@ export class ConfigWatcher {
       this.watching = true
       this.logger.info(`Config watcher started on ${this.configDir}`)
     } catch (error) {
-      this.logger.warn('Failed to start config watcher:', error)
+      const msg = error instanceof Error ? error.message : String(error)
+      this.logger.warn(`Failed to start config watcher: ${msg}`)
     }
   }
 
@@ -98,7 +100,8 @@ export class ConfigWatcher {
 
       this.logger.info('Configuration reloaded successfully')
     } catch (error) {
-      this.logger.error('Failed to reload configuration:', error)
+      const msg = error instanceof Error ? error.message : String(error)
+      this.logger.error(`Failed to reload configuration: ${msg}`)
     }
   }
 }

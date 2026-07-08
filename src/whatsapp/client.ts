@@ -108,14 +108,14 @@ export class WhatsAppChannel implements MessageChannel {
           }
           domainMessage.senderName = contact.pushname || contact.name || contact.shortName
         } catch (err: any) {
-          this.logger.debug('LID resolution failed:', err.message)
+          this.logger.debug(`LID resolution failed: ${err.message}`)
         }
       } else {
         try {
           const contact = await msg.getContact()
           domainMessage.senderName = contact.pushname || contact.name || contact.shortName
         } catch (err: any) {
-          this.logger.debug('Contact resolution failed:', err.message)
+          this.logger.debug(`Contact resolution failed: ${err.message}`)
         }
       }
 
@@ -187,7 +187,7 @@ export class WhatsAppChannel implements MessageChannel {
     }
 
     const whatsappMsg = toWhatsAppFormat(message)
-    this.logger.debug('WhatsApp send options:', JSON.stringify(whatsappMsg.options, null, 2))
+    this.logger.debug(`WhatsApp send options: ${JSON.stringify(whatsappMsg.options, null, 2)}`)
 
     if (whatsappMsg.options?.type === 'location') {
       const { latitude, longitude, name, address, url, description } = whatsappMsg.options as Record<string, any>

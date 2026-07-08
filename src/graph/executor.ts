@@ -338,9 +338,10 @@ export class GraphExecutor {
     }
 
     if ('request' in step) {
+      const resolvedUrl = resolveVars(step.request.url, context)
+
       try {
         const payload = this.buildRequestPayload(bot, message, step.request.name || 'unnamed')
-        const resolvedUrl = resolveVars(step.request.url, context)
         await sendRequest({
           url: resolvedUrl,
           method: step.request.method,
@@ -350,7 +351,8 @@ export class GraphExecutor {
           retries: step.request.retries,
         })
       } catch (error) {
-        this.logger.error(`Failed to execute request step for bot "${bot.id}":`, error)
+        const msg = error instanceof Error ? error.message : String(error)
+        this.logger.error(`Failed to execute request step for bot "${bot.id}" url="${resolvedUrl}": ${msg}`)
       }
       return
     }

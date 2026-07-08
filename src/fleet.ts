@@ -83,7 +83,8 @@ export class BotFleet {
       return this.bots
 
     } catch (error) {
-      this.logger.error('Failed to start Bot Fleet Launcher:', error)
+      const msg = error instanceof Error ? error.message : String(error)
+      this.logger.error(`Failed to start Bot Fleet Launcher: ${msg}`)
       throw error
     }
   }
@@ -104,7 +105,8 @@ export class BotFleet {
       this.isRunning = false
       this.logger.info('WWeb BotForge stopped successfully')
     } catch (error) {
-      this.logger.error('Error stopping Bot Fleet:', error)
+      const msg = error instanceof Error ? error.message : String(error)
+      this.logger.error(`Error stopping Bot Fleet: ${msg}`)
       throw error
     }
   }
@@ -148,19 +150,19 @@ export class BotFleet {
     })
 
     bot.channel.onDisconnected((reason: string) => {
-      this.logger.warn(`Bot "${bot.id}" disconnected:`, reason)
+      this.logger.warn(`Bot "${bot.id}" disconnected: ${reason}`)
     })
 
     bot.channel.onAuthFailure((error: Error) => {
-      this.logger.error(`Bot "${bot.id}" authentication failed:`, error.message)
+      this.logger.error(`Bot "${bot.id}" authentication failed: ${error.message}`)
     })
 
     bot.channel.onConnectionError((error: Error) => {
-      this.logger.error(`Bot "${bot.id}" connection error:`, error.message)
+      this.logger.error(`Bot "${bot.id}" connection error: ${error.message}`)
     })
 
     bot.channel.onStateChange((state: string) => {
-      this.logger.info(`Bot "${bot.id}" state changed to:`, state)
+      this.logger.info(`Bot "${bot.id}" state changed to: ${state}`)
     })
 
     bot.channel.onAuthRequired?.((info) => {
@@ -194,12 +196,14 @@ export class BotFleet {
     process.on('SIGUSR2', shutdown)
 
     process.on('uncaughtException', (error) => {
-      this.logger.error('Uncaught Exception:', error)
+      const msg = error instanceof Error ? error.stack || error.message : String(error)
+      this.logger.error(`Uncaught Exception: ${msg}`)
       this.stop().finally(() => process.exit(1))
     })
 
-    process.on('unhandledRejection', (reason, promise) => {
-      this.logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
+    process.on('unhandledRejection', (reason) => {
+      const msg = reason instanceof Error ? reason.stack || reason.message : String(reason)
+      this.logger.error(`Unhandled Rejection: ${msg}`)
       this.stop().finally(() => process.exit(1))
     })
   }

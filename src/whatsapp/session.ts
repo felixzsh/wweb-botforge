@@ -180,7 +180,8 @@ export class SessionManager {
       try {
         handler(event)
       } catch (err) {
-        this.logger.error(`Session event handler error for ${id}:`, err)
+        const msg = err instanceof Error ? err.message : String(err)
+        this.logger.error(`Session event handler error for ${id}: ${msg}`)
       }
     })
   }

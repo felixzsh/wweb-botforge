@@ -38,7 +38,7 @@ export function createSessionsRouter(): Router {
         session: info,
       })
     } catch (error: any) {
-      logger.error('Error registering session:', error)
+      logger.error(`Error registering session: ${error.message || String(error)}`)
       res.status(500).json({ error: error.message || 'Internal server error' })
     }
   })
@@ -65,7 +65,7 @@ export function createSessionsRouter(): Router {
       await sessionManager.removeChannel(id)
       res.json({ success: true, id })
     } catch (error: any) {
-      logger.error('Error removing session:', error)
+      logger.error(`Error removing session: ${error.message || String(error)}`)
       res.status(500).json({ error: error.message || 'Internal server error' })
     }
   })

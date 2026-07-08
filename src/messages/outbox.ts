@@ -50,7 +50,7 @@ export class OutboxService {
   ): string {
     const messageId = `${botId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    this.logger.debug(`Queueing message for bot "${botId}" with metadata:`, metadata)
+    this.logger.debug(`Queueing message for bot "${botId}" with metadata: ${JSON.stringify(metadata)}`)
 
     const outgoingMessage: OutgoingMessage = {
       to,
@@ -115,7 +115,8 @@ export class OutboxService {
         }
 
       } catch (error) {
-        this.logger.error(`Error sending queued message ${messageData.id} from bot "${botId}":`, error)
+        const msg = error instanceof Error ? error.message : String(error)
+        this.logger.error(`Error sending queued message ${messageData.id} from bot "${botId}": ${msg}`)
       }
     }
 
