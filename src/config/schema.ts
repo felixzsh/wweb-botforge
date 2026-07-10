@@ -6,7 +6,6 @@ export interface BotSettingsConfig {
   ignore_groups?: boolean
   allowed_senders?: string[]
   ignored_senders?: string[]
-  admin_numbers?: string[]
 }
 
 export interface BotConfig {

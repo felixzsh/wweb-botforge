@@ -17,7 +17,6 @@ export interface BotSettings {
   ignoreGroups: boolean
   allowedSenders: string[]
   ignoredSenders: string[]
-  adminNumbers: string[]
 }
 
 export function createBot(props: {
@@ -51,6 +50,5 @@ export function createDefaultSettings(): BotSettings {
     ignoreGroups: true,
     allowedSenders: [],
     ignoredSenders: [],
-    adminNumbers: [],
   }
 }

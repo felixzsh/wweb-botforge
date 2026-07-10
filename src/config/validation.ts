@@ -467,11 +467,7 @@ function validateBotFile(id: string, data: unknown, ctx: FileContext): BotConfig
           }
         }
       }
-      if (s.admin_numbers !== undefined) {
-        if (!Array.isArray(s.admin_numbers)) {
-          ctx.add('bot.settings.admin_numbers must be an array', 'admin_numbers')
-        }
-      }
+
     }
   }
 

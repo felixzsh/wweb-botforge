@@ -165,7 +165,6 @@ describe('Mapper', () => {
       expect(settings.readReceipts).toBe(true)
       expect(settings.ignoreGroups).toBe(true)
       expect(settings.ignoredSenders).toEqual([])
-      expect(settings.adminNumbers).toEqual([])
     })
 
     it('should map settings with custom values', () => {
@@ -176,7 +175,6 @@ describe('Mapper', () => {
         read_receipts: false,
         ignore_groups: false,
         ignored_senders: ['1111111111', '2222222222'],
-        admin_numbers: ['9999999999'],
       }
 
       const settings = mapSettings(config)
@@ -187,7 +185,6 @@ describe('Mapper', () => {
       expect(settings.readReceipts).toBe(false)
       expect(settings.ignoreGroups).toBe(false)
       expect(settings.ignoredSenders).toEqual(['1111111111', '2222222222'])
-      expect(settings.adminNumbers).toEqual(['9999999999'])
     })
   })
 
@@ -215,7 +212,7 @@ describe('Mapper', () => {
           read_receipts: true,
           ignore_groups: false,
           ignored_senders: ['spam@broadcast'],
-          admin_numbers: ['9999999999'],
+
         },
       })
 

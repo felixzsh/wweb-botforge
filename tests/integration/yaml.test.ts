@@ -51,7 +51,6 @@ describe('YAML Configuration Loading Integration Tests', () => {
         expect(bot.settings.readReceipts).toBe(true)
         expect(bot.settings.ignoreGroups).toBe(true)
         expect(bot.settings.ignoredSenders).toEqual([])
-        expect(bot.settings.adminNumbers).toEqual([])
         expect(bot.graph).toBe('')
       })
     })
@@ -127,7 +126,6 @@ describe('YAML Configuration Loading Integration Tests', () => {
         expect(bot.settings.queueDelay).toBe(1500)
         expect(bot.settings.simulateTyping).toBe(true)
         expect(bot.settings.ignoredSenders).toEqual(['status@broadcast'])
-        expect(bot.settings.adminNumbers).toEqual(['9999999999'])
       })
 
       it('should map sales bot with partial settings', async () => {
@@ -428,7 +426,6 @@ steps:
           read_receipts: false,
           ignore_groups: false,
           ignored_senders: ['1234567890', '0987654321'],
-          admin_numbers: ['1111111111'],
         },
       })
 
@@ -438,7 +435,6 @@ steps:
       expect(bot.settings.readReceipts).toBe(false)
       expect(bot.settings.ignoreGroups).toBe(false)
       expect(bot.settings.ignoredSenders).toEqual(['1234567890', '0987654321'])
-      expect(bot.settings.adminNumbers).toEqual(['1111111111'])
     })
   })
 

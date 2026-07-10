@@ -143,8 +143,6 @@ bots:
       ignore_groups: true
       ignored_senders:
         - "status@broadcast"
-      admin_numbers:
-        - "9999999999"
 
   sales-bot:
     graph: faq-support

@@ -210,7 +210,6 @@ settings:
   ignore_groups: true
   ignored_senders:
     - "status@broadcast"
-  admin_numbers: []
 \`\`\`
 
 | Field | Type | Default | Description |
@@ -220,7 +219,7 @@ settings:
 | settings.queue_delay | number | 1000 | ms between outgoing messages |
 | settings.ignore_groups | boolean | true | Ignore group messages |
 | settings.ignored_senders | string[] | [] | Senders to ignore |
-| settings.admin_numbers | string[] | [] | Admin phone numbers |
+
 
 A bot references exactly one graph. There is no priority or list of graphs per bot.
 

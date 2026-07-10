@@ -49,7 +49,7 @@ describe('Bot', () => {
       expect(defaultSettings.readReceipts).toBe(true)
       expect(defaultSettings.ignoreGroups).toBe(true)
       expect(defaultSettings.ignoredSenders).toEqual([])
-      expect(defaultSettings.adminNumbers).toEqual([])
+
     })
   })
 

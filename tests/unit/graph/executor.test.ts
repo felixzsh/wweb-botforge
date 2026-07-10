@@ -273,7 +273,6 @@ describe('GraphExecutor', () => {
         ignoreGroups: true,
         allowedSenders: [],
         ignoredSenders: [],
-        adminNumbers: [],
       },
       graph: 'faq-menu',
     }
