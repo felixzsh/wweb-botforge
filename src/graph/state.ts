@@ -113,6 +113,10 @@ export class GraphStateService {
     this.db.prepare('DELETE FROM graph_states WHERE sender = ? AND bot_id = ?').run(sender, botId)
   }
 
+  clearBotSessions(botId: string): void {
+    this.db.prepare('DELETE FROM graph_states WHERE bot_id = ?').run(botId)
+  }
+
   cleanupExpired(now: number = Date.now()): number {
     const cutoff = now
     const result = this.db

@@ -71,7 +71,7 @@ export class BotFleet {
       this.logger.debug(`Initializing ${loadedBots.length} bot(s)...`)
 
       for (const bot of loadedBots) {
-        this.logger.debug("about to initialize a bot")
+        this.logger.debug(`Bot "${bot.id}" settings: allowed_senders=[${bot.settings.allowedSenders.join(', ')}]`)
         this.registerBot(bot)
       }
 

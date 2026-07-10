@@ -85,6 +85,20 @@ export class ConfigWatcher {
           existingBots.set(bot.id, bot)
           this.fleet.getOutboxService().setupBotQueue(bot)
           this.logger.info(`New bot added via reload: ${bot.id}`)
+          this.logger.debug(`  allowed_senders=[${bot.settings.allowedSenders.join(', ')}]`)
+        } else {
+          const existing = existingBots.get(bot.id)
+          if (existing) {
+            const graphChanged = existing.graph !== bot.graph
+            existing.settings = bot.settings
+            existing.graph = bot.graph
+            if (graphChanged) {
+              this.fleet.getGraphExecutor()?.clearBotSessions(bot.id)
+              this.logger.info(`Graph changed for bot "${bot.id}" — active sessions cleared`)
+            }
+            this.logger.info(`Bot updated via reload: ${bot.id}`)
+            this.logger.debug(`  allowed_senders=[${bot.settings.allowedSenders.join(', ')}]`)
+          }
         }
       }
 

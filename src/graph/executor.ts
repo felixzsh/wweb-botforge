@@ -36,6 +36,10 @@ export class GraphExecutor {
     this.graphCatalog = graphCatalog
   }
 
+  clearBotSessions(botId: string): void {
+    this.graphStateService.clearBotSessions(botId)
+  }
+
   async handleMessage(bot: Bot, message: IncomingMessage): Promise<boolean> {
     this.graphStateService.cleanupExpired()
 
