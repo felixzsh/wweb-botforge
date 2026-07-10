@@ -15,6 +15,7 @@ export interface BotSettings {
   queueDelay: number
   readReceipts: boolean
   ignoreGroups: boolean
+  allowedSenders: string[]
   ignoredSenders: string[]
   adminNumbers: string[]
 }
@@ -48,6 +49,7 @@ export function createDefaultSettings(): BotSettings {
     queueDelay: 1000,
     readReceipts: true,
     ignoreGroups: true,
+    allowedSenders: [],
     ignoredSenders: [],
     adminNumbers: [],
   }

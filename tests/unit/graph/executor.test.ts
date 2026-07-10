@@ -271,6 +271,7 @@ describe('GraphExecutor', () => {
         queueDelay: 0,
         readReceipts: false,
         ignoreGroups: true,
+        allowedSenders: [],
         ignoredSenders: [],
         adminNumbers: [],
       },

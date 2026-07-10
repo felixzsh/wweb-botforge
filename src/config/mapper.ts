@@ -175,7 +175,7 @@ export function mapSettings(config: BotSettingsConfig): BotSettings {
     queueDelay: config.queue_delay ?? 1000,
     readReceipts: config.read_receipts ?? true,
     ignoreGroups: config.ignore_groups ?? true,
-    ignoredSenders: config.ignored_senders || [],
-    adminNumbers: config.admin_numbers || [],
+    allowedSenders: (config.allowed_senders || []).map(String),
+    ignoredSenders: (config.ignored_senders || []).map(String),
   }
 }

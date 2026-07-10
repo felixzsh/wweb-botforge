@@ -4,6 +4,7 @@ export interface BotSettingsConfig {
   queue_delay?: number
   read_receipts?: boolean
   ignore_groups?: boolean
+  allowed_senders?: string[]
   ignored_senders?: string[]
   admin_numbers?: string[]
 }

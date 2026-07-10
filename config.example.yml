@@ -192,6 +192,8 @@ bots:
     settings:
       queue_delay: 1500
       ignore_groups: true           # Ignore group messages
+      # allowed_senders:            # Whitelist — only these senders trigger a response
+      #   - "521234567890"          # Empty or undefined = all senders allowed
       ignored_senders:              # Senders to ignore entirely
         - "status@broadcast"        # WhatsApp status broadcasts
 

@@ -445,6 +445,17 @@ function validateBotFile(id: string, data: unknown, ctx: FileContext): BotConfig
       if (s.ignore_groups !== undefined && typeof s.ignore_groups !== 'boolean') {
         ctx.add('bot.settings.ignore_groups must be a boolean', 'ignore_groups')
       }
+      if (s.allowed_senders !== undefined) {
+        if (!Array.isArray(s.allowed_senders)) {
+          ctx.add('bot.settings.allowed_senders must be an array', 'allowed_senders')
+        } else {
+          for (let si = 0; si < s.allowed_senders.length; si++) {
+            if (typeof s.allowed_senders[si] !== 'string') {
+              ctx.add(`bot.settings.allowed_senders[${si}] must be a string`, 'allowed_senders')
+            }
+          }
+        }
+      }
       if (s.ignored_senders !== undefined) {
         if (!Array.isArray(s.ignored_senders)) {
           ctx.add('bot.settings.ignored_senders must be an array', 'ignored_senders')

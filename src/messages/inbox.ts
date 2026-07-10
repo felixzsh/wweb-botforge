@@ -36,6 +36,11 @@ export class InboxService {
         return
       }
 
+      if (this.isSenderNotAllowed(bot, message.from)) {
+        this.logger.debug(`Ignoring message from "${message.from}" for bot "${bot.id}" (sender not in allowed list)`)
+        return
+      }
+
       if (this.isSenderIgnored(bot, message.from)) {
         this.logger.debug(`Ignoring message from "${message.from}" for bot "${bot.id}" (sender in ignored list)`)
         return
@@ -52,6 +57,10 @@ export class InboxService {
       const msg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Error handling message for bot "${bot.id}": ${msg}`)
     }
+  }
+
+  private isSenderNotAllowed(bot: Bot, sender: string): boolean {
+    return bot.settings.allowedSenders.length > 0 && !bot.settings.allowedSenders.includes(sender)
   }
 
   private isSenderIgnored(bot: Bot, sender: string): boolean {
