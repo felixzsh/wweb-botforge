@@ -4,8 +4,9 @@
 
 # Global system configuration
 chromium_path: "/usr/bin/chromium"  # Path to your Chromium/Chrome installation
-api_port: 3000                     # Port for REST API (set to enable the API)
-api_key: "your-api-key-here"       # REST API key (optional — if set, all /api/* requests except /health require Authorization: Bearer <key>)
+address: "127.0.0.1"              # Bind address (127.0.0.1 = localhost only, 0.0.0.0 = all interfaces)
+port: 3000                         # Port for REST API (set to enable the API)
+key: "your-api-key-here"           # REST API key (optional — if set, all /api/* requests except /health require Authorization: Bearer <key>)
 log_level: "info"                  # Log level: info, debug, warn, error
 default_timeout: 300               # Global default timeout for graph sessions (seconds)
 

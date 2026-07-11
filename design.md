@@ -182,7 +182,8 @@ same services as the core runtime.
 ## YAML Configuration
 
 ```yaml
-api_port: 3000
+port: 3000
+address: "127.0.0.1"
 log_level: info
 default_timeout: 300
 

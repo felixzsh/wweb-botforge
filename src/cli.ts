@@ -88,9 +88,9 @@ async function runDaemon(configPath?: string) {
 
   const bots = await fleet.start(configFile)
 
-  if (configFile?.api_port) {
-    const apiPort = configFile.api_port
-    const apiServer = new ApiServer(outboxService, bots, apiPort, fleet, configWatcher, configFile.api_key)
+  if (configFile?.port) {
+    const apiPort = configFile.port
+    const apiServer = new ApiServer(outboxService, bots, apiPort, fleet, configWatcher, configFile.key, configFile.address)
     await apiServer.start()
   }
 

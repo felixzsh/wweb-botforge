@@ -14,6 +14,7 @@ import { getLogger } from '../helpers/logger'
 export class ApiServer {
   private app: express.Application
   private port: number
+  private address: string
   private apiKey?: string
   private outboxService: OutboxService
   private bots: Map<string, Bot>
@@ -27,10 +28,12 @@ export class ApiServer {
     port: number = 3000,
     fleet?: BotFleet,
     configWatcher?: ConfigWatcher,
-    apiKey?: string
+    apiKey?: string,
+    address: string = '127.0.0.1'
   ) {
     this.app = express()
     this.port = port
+    this.address = address
     this.apiKey = apiKey
     this.outboxService = outboxService
     this.bots = bots
@@ -70,7 +73,7 @@ export class ApiServer {
 
       const auth = req.headers.authorization
       if (auth !== `Bearer ${this.apiKey}`) {
-        res.status(401).json({ error: 'Unauthorized — provide Authorization: Bearer <api_key>' })
+        res.status(401).json({ error: 'Unauthorized — provide Authorization: Bearer <key>' })
         return
       }
 
@@ -116,8 +119,8 @@ export class ApiServer {
 
   async start(): Promise<void> {
     return new Promise((resolve) => {
-      this.server = this.app.listen(this.port, () => {
-        this.logger.info(`API Server started on port ${this.port}`)
+      this.server = this.app.listen(this.port, this.address, () => {
+        this.logger.info(`API Server started on ${this.address}:${this.port}`)
         resolve()
       })
     })

@@ -1,5 +1,5 @@
 chromium_path: "/usr/bin/chromium"
-api_port: 3000
+port: 3000
 log_level: "info"
 default_timeout: 300
 

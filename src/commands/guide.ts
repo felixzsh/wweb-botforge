@@ -58,7 +58,8 @@ The loader merges directory files with any inline definitions in \`config.yml\`.
 
 \`\`\`yaml
 chromium_path: "/usr/bin/chromium"
-api_port: 3000
+port: 3000
+address: "127.0.0.1"
 log_level: "info"
 default_timeout: 300
 \`\`\`
@@ -72,8 +73,9 @@ default_timeout: 300
 | Field | Type | Default | Description |
 |---|---|---|---|---|
 | chromium_path | string | - | Path to Chromium/Chrome |
-| api_port | number | 3000 | REST API port (if set, API runs on this port) |
-| api_key | string | - | REST API key (optional — if set, all /api/* requests require \`Authorization: Bearer <key>\`) |
+| port | number | 3000 | REST API port (if set, API runs on this port) |
+| key | string | - | REST API key (optional — if set, all /api/* requests require \`Authorization: Bearer <key>\`) |
+| address | string | "127.0.0.1" | Bind address (127.0.0.1 = localhost only, 0.0.0.0 = all interfaces) |
 | log_level | string | "info" | info, debug, warn, error |
 | default_timeout | number | 300 | Default graph session TTL (seconds) |
 
@@ -367,17 +369,17 @@ settings:
 
 ## REST API Reference
 
-When \`api_port\` is set in config, the daemon starts an HTTP API at \`http://localhost:<api_port>\`.
+When \`port\` is set in config, the daemon starts an HTTP API bound to the configured \`address\` (default \`127.0.0.1\`).
 
 ### Authentication
 
-If \`api_key\` is configured in \`config.yml\`, every \`/api/*\` request (except \`/api/health\`) must include:
+If \`key\` is configured in \`config.yml\`, every \`/api/*\` request (except \`/api/health\`) must include:
 
 \`\`\`
-Authorization: Bearer <api_key>
+Authorization: Bearer <key>
 \`\`\`
 
-If \`api_key\` is not set, the API is open (suitable for localhost-only or reverse-proxy-controlled setups).
+If \`key\` is not set, the API is open (suitable for localhost-only or reverse-proxy-controlled setups).
 
 ### Endpoints
 

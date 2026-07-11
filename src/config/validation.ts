@@ -116,9 +116,21 @@ function validateConfigFile(config: Record<string, unknown>, ctx: FileContext): 
     ctx.add('chromium_path must be a string', 'chromium_path')
   }
 
-  if (config.api_port !== undefined) {
-    if (typeof config.api_port !== 'number' || !Number.isInteger(config.api_port) || config.api_port < 0) {
-      ctx.add('api_port must be a non-negative integer', 'api_port')
+  if (config.port !== undefined) {
+    if (typeof config.port !== 'number' || !Number.isInteger(config.port) || config.port < 0) {
+      ctx.add('port must be a non-negative integer', 'port')
+    }
+  }
+
+  if (config.key !== undefined) {
+    if (typeof config.key !== 'string' || config.key.length === 0) {
+      ctx.add('key must be a non-empty string', 'key')
+    }
+  }
+
+  if (config.address !== undefined) {
+    if (typeof config.address !== 'string' || config.address.length === 0) {
+      ctx.add('address must be a non-empty string', 'address')
     }
   }
 
