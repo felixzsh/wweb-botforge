@@ -24,7 +24,7 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 const program = new Command()
 
 program
-  .name('botdeck')
+  .name('botforje')
   .description('CLI tool for creating and managing WhatsApp bots')
   .version(packageJson.version)
   .option('-c, --config <path>', `Path to config file (default: ${getDefaultConfigPath()})`)
@@ -96,7 +96,7 @@ async function runDaemon(configPath?: string) {
   }
 
   const logger = getLogger()
-  logger.info('Botdeck - Starting bots...')
+  logger.info('Botforje - Starting bots...')
 
   const outboxService = new OutboxService()
   const fleet = new BotFleet(outboxService)
@@ -110,7 +110,7 @@ async function runDaemon(configPath?: string) {
   const authService = fleet.getAuthService()
 
   if (address !== '127.0.0.1' && !authService.isLocked()) {
-    logger.warn('API is exposed on a non-local address. Run `botdeck lock` to enable auth protection.')
+    logger.warn('API is exposed on a non-local address. Run `botforje lock` to enable auth protection.')
   }
 
   if (configFile?.port) {
@@ -119,7 +119,7 @@ async function runDaemon(configPath?: string) {
     await apiServer.start()
   }
 
-  logger.info('Botdeck Daemon is running')
+  logger.info('Botforje Daemon is running')
 }
 
 program.parse()

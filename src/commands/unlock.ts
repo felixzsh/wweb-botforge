@@ -26,11 +26,11 @@ export async function runUnlock(key?: string, configPath?: string): Promise<void
 
     const dataDir = getDataDir()
     fs.mkdirSync(dataDir, { recursive: true })
-    const dbPath = path.join(dataDir, 'botdeck.db')
+    const dbPath = path.join(dataDir, 'botforje.db')
     const auth = new AuthService(dbPath)
 
     if (!auth.isLocked()) {
-      console.log('Botdeck is not locked. Nothing to do.')
+      console.log('Botforje is not locked. Nothing to do.')
       process.exit(0)
     }
 
@@ -44,7 +44,7 @@ export async function runUnlock(key?: string, configPath?: string): Promise<void
     const success = auth.unlock(providedKey)
 
     if (success) {
-      console.log('\nBotdeck unlocked successfully. Auth is no longer required.')
+      console.log('\nBotforje unlocked successfully. Auth is no longer required.')
       console.log('All active sessions have been invalidated.\n')
       process.exit(0)
     } else {

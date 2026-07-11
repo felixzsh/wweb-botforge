@@ -1,6 +1,6 @@
-# Botdeck Configuration Example
+# Botforje Configuration Example
 # This is a comprehensive example showing all available configuration options
-# Copy this to ~/.config/botdeck/config.yml and customize for your needs
+# Copy this to ~/.config/botforje/config.yml and customize for your needs
 
 # Global system configuration
 chromium_path: "/usr/bin/chromium"  # Path to your Chromium/Chrome installation
@@ -207,10 +207,10 @@ bots:
       ignored_senders: []
 
 # Actions can also be loaded from separate files in the actions/ directory:
-#   ~/.config/botdeck/actions/greet.yml
+#   ~/.config/botforje/actions/greet.yml
 #
 # Graphs can also be loaded from separate files in the graphs/ directory:
-#   ~/.config/botdeck/graphs/faq-support.yml
+#   ~/.config/botforje/graphs/faq-support.yml
 #
 # File name becomes the action/graph ID.
 # Inline definitions in this file take precedence over directory files.

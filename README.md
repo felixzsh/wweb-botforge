@@ -1,13 +1,13 @@
-# Botdeck
+# Botforje
 
-[![npm version](https://img.shields.io/npm/v/botdeck.svg)](https://www.npmjs.com/package/botdeck)
+[![npm version](https://img.shields.io/npm/v/botforje.svg)](https://www.npmjs.com/package/botforje)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16-brightgreen.svg)](https://nodejs.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/felixzsh/botdeck/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/felixzsh/botforje/pulls)
 
 **Create multiple WhatsApp bots without writing code** - Just configure in YAML!
 
-Botdeck lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
+Botforje lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
 
 ## What Can You Do?
 
@@ -31,7 +31,7 @@ Botdeck lets you create and manage multiple WhatsApp bots by simply editing a co
 ### 1. Install
 
 ```bash
-npm install -g botdeck
+npm install -g botforje
 ```
 
 ### 2. Setup & Start as System Service
@@ -40,16 +40,16 @@ The daemon is configured automatically during install. Start it with:
 
 ```bash
 # Start the service
-systemctl --user start botdeck
+systemctl --user start botforje
 
 # Enable auto-start on boot
-systemctl --user enable botdeck
+systemctl --user enable botforje
 ```
 
 ### 3. Authenticate Your Bot
 
 ```bash
-botdeck auth <botId>
+botforje auth <botId>
 ```
 
 Shows a QR code to link your WhatsApp account. Once scanned, the bot is authenticated and ready.
@@ -57,8 +57,8 @@ Shows a QR code to link your WhatsApp account. Once scanned, the bot is authenti
 ### 4. Check Status
 
 ```bash
-botdeck status
-journalctl --user -u botdeck -f    # real-time logs
+botforje status
+journalctl --user -u botforje -f    # real-time logs
 ```
 
 ## Configuration Guide
@@ -77,7 +77,7 @@ default_timeout: 300               # Global default timeout for graph sessions (
 
 ### Architecture
 
-Botdeck uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
+Botforje uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
 
 - **Actions**: Reusable behaviors — text replies, request calls, cooldowns. Not tied to any specific bot.
 - **Graphs**: Conversation state machines. A graph owns a set of nodes connected by fuzzy-matched edges. Each bot references exactly one graph.
@@ -344,31 +344,31 @@ Once installed and configured, manage your bot service:
 
 ```bash
 # Check service status
-systemctl --user status botdeck
+systemctl --user status botforje
 
 # View logs in real-time
-journalctl --user -u botdeck -f
+journalctl --user -u botforje -f
 
 # Restart service
-systemctl --user restart botdeck
+systemctl --user restart botforje
 
 # Stop service
-systemctl --user stop botdeck
+systemctl --user stop botforje
 
 # Disable auto-start
-systemctl --user disable botdeck
+systemctl --user disable botforje
 ```
 
 ## Troubleshooting
 
 **Service not starting?**
 - Check if `xvfb` is installed: `which xvfb`
-- Verify config file: `cat ~/.config/botdeck/config.yml`
-- Check service logs: `journalctl --user -u botdeck -n 50`
+- Verify config file: `cat ~/.config/botforje/config.yml`
+- Check service logs: `journalctl --user -u botforje -n 50`
 
 **QR code not showing?**
 - Ensure no other WhatsApp sessions are active
-- Restart the service: `systemctl --user restart botdeck`
+- Restart the service: `systemctl --user restart botforje`
 
 **Messages not responding?**
 - Check bot status in logs

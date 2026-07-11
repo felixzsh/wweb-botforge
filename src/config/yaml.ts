@@ -10,7 +10,7 @@ let configPath: string
 
 export function getDefaultConfigPath(): string {
   const home = process.env.HOME || os.homedir()
-  return path.join(home, '.config', 'botdeck', 'config.yml')
+  return path.join(home, '.config', 'botforje', 'config.yml')
 }
 
 export function getConfigPath(): string {

@@ -321,7 +321,7 @@ describe('YAML Configuration Loading Integration Tests', () => {
     })
 
     it('should let inline bot override directory bot with same id', async () => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-config-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-config-'))
 
       const configPath = path.join(tempDir, 'config.yml')
       const botsDir = path.join(tempDir, 'bots')
@@ -351,7 +351,7 @@ settings:
     })
 
     it('should let inline action override directory action with same id', async () => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-config-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-config-'))
 
       const configPath = path.join(tempDir, 'config.yml')
       const actionsDir = path.join(tempDir, 'actions')
@@ -448,7 +448,7 @@ steps:
     })
 
     it('should load actions and graphs from adjacent directories', async () => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-config-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-config-'))
 
       const configPath = path.join(tempDir, 'config.yml')
       const actionsDir = path.join(tempDir, 'actions')
@@ -498,7 +498,7 @@ nodes:
     it('should return default config path when no custom path set', () => {
       const result = getConfigPath()
       expect(result).toContain('.config')
-      expect(result).toContain('botdeck')
+      expect(result).toContain('botforje')
       expect(result).toContain('config.yml')
     })
 
@@ -508,7 +508,7 @@ nodes:
     })
 
     it('should use custom path in loadConfig', async () => {
-      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-path-'))
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-path-'))
       const configPath = path.join(tempDir, 'my-config.yml')
 
       fs.writeFileSync(configPath, 'bots:\n  test-bot:\n    graph: any-graph')
@@ -530,7 +530,7 @@ nodes:
     })
 
     it('should process !include for graph edges', async () => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-include-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-include-'))
 
       const edgesDir = path.join(tempDir, 'edges')
       fs.mkdirSync(edgesDir)
@@ -572,7 +572,7 @@ goto: hours-node`)
     })
 
     it('should save config to file', async () => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-save-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-save-'))
       const configPath = path.join(tempDir, 'config.yml')
 
       const config = {
@@ -593,7 +593,7 @@ goto: hours-node`)
     })
 
     it('should create directory structure when saving', async () => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-save-dir-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-save-dir-'))
       const deepPath = path.join(tempDir, 'sub', 'dir', 'config.yml')
 
       await saveConfig({ bots: { test: {} } }, deepPath)
@@ -601,7 +601,7 @@ goto: hours-node`)
     })
 
     it('should throw when save fails', async () => {
-      const readOnlyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-readonly-'))
+      const readOnlyDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-readonly-'))
       try {
         fs.chmodSync(readOnlyDir, 0o444)
         const writePath = path.join(readOnlyDir, 'config.yml')
@@ -620,7 +620,7 @@ goto: hours-node`)
     let botsDir: string
 
     beforeEach(() => {
-      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-modbot-'))
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-modbot-'))
       configPath = path.join(tempDir, 'config.yml')
       botsDir = path.join(tempDir, 'bots')
     })

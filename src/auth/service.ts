@@ -44,7 +44,7 @@ export class AuthService {
 
   lock(key?: string): string {
     if (this.isLocked()) {
-      throw new Error('Botdeck is already locked. Run `botdeck unlock` first.')
+      throw new Error('Botforje is already locked. Run `botforje unlock` first.')
     }
 
     const secret = key || randomBytes(32).toString('hex')

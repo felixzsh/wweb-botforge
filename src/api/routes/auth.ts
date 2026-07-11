@@ -25,7 +25,7 @@ export function createAuthRouter(authService: AuthService): Router {
     }
 
     if (!authService.isLocked()) {
-      res.status(400).json({ error: 'Auth is not enabled. Run `botdeck lock` first.' })
+      res.status(400).json({ error: 'Auth is not enabled. Run `botforje lock` first.' })
       return
     }
 
@@ -37,19 +37,19 @@ export function createAuthRouter(authService: AuthService): Router {
     const session = authService.createSession()
     res.setHeader(
       'Set-Cookie',
-      `botdeck_session=${session.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400`
+      `botforje_session=${session.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400`
     )
     res.json({ success: true, expiresAt: session.expiresAt })
   })
 
   router.post('/logout', (req, res) => {
-    const token = parseCookie(req.headers.cookie, 'botdeck_session')
+    const token = parseCookie(req.headers.cookie, 'botforje_session')
     if (token) {
       authService.invalidateSession(token)
     }
     res.setHeader(
       'Set-Cookie',
-      'botdeck_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+      'botforje_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
     )
     res.json({ success: true })
   })
@@ -58,7 +58,7 @@ export function createAuthRouter(authService: AuthService): Router {
 }
 
 export function findSessionToken(authService: AuthService, cookieHeader: string | undefined): string | null {
-  const token = parseCookie(cookieHeader, 'botdeck_session')
+  const token = parseCookie(cookieHeader, 'botforje_session')
   if (!token) return null
   const session = authService.validateSession(token)
   return session ? token : null

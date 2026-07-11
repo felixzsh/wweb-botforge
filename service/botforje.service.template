@@ -1,7 +1,7 @@
 [Unit]
-Description=Botdeck - WhatsApp Bot Service
+Description=Botforje - WhatsApp Bot Service
 After=network.target
-Documentation=https://github.com/felixzsh/botdeck
+Documentation=https://github.com/felixzsh/botforje
 
 [Service]
 Type=simple
@@ -11,7 +11,7 @@ Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=botdeck
+SyslogIdentifier=botforje
 
 # Variables de entorno
 Environment="NODE_ENV=production"

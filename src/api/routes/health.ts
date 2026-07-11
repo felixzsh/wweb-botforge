@@ -7,7 +7,7 @@ export function createHealthRouter(): Router {
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'Botdeck API',
+      service: 'Botforje API',
     })
   })
 

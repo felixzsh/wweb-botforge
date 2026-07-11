@@ -14,7 +14,7 @@ function setupSystemd() {
 
     const user = os.userInfo().username;
     const homeDir = os.homedir();
-    const configDir = path.join(homeDir, '.config', 'botdeck');
+    const configDir = path.join(homeDir, '.config', 'botforje');
     const systemdUserDir = path.join(homeDir, '.config', 'systemd', 'user');
     
     const globalNpmRoot = execSync('npm root -g', { encoding: 'utf8' }).trim();
@@ -24,7 +24,7 @@ function setupSystemd() {
     // Detect mode: If project root is within global npm root, it's production
     const isProduction = projectRoot.startsWith(globalNpmRoot);
     const installDir = isProduction
-      ? path.join(globalNpmRoot, 'botdeck')
+      ? path.join(globalNpmRoot, 'botforje')
       : projectRoot;
 
     // For Node path, use 'which node' in both cases, but log a warning for dev
@@ -36,7 +36,7 @@ function setupSystemd() {
       console.log('   Note: Ensure dist/cli.js exists (run build first)');
     }
 
-    console.log('Setting up Botdeck systemd service...');
+    console.log('Setting up Botforje systemd service...');
     
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir, { recursive: true });
@@ -66,7 +66,7 @@ function setupSystemd() {
       console.log(`Created systemd user directory: ${systemdUserDir}`);
     }
 
-    const templatePath = path.join(__dirname, '..', 'service', 'botdeck.service.template');
+    const templatePath = path.join(__dirname, '..', 'service', 'botforje.service.template');
     let serviceContent = fs.readFileSync(templatePath, 'utf8');
 
     serviceContent = serviceContent
@@ -75,7 +75,7 @@ function setupSystemd() {
       .replace(/{{NODE_PATH}}/g, nodePath)
       .replace(/{{CONFIG_DIR}}/g, configDir);
 
-    const servicePath = path.join(systemdUserDir, 'botdeck.service');
+    const servicePath = path.join(systemdUserDir, 'botforje.service');
     fs.writeFileSync(servicePath, serviceContent);
     console.log(`Created service file: ${servicePath}`);
 

@@ -20,7 +20,7 @@ describe('GraphExecutor', () => {
   let sentMessages: Array<{ to: string; content: string; metadata?: Record<string, any> }>
 
   beforeEach(() => {
-    dbPath = path.join(os.tmpdir(), `botdeck-graph-test-${Date.now()}.db`)
+    dbPath = path.join(os.tmpdir(), `botforje-graph-test-${Date.now()}.db`)
     graphStateService = new GraphStateService(dbPath)
     cooldownService = new CooldownService()
     sentMessages = []

@@ -1,5 +1,5 @@
 export function runGuide() {
-  const guide = `# Botdeck — AI Agent Configuration Guide
+  const guide = `# Botforje — AI Agent Configuration Guide
 
 Framework for running config-driven WhatsApp bots. All behavior is defined in YAML — no code required.
 
@@ -38,7 +38,7 @@ WhatsApp message
 Place config files in a directory structure. File names become IDs.
 
 \`\`\`
-~/.config/botdeck/
+~/.config/botforje/
   config.yml              # global settings only
   actions/                # each file = one action, filename = action ID
     greet.yml
@@ -269,14 +269,14 @@ bots:
 
 ## Complete Modular Example
 
-\`~/.config/botdeck/config.yml\`:
+\`~/.config/botforje/config.yml\`:
 
 \`\`\`yaml
 chromium_path: "/usr/bin/chromium"
 log_level: "info"
 \`\`\`
 
-\`~/.config/botdeck/actions/greet.yml\`:
+\`~/.config/botforje/actions/greet.yml\`:
 
 \`\`\`yaml
 steps:
@@ -284,7 +284,7 @@ steps:
       body: "Hev {{senderName}}! How can I help you today?"
 \`\`\`
 
-\`~/.config/botdeck/actions/menu.yml\`:
+\`~/.config/botforje/actions/menu.yml\`:
 
 \`\`\`yaml
 steps:
@@ -292,7 +292,7 @@ steps:
       body: "Main menu:\\n1. Hours\\n2. Contact\\n0. Exit"
 \`\`\`
 
-\`~/.config/botdeck/actions/hours.yml\`:
+\`~/.config/botforje/actions/hours.yml\`:
 
 \`\`\`yaml
 steps:
@@ -300,7 +300,7 @@ steps:
       body: "Mon-Fri 9am-6pm"
 \`\`\`
 
-\`~/.config/botdeck/actions/farewell.yml\`:
+\`~/.config/botforje/actions/farewell.yml\`:
 
 \`\`\`yaml
 steps:
@@ -308,7 +308,7 @@ steps:
       body: "Thanks, have a great day!"
 \`\`\`
 
-\`~/.config/botdeck/actions/invalid.yml\`:
+\`~/.config/botforje/actions/invalid.yml\`:
 
 \`\`\`yaml
 steps:
@@ -316,7 +316,7 @@ steps:
       body: "Invalid option. Choose a number from the menu."
 \`\`\`
 
-\`~/.config/botdeck/graphs/support.yml\`:
+\`~/.config/botforje/graphs/support.yml\`:
 
 \`\`\`yaml
 root: greet
@@ -354,7 +354,7 @@ nodes:
     edges: []
 \`\`\`
 
-\`~/.config/botdeck/bots/support.yml\`:
+\`~/.config/botforje/bots/support.yml\`:
 
 \`\`\`yaml
 graph: support
@@ -388,7 +388,7 @@ If \`key\` is not set, the API is open (suitable for localhost-only or reverse-p
 Liveness probe. Always responds without authentication.
 
 \`\`\`json
-{ "status": "ok", "timestamp": "2025-01-01T00:00:00.000Z", "service": "Botdeck API" }
+{ "status": "ok", "timestamp": "2025-01-01T00:00:00.000Z", "service": "Botforje API" }
 \`\`\`
 
 #### GET /api/status
@@ -549,11 +549,11 @@ curl http://localhost:3000/api/config/status
 ## Quick Start CLI Commands
 
 \`\`\`
-botdeck daemon                 # Start the bot daemon
-botdeck status                 # Show bot session status
-botdeck auth <botId>           # Authenticate a bot
-botdeck setup                  # Setup systemd service
-botdeck guide                  # Show this guide
+botforje daemon                 # Start the bot daemon
+botforje status                 # Show bot session status
+botforje auth <botId>           # Authenticate a bot
+botforje setup                  # Setup systemd service
+botforje guide                  # Show this guide
 \`\`\`
 `
 

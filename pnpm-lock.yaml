@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  botdeck: 'link:'
+  botforje: 'link:'
 
 importers:
 
@@ -14,7 +14,7 @@ importers:
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
-      botdeck:
+      botforje:
         specifier: 'link:'
         version: 'link:'
       commander:
