@@ -38,7 +38,7 @@ async function apiRequest(method: string, path: string, apiBase: string, body?: 
 
     req.on('error', (err: any) => {
       if (err.code === 'ECONNREFUSED') {
-        reject(new Error('Daemon is not running. Start it with: botforge daemon'))
+        reject(new Error('Daemon is not running. Start it with: botdeck daemon'))
       } else {
         reject(err)
       }
@@ -101,7 +101,7 @@ function subscribeToSSE(urlStr: string, onEvent: (type: string, data: any) => vo
 
     req.on('error', (err: any) => {
       if (err.code === 'ECONNREFUSED') {
-        reject(new Error('Daemon is not running. Start it with: botforge daemon'))
+        reject(new Error('Daemon is not running. Start it with: botdeck daemon'))
       } else {
         reject(err)
       }

@@ -7,7 +7,7 @@ export function createHealthRouter(): Router {
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'WWeb BotForge API',
+      service: 'Botdeck API',
     })
   })
 

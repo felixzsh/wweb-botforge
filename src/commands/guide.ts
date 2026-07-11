@@ -1,5 +1,5 @@
 export function runGuide() {
-  const guide = `# WWeb BotForge — AI Agent Configuration Guide
+  const guide = `# Botdeck — AI Agent Configuration Guide
 
 Framework for running config-driven WhatsApp bots. All behavior is defined in YAML — no code required.
 
@@ -38,7 +38,7 @@ WhatsApp message
 Place config files in a directory structure. File names become IDs.
 
 \`\`\`
-~/.config/wweb-botforge/
+~/.config/botdeck/
   config.yml              # global settings only
   actions/                # each file = one action, filename = action ID
     greet.yml
@@ -267,14 +267,14 @@ bots:
 
 ## Complete Modular Example
 
-\`~/.config/wweb-botforge/config.yml\`:
+\`~/.config/botdeck/config.yml\`:
 
 \`\`\`yaml
 chromium_path: "/usr/bin/chromium"
 log_level: "info"
 \`\`\`
 
-\`~/.config/wweb-botforge/actions/greet.yml\`:
+\`~/.config/botdeck/actions/greet.yml\`:
 
 \`\`\`yaml
 steps:
@@ -282,7 +282,7 @@ steps:
       body: "Hev {{senderName}}! How can I help you today?"
 \`\`\`
 
-\`~/.config/wweb-botforge/actions/menu.yml\`:
+\`~/.config/botdeck/actions/menu.yml\`:
 
 \`\`\`yaml
 steps:
@@ -290,7 +290,7 @@ steps:
       body: "Main menu:\\n1. Hours\\n2. Contact\\n0. Exit"
 \`\`\`
 
-\`~/.config/wweb-botforge/actions/hours.yml\`:
+\`~/.config/botdeck/actions/hours.yml\`:
 
 \`\`\`yaml
 steps:
@@ -298,7 +298,7 @@ steps:
       body: "Mon-Fri 9am-6pm"
 \`\`\`
 
-\`~/.config/wweb-botforge/actions/farewell.yml\`:
+\`~/.config/botdeck/actions/farewell.yml\`:
 
 \`\`\`yaml
 steps:
@@ -306,7 +306,7 @@ steps:
       body: "Thanks, have a great day!"
 \`\`\`
 
-\`~/.config/wweb-botforge/actions/invalid.yml\`:
+\`~/.config/botdeck/actions/invalid.yml\`:
 
 \`\`\`yaml
 steps:
@@ -314,7 +314,7 @@ steps:
       body: "Invalid option. Choose a number from the menu."
 \`\`\`
 
-\`~/.config/wweb-botforge/graphs/support.yml\`:
+\`~/.config/botdeck/graphs/support.yml\`:
 
 \`\`\`yaml
 root: greet
@@ -352,7 +352,7 @@ nodes:
     edges: []
 \`\`\`
 
-\`~/.config/wweb-botforge/bots/support.yml\`:
+\`~/.config/botdeck/bots/support.yml\`:
 
 \`\`\`yaml
 graph: support
@@ -386,7 +386,7 @@ If \`api_key\` is not set, the API is open (suitable for localhost-only or rever
 Liveness probe. Always responds without authentication.
 
 \`\`\`json
-{ "status": "ok", "timestamp": "2025-01-01T00:00:00.000Z", "service": "WWeb BotForge API" }
+{ "status": "ok", "timestamp": "2025-01-01T00:00:00.000Z", "service": "Botdeck API" }
 \`\`\`
 
 #### GET /api/status
@@ -547,11 +547,11 @@ curl http://localhost:3000/api/config/status
 ## Quick Start CLI Commands
 
 \`\`\`
-botforge daemon                 # Start the bot daemon
-botforge status                 # Show bot session status
-botforge auth <botId>           # Authenticate a bot
-botforge setup                  # Setup systemd service
-botforge guide                  # Show this guide
+botdeck daemon                 # Start the bot daemon
+botdeck status                 # Show bot session status
+botdeck auth <botId>           # Authenticate a bot
+botdeck setup                  # Setup systemd service
+botdeck guide                  # Show this guide
 \`\`\`
 `
 

@@ -1,13 +1,13 @@
-# WWeb BotForge
+# Botdeck
 
-[![npm version](https://img.shields.io/npm/v/wweb-botforge.svg)](https://www.npmjs.com/package/wweb-botforge)
+[![npm version](https://img.shields.io/npm/v/botdeck.svg)](https://www.npmjs.com/package/botdeck)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16-brightgreen.svg)](https://nodejs.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/felixzsh/wweb-botforge/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/felixzsh/botdeck/pulls)
 
 **Create multiple WhatsApp bots without writing code** - Just configure in YAML!
 
-WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
+Botdeck lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
 
 ## What Can You Do?
 
@@ -31,7 +31,7 @@ WWeb BotForge lets you create and manage multiple WhatsApp bots by simply editin
 ### 1. Install
 
 ```bash
-npm install -g wweb-botforge
+npm install -g botdeck
 ```
 
 ### 2. Setup & Start as System Service
@@ -40,16 +40,16 @@ The daemon is configured automatically during install. Start it with:
 
 ```bash
 # Start the service
-systemctl --user start wweb-botforge
+systemctl --user start botdeck
 
 # Enable auto-start on boot
-systemctl --user enable wweb-botforge
+systemctl --user enable botdeck
 ```
 
 ### 3. Authenticate Your Bot
 
 ```bash
-botforge auth <botId>
+botdeck auth <botId>
 ```
 
 Shows a QR code to link your WhatsApp account. Once scanned, the bot is authenticated and ready.
@@ -57,8 +57,8 @@ Shows a QR code to link your WhatsApp account. Once scanned, the bot is authenti
 ### 4. Check Status
 
 ```bash
-botforge status
-journalctl --user -u wweb-botforge -f    # real-time logs
+botdeck status
+journalctl --user -u botdeck -f    # real-time logs
 ```
 
 ## Configuration Guide
@@ -76,7 +76,7 @@ default_timeout: 300               # Global default timeout for graph sessions (
 
 ### Architecture
 
-BotForge uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
+Botdeck uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
 
 - **Actions**: Reusable behaviors — text replies, request calls, cooldowns. Not tied to any specific bot.
 - **Graphs**: Conversation state machines. A graph owns a set of nodes connected by fuzzy-matched edges. Each bot references exactly one graph.
@@ -343,31 +343,31 @@ Once installed and configured, manage your bot service:
 
 ```bash
 # Check service status
-systemctl --user status wweb-botforge
+systemctl --user status botdeck
 
 # View logs in real-time
-journalctl --user -u wweb-botforge -f
+journalctl --user -u botdeck -f
 
 # Restart service
-systemctl --user restart wweb-botforge
+systemctl --user restart botdeck
 
 # Stop service
-systemctl --user stop wweb-botforge
+systemctl --user stop botdeck
 
 # Disable auto-start
-systemctl --user disable wweb-botforge
+systemctl --user disable botdeck
 ```
 
 ## Troubleshooting
 
 **Service not starting?**
 - Check if `xvfb` is installed: `which xvfb`
-- Verify config file: `cat ~/.config/wweb-botforge/config.yml`
-- Check service logs: `journalctl --user -u wweb-botforge -n 50`
+- Verify config file: `cat ~/.config/botdeck/config.yml`
+- Check service logs: `journalctl --user -u botdeck -n 50`
 
 **QR code not showing?**
 - Ensure no other WhatsApp sessions are active
-- Restart the service: `systemctl --user restart wweb-botforge`
+- Restart the service: `systemctl --user restart botdeck`
 
 **Messages not responding?**
 - Check bot status in logs
@@ -378,13 +378,3 @@ systemctl --user disable wweb-botforge
 - Test your endpoint with tools like Postman
 - Check logs for timeout/connection errors
 - Verify request URL and headers
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file.
-
----
-
-## Acknowledgments
-
-This project is built on top of the excellent [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js) library, which provides the core WhatsApp Web automation capabilities. WWeb BotForge wouldn't be possible without this foundational work.

@@ -80,7 +80,7 @@ describe('Live reload integration', () => {
   })
 
   beforeEach(async () => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-reload-'))
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-reload-'))
     mockCacheDir = tempDir
     configPath = path.join(tempDir, 'config.yml')
     sentMessages = []

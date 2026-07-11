@@ -1,7 +1,7 @@
 [Unit]
-Description=WWeb BotForge - WhatsApp Bot Service
+Description=Botdeck - WhatsApp Bot Service
 After=network.target
-Documentation=https://github.com/felixzsh/wweb-botforge
+Documentation=https://github.com/felixzsh/botdeck
 
 [Service]
 Type=simple
@@ -11,7 +11,7 @@ Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=wweb-botforge
+SyslogIdentifier=botdeck
 
 # Variables de entorno
 Environment="NODE_ENV=production"

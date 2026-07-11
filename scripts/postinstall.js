@@ -4,7 +4,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 const os = require('os');
 
-console.log('\nSetting up WWeb BotForge...\n');
+console.log('\nSetting up Botdeck...\n');
 
 function hasSystemd() {
   if (os.platform() !== 'linux') return false;
@@ -26,20 +26,20 @@ if (hasSystemd()) {
     
     console.log('Installation complete!\n');
     console.log('Quick Start:\n');
-    console.log('  1. Start service:    systemctl --user start wweb-botforge');
-    console.log('  2. Enable on boot:   systemctl --user enable wweb-botforge');
-    console.log('  3. Check status:     botforge status');
-    console.log('  4. Authenticate:     botforge auth <botId>');
-    console.log('  5. View logs:        journalctl --user -u wweb-botforge -f\n');
+    console.log('  1. Start service:    systemctl --user start botdeck');
+    console.log('  2. Enable on boot:   systemctl --user enable botdeck');
+    console.log('  3. Check status:     botdeck status');
+    console.log('  4. Authenticate:     botdeck auth <botId>');
+    console.log('  5. View logs:        journalctl --user -u botdeck -f\n');
     
   } catch (error) {
     console.error('Automatic setup failed:', error.message);
-    console.log('\nYou can set it up manually: botforge setup\n');
+    console.log('\nYou can set it up manually: botdeck setup\n');
     process.exit(0);
   }
 } else {
   console.log('Systemd not detected (macOS/Windows/Container)');
-  console.log('\nTo use WWeb BotForge:\n');
-  console.log('  1. Start daemon:     botforge daemon');
-  console.log('  2. Authenticate:     botforge auth <botId>\n');
+  console.log('\nTo use Botdeck:\n');
+  console.log('\n  1. Start daemon:     botdeck daemon');
+  console.log('  2. Authenticate:     botdeck auth <botId>\n');
 }

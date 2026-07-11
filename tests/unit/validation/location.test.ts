@@ -5,7 +5,7 @@ import * as os from 'os'
 import { validateConfig } from '../../../src/config/validation'
 
 async function setupTempConfig(configContent: string, actionFiles: Record<string, string>): Promise<{ tmpDir: string; configPath: string }> {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'botforge-loc-test-'))
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'botdeck-loc-test-'))
   const configPath = path.join(tmpDir, 'config.yml')
   await fs.writeFile(configPath, configContent, 'utf-8')
 

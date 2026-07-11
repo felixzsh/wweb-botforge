@@ -94,7 +94,7 @@ export class BotFleet {
       return
     }
 
-    this.logger.info('Stopping WWeb BotForge...')
+    this.logger.info('Stopping Botdeck...')
 
     try {
       await this.outboxService.shutdown()
@@ -103,7 +103,7 @@ export class BotFleet {
       this.bots.clear()
 
       this.isRunning = false
-      this.logger.info('WWeb BotForge stopped successfully')
+      this.logger.info('Botdeck stopped successfully')
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Error stopping Bot Fleet: ${msg}`)

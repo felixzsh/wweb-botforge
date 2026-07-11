@@ -102,7 +102,7 @@ export class ApiServer {
         endpoints.config = '/api/config'
       }
       res.json({
-        service: 'WWeb BotForge API',
+        service: 'Botdeck API',
         endpoints,
       })
     })

@@ -10,24 +10,24 @@ function uninstallService() {
 
   try {
     const homeDir = os.homedir();
-    const servicePath = path.join(homeDir, '.config', 'systemd', 'user', 'wweb-botforge.service');
-    const configDir = path.join(homeDir, '.config', 'wweb-botforge');
+    const servicePath = path.join(homeDir, '.config', 'systemd', 'user', 'botdeck.service');
+    const configDir = path.join(homeDir, '.config', 'botdeck');
 
     if (!fs.existsSync(servicePath)) return;
 
-    console.log('\nUninstalling WWeb BotForge service...\n');
+    console.log('\nUninstalling Botdeck service...\n');
 
     // Stop service first to prevent hanging
     console.log('Stopping service...');
     try {
-      execSync('systemctl --user stop wweb-botforge 2>/dev/null', { stdio: 'inherit', timeout: 10000 });
+      execSync('systemctl --user stop botdeck 2>/dev/null', { stdio: 'inherit', timeout: 10000 });
     } catch (error) {
       console.log('Service may not be running or failed to stop gracefully');
     }
 
     // Disable service
     try {
-      execSync('systemctl --user disable wweb-botforge 2>/dev/null', { stdio: 'ignore' });
+      execSync('systemctl --user disable botdeck 2>/dev/null', { stdio: 'ignore' });
     } catch {}
 
     // Eliminar archivo .service

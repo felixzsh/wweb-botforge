@@ -22,7 +22,7 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
 const program = new Command()
 
 program
-  .name('botforge')
+  .name('botdeck')
   .description('CLI tool for creating and managing WhatsApp bots')
   .version(packageJson.version)
   .option('-c, --config <path>', `Path to config file (default: ${getDefaultConfigPath()})`)
@@ -78,7 +78,7 @@ async function runDaemon(configPath?: string) {
   }
 
   const logger = getLogger()
-  logger.info('WWeb BotForge - Starting bots...')
+  logger.info('Botdeck - Starting bots...')
 
   const outboxService = new OutboxService()
   const fleet = new BotFleet(outboxService)
@@ -94,7 +94,7 @@ async function runDaemon(configPath?: string) {
     await apiServer.start()
   }
 
-  logger.info('WWeb BotForge Daemon is running')
+  logger.info('Botdeck Daemon is running')
 }
 
 program.parse()

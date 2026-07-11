@@ -23,7 +23,7 @@ describe('Message flow end-to-end', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforge-graph-int-'))
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botdeck-graph-int-'))
     mockConfigDir = tempDir
     outbox = new OutboxService()
     fleet = new BotFleet(outbox)
