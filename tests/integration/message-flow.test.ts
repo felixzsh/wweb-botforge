@@ -17,6 +17,10 @@ jest.mock('../../src/whatsapp/client', () => ({
   getWwebCacheDir: jest.fn(() => mockConfigDir),
 }))
 
+jest.mock('../../src/helpers/data', () => ({
+  getDataDir: jest.fn(() => mockConfigDir),
+}))
+
 describe('Message flow end-to-end', () => {
   let fleet: BotFleet
   let outbox: OutboxService

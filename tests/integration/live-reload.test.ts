@@ -15,6 +15,10 @@ jest.mock('../../src/whatsapp/client', () => ({
   getWwebCacheDir: jest.fn(() => mockCacheDir),
 }))
 
+jest.mock('../../src/helpers/data', () => ({
+  getDataDir: jest.fn(() => mockCacheDir),
+}))
+
 let mockCacheDir = ''
 
 function makeMessage(from: string, content: string): IncomingMessage {

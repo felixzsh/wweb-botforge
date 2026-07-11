@@ -17,6 +17,10 @@ jest.mock('../../src/whatsapp/client', () => ({
   getWwebCacheDir: jest.fn(() => mockConfigDir),
 }))
 
+jest.mock('../../src/helpers/data', () => ({
+  getDataDir: jest.fn(() => mockConfigDir),
+}))
+
 describe('Fleet lifecycle integration', () => {
   let fleet: BotFleet
   let outbox: OutboxService

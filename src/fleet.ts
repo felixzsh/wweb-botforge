@@ -1,3 +1,4 @@
+import * as fs from 'fs'
 import * as path from 'path'
 import { Bot } from './bot'
 import { ConfigFile } from './config/schema'
@@ -10,9 +11,10 @@ import { InboxService } from './messages/inbox'
 import { GraphStateService } from './graph/state'
 import { GraphExecutor } from './graph/executor'
 import { SessionManager } from './whatsapp/session'
-import { setGlobalConfig, getWwebCacheDir } from './whatsapp/client'
+import { setGlobalConfig } from './whatsapp/client'
 import { MessageChannel } from './messages/contracts'
 import { getLogger } from './helpers/logger'
+import { getDataDir } from './helpers/data'
 
 export class BotFleet {
   private bots: Map<string, Bot> = new Map()
@@ -46,8 +48,10 @@ export class BotFleet {
       this.actionCatalog = mapActionCatalog(configFile.actions || {})
       this.graphCatalog = mapGraphCatalog(configFile.graphs || {})
 
-      const graphStateDbPath = path.join(getWwebCacheDir(), 'graphs.db')
-      this.graphStateService = new GraphStateService(graphStateDbPath)
+      const dataDir = getDataDir()
+      fs.mkdirSync(dataDir, { recursive: true })
+      const dbPath = path.join(dataDir, 'botdeck.db')
+      this.graphStateService = new GraphStateService(dbPath)
 
       const graphStateTimeout = configFile.default_timeout ?? 300
       this.graphExecutor = new GraphExecutor(
