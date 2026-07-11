@@ -15,6 +15,8 @@ import { runGuide } from './commands/guide'
 import { runValidate } from './commands/validate'
 import { runAuth } from './commands/auth'
 import { runStatus } from './commands/status'
+import { runLock } from './commands/lock'
+import { runUnlock } from './commands/unlock'
 
 const packageJsonPath = path.join(__dirname, '..', 'package.json')
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
@@ -62,6 +64,22 @@ program
   })
 
 program
+  .command('lock')
+  .description('Enable API auth protection and generate a key')
+  .option('-k, --key <value>', 'Supply your own key (32+ characters)')
+  .action(async (options) => {
+    await runLock(options.key, program.opts().config)
+  })
+
+program
+  .command('unlock')
+  .description('Disable API auth protection')
+  .option('-k, --key <value>', 'Current auth key (will prompt if omitted)')
+  .action(async (options) => {
+    await runUnlock(options.key, program.opts().config)
+  })
+
+program
   .command('status')
   .description('Show all bots and their session status')
   .action(async () => {
@@ -88,9 +106,16 @@ async function runDaemon(configPath?: string) {
 
   const bots = await fleet.start(configFile)
 
+  const address = configFile?.address || '127.0.0.1'
+  const authService = fleet.getAuthService()
+
+  if (address !== '127.0.0.1' && !authService.isLocked()) {
+    logger.warn('API is exposed on a non-local address. Run `botdeck lock` to enable auth protection.')
+  }
+
   if (configFile?.port) {
     const apiPort = configFile.port
-    const apiServer = new ApiServer(outboxService, bots, apiPort, fleet, configWatcher, configFile.key, configFile.address)
+    const apiServer = new ApiServer(outboxService, bots, authService, apiPort, fleet, configWatcher, address)
     await apiServer.start()
   }
 

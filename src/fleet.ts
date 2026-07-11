@@ -11,6 +11,7 @@ import { InboxService } from './messages/inbox'
 import { GraphStateService } from './graph/state'
 import { GraphExecutor } from './graph/executor'
 import { SessionManager } from './whatsapp/session'
+import { AuthService } from './auth/service'
 import { setGlobalConfig } from './whatsapp/client'
 import { MessageChannel } from './messages/contracts'
 import { getLogger } from './helpers/logger'
@@ -26,6 +27,7 @@ export class BotFleet {
   private graphCatalog: GraphCatalog = new Map()
   private graphStateService?: GraphStateService
   private graphExecutor?: GraphExecutor
+  private authService?: AuthService
   private isRunning: boolean = false
 
   constructor(outboxService: OutboxService) {
@@ -52,6 +54,7 @@ export class BotFleet {
       fs.mkdirSync(dataDir, { recursive: true })
       const dbPath = path.join(dataDir, 'botdeck.db')
       this.graphStateService = new GraphStateService(dbPath)
+      this.authService = new AuthService(dbPath)
 
       const graphStateTimeout = configFile.default_timeout ?? 300
       this.graphExecutor = new GraphExecutor(
@@ -104,6 +107,7 @@ export class BotFleet {
       await this.outboxService.shutdown()
       await this.sessionManager.removeAllChannels()
       this.graphStateService?.close()
+      this.authService?.close()
       this.bots.clear()
 
       this.isRunning = false
@@ -260,5 +264,12 @@ export class BotFleet {
 
   getGraphExecutor(): GraphExecutor | undefined {
     return this.graphExecutor
+  }
+
+  getAuthService(): AuthService {
+    if (!this.authService) {
+      throw new Error('AuthService not initialized. Call start() first.')
+    }
+    return this.authService
   }
 }

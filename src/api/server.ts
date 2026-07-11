@@ -3,19 +3,21 @@ import { OutboxService } from '../messages/outbox'
 import { Bot } from '../bot'
 import { BotFleet } from '../fleet'
 import { ConfigWatcher } from '../config/watcher'
+import { AuthService } from '../auth/service'
 import { createHealthRouter } from './routes/health'
 import { createBotsRouter } from './routes/bots'
 import { createMessagesRouter } from './routes/messages'
 import { createSessionsRouter } from './routes/sessions'
 import { createStatusRouter } from './routes/status'
 import { createConfigRouter } from './routes/config'
+import { createAuthRouter, findSessionToken } from './routes/auth'
 import { getLogger } from '../helpers/logger'
 
 export class ApiServer {
   private app: express.Application
   private port: number
   private address: string
-  private apiKey?: string
+  private authService: AuthService
   private outboxService: OutboxService
   private bots: Map<string, Bot>
   private fleet?: BotFleet
@@ -25,16 +27,16 @@ export class ApiServer {
   constructor(
     outboxService: OutboxService,
     bots: Map<string, Bot>,
+    authService: AuthService,
     port: number = 3000,
     fleet?: BotFleet,
     configWatcher?: ConfigWatcher,
-    apiKey?: string,
     address: string = '127.0.0.1'
   ) {
     this.app = express()
     this.port = port
     this.address = address
-    this.apiKey = apiKey
+    this.authService = authService
     this.outboxService = outboxService
     this.bots = bots
     this.fleet = fleet
@@ -66,24 +68,28 @@ export class ApiServer {
   }
 
   private setupAuth(): void {
-    if (!this.apiKey) return
-
     this.app.use('/api', (req, res, next) => {
       if (req.path === '/health') return next()
 
+      if (!this.authService.isLocked()) return next()
+
+      const sessionToken = findSessionToken(this.authService, req.headers.cookie)
+      if (sessionToken) return next()
+
       const auth = req.headers.authorization
-      if (auth !== `Bearer ${this.apiKey}`) {
-        res.status(401).json({ error: 'Unauthorized — provide Authorization: Bearer <key>' })
-        return
+      if (auth && auth.startsWith('Bearer ')) {
+        const key = auth.slice(7)
+        if (this.authService.verifyKey(key)) return next()
       }
 
-      next()
+      res.status(401).json({ error: 'Unauthorized' })
     })
   }
 
   private setupRoutes(): void {
     const api = Router()
     api.use('/health', createHealthRouter())
+    api.use('/auth', createAuthRouter(this.authService))
     api.use('/bots', createBotsRouter(this.bots))
     api.use('/messages', createMessagesRouter(this.outboxService, this.bots))
     api.use('/sessions', createSessionsRouter())
@@ -96,6 +102,7 @@ export class ApiServer {
     this.app.get('/', (req, res) => {
       const endpoints: any = {
         health: '/api/health',
+        auth: '/api/auth',
         messages: '/api/messages',
         bots: '/api/bots',
         sessions: '/api/sessions',

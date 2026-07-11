@@ -78,7 +78,7 @@ export interface ConfigFile {
   chromium_path?: string
   log_level?: 'info' | 'debug' | 'warn' | 'error'
   port?: number
-  key?: string
+  trusted_issuers?: string[]
   address?: string
   default_timeout?: number
   actions?: Record<string, ActionConfig>

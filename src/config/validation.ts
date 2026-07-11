@@ -122,9 +122,9 @@ function validateConfigFile(config: Record<string, unknown>, ctx: FileContext): 
     }
   }
 
-  if (config.key !== undefined) {
-    if (typeof config.key !== 'string' || config.key.length === 0) {
-      ctx.add('key must be a non-empty string', 'key')
+  if (config.trusted_issuers !== undefined) {
+    if (!Array.isArray(config.trusted_issuers) || !config.trusted_issuers.every(i => typeof i === 'string')) {
+      ctx.add('trusted_issuers must be an array of strings', 'trusted_issuers')
     }
   }
 
