@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/botforje.svg)](https://www.npmjs.com/package/botforje)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D16-brightgreen.svg)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.13-brightgreen.svg)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/felixzsh/botforje/pulls)
 
 **Create multiple WhatsApp bots without writing code** - Just configure in YAML!
