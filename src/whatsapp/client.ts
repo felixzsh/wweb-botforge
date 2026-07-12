@@ -76,11 +76,17 @@ export class WhatsAppChannel implements MessageChannel {
   private authRequiredHandlers: AuthRequiredHandler[] = []
   private isConnected: boolean = false
   private phoneNumber?: string
+  private dedupCache = new Set<string>()
+  private dedupInterval?: ReturnType<typeof setInterval>
 
   constructor(clientId: string) {
     this.channelId = clientId
     this.client = new Client(getClientOptions(clientId))
     this.setupEventListeners()
+
+    this.dedupInterval = setInterval(() => {
+      this.dedupCache.clear()
+    }, 30_000)
   }
 
   private get logger() {
@@ -97,6 +103,13 @@ export class WhatsAppChannel implements MessageChannel {
     })
 
     this.client.on('message', async msg => {
+      const rawId = msg.id._serialized
+      if (this.dedupCache.has(rawId)) {
+        this.logger.debug(`Skipping duplicate message ${rawId}`)
+        return
+      }
+      this.dedupCache.add(rawId)
+
       const domainMessage = toDomainMessage(msg)
 
       if (msg.from.includes('@lid')) {
@@ -175,6 +188,9 @@ export class WhatsAppChannel implements MessageChannel {
   }
 
   async disconnect(): Promise<void> {
+    if (this.dedupInterval) {
+      clearInterval(this.dedupInterval)
+    }
     if (this.client) {
       await this.client.destroy()
       this.isConnected = false
