@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import { execSync } from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
 import { BotFleet } from './fleet'
@@ -28,14 +27,6 @@ program
   .description('CLI tool for creating and managing WhatsApp bots')
   .version(packageJson.version)
   .option('-c, --config <path>', `Path to config file (default: ${getDefaultConfigPath()})`)
-
-program
-  .command('setup')
-  .description('Setup/repair systemd service')
-  .action(() => {
-    const setupScript = path.join(__dirname, '..', 'scripts', 'setup-systemd.js')
-    execSync(`node ${setupScript}`, { stdio: 'inherit' })
-  })
 
 program
   .command('guide')

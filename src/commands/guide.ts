@@ -552,7 +552,6 @@ curl http://localhost:3000/api/config/status
 botforje daemon                 # Start the bot daemon
 botforje status                 # Show bot session status
 botforje auth <botId>           # Authenticate a bot
-botforje setup                  # Setup systemd service
 botforje guide                  # Show this guide
 \`\`\`
 `
