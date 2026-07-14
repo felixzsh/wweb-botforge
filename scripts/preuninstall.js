@@ -8,41 +8,44 @@ const os = require('os');
 function uninstallService() {
   if (os.platform() !== 'linux') return;
 
+  const isRoot = process.getuid && process.getuid() === 0;
+  const homeDir = os.homedir();
+
+  const userServicePath = path.join(homeDir, '.config', 'systemd', 'user', 'botforje.service');
+  const userConfigDir = path.join(homeDir, '.config', 'botforje');
+  const systemServicePath = '/etc/systemd/system/botforje.service';
+  const systemConfigDir = '/etc/botforje';
+
+  const isUserService = fs.existsSync(userServicePath);
+  const isSystemService = fs.existsSync(systemServicePath);
+
+  if (!isUserService && !isSystemService) return;
+
+  const scopeFlag = isUserService ? '--user ' : '';
+  const scope = isUserService ? 'user' : 'system';
+  const servicePath = isUserService ? userServicePath : systemServicePath;
+  const configDir = isUserService ? userConfigDir : systemConfigDir;
+
+  console.log('\nUninstalling Botforje service...\n');
+
   try {
-    const homeDir = os.homedir();
-    const servicePath = path.join(homeDir, '.config', 'systemd', 'user', 'botforje.service');
-    const configDir = path.join(homeDir, '.config', 'botforje');
-
-    if (!fs.existsSync(servicePath)) return;
-
-    console.log('\nUninstalling Botforje service...\n');
-
-    // Stop service first to prevent hanging
-    console.log('Stopping service...');
-    try {
-      execSync('systemctl --user stop botforje 2>/dev/null', { stdio: 'inherit', timeout: 10000 });
-    } catch (error) {
-      console.log('Service may not be running or failed to stop gracefully');
-    }
-
-    // Disable service
-    try {
-      execSync('systemctl --user disable botforje 2>/dev/null', { stdio: 'ignore' });
-    } catch {}
-
-    // Eliminar archivo .service
-    fs.unlinkSync(servicePath);
-    console.log('Service removed');
-
-    // Recargar systemd
-    execSync('systemctl --user daemon-reload', { stdio: 'ignore' });
-    
-    console.log(`\nConfiguration kept at: ${configDir}`);
-    console.log(`   To remove: rm -rf ${configDir}\n`);
-
-  } catch (error) {
-    console.error('Cleanup warning:', error.message);
+    console.log('  Stopping service...');
+    execSync(`systemctl ${scopeFlag}stop botforje 2>/dev/null`, { stdio: 'inherit', timeout: 10000 });
+  } catch {
+    console.log('  (service was not running)');
   }
+
+  try {
+    execSync(`systemctl ${scopeFlag}disable botforje 2>/dev/null`, { stdio: 'ignore' });
+  } catch {}
+
+  fs.unlinkSync(servicePath);
+  console.log('  Service file removed');
+
+  execSync(`systemctl ${scopeFlag}daemon-reload`, { stdio: 'ignore' });
+
+  console.log(`\n  Config kept at: ${configDir}`);
+  console.log(`  To remove:      rm -rf ${configDir}\n`);
 }
 
 uninstallService();

@@ -5,21 +5,15 @@ Documentation=https://github.com/felixzsh/botforje
 
 [Service]
 Type=simple
-WorkingDirectory={{INSTALL_DIR}}
-ExecStart=xvfb-run -a {{NODE_PATH}} {{INSTALL_DIR}}/dist/cli.js daemon
+ExecStart={{NODE}} {{SCRIPT}} daemon
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=botforje
-
-# Variables de entorno
 Environment="NODE_ENV=production"
-Environment="CONFIG_DIR={{CONFIG_DIR}}"
-
-# Límites de seguridad
 LimitNOFILE=65536
 PrivateTmp=true
 
 [Install]
-WantedBy=multi-user.target
+WantedBy={{WANTED_BY}}
