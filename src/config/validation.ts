@@ -3,7 +3,7 @@ import * as fsSync from 'fs'
 import * as path from 'path'
 import * as yaml from 'js-yaml'
 import { ActionConfig, GraphConfig, BotConfig } from './schema'
-import { getDefaultConfigPath } from './yaml'
+import { getConfigPath } from './yaml'
 
 export function validateId(id: string, kind: string): void {
   if (!id || id.length < 3) {
@@ -495,7 +495,7 @@ function validateIdWithContext(id: string, kind: string, ctx: FileContext): void
 }
 
 export async function validateConfig(configPath?: string): Promise<ValidationResult> {
-  const targetPath = configPath || getDefaultConfigPath()
+  const targetPath = configPath || getConfigPath()
   const configDir = path.dirname(targetPath)
   const errors: ValidationError[] = []
 
