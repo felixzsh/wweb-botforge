@@ -11,7 +11,6 @@ RestartSec=10
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=botforje
-Environment="NODE_ENV=production"
 LimitNOFILE=65536
 PrivateTmp=true
 

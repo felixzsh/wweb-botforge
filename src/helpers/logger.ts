@@ -11,9 +11,6 @@ export interface Logger {
 }
 
 function getCallerInfo(): { file: string; line: number; func: string } | undefined {
-  const isDevelopment = process.env.NODE_ENV !== 'production'
-  if (!isDevelopment) return undefined
-
   const originalPrepareStackTrace = Error.prepareStackTrace
   try {
     const err = new Error()
@@ -43,11 +40,11 @@ function getCallerInfo(): { file: string; line: number; func: string } | undefin
 }
 
 export function createLogger(logLevel: LogLevel = 'info'): Logger {
-  const isDevelopment = process.env.NODE_ENV !== 'production'
+  const usePretty = process.stdout.isTTY
 
   const logger = pino({
     level: logLevel,
-    transport: isDevelopment
+    transport: usePretty
       ? {
           target: 'pino-pretty',
           options: {
