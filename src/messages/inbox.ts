@@ -30,6 +30,7 @@ export class InboxService {
 
   private async handleIncomingMessage(bot: Bot, message: IncomingMessage): Promise<void> {
     this.logger.info(`Message received for bot "${bot.id}": ${message.content.substring(0, 50)}...`)
+    this.logger.debug(`Message details: from="${message.from}" senderName="${message.senderName}" content="${message.content}" type="${message.metadata?.type}"`)
 
     try {
       if (message.metadata?.fromMe) {
@@ -37,7 +38,7 @@ export class InboxService {
       }
 
       if (this.isSenderNotAllowed(bot, message.from)) {
-        this.logger.debug(`Ignoring message from "${message.from}" for bot "${bot.id}" (sender not in allowed list)`)
+        this.logger.debug(`Ignoring message from "${message.from}" (senderName="${message.senderName}") for bot "${bot.id}" (sender not in allowed list)`)
         return
       }
 

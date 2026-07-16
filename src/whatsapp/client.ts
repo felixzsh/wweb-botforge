@@ -104,6 +104,7 @@ export class WhatsAppChannel implements MessageChannel {
 
     this.client.on('message', async msg => {
       const rawId = msg.id._serialized
+      this.logger.debug(`Raw message: id=${rawId} from="${msg.from}" to="${msg.to}" type="${msg.type}" body="${msg.body}" hasMedia=${msg.hasMedia} fromMe=${msg.fromMe}`)
       if (this.dedupCache.has(rawId)) {
         this.logger.debug(`Skipping duplicate message ${rawId}`)
         return
