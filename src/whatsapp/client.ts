@@ -4,7 +4,7 @@ import * as os from 'os'
 import { IncomingMessage, OutgoingMessage, MessageChannel, AuthRequiredInfo } from '../messages/contracts'
 import { Bot } from '../bot'
 import { ConfigFile } from '../config/schema'
-import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber, normalizePhoneNumber } from './whatsapp'
+import { toDomainMessage, toWhatsAppFormat, WhatsAppConnectionState, widToPhoneNumber, normalizePhoneNumber, generateMessageId } from './whatsapp'
 import { getLogger } from '../helpers/logger'
 
 export function getWwebCacheDir(): string {
@@ -211,7 +211,7 @@ export class WhatsAppChannel implements MessageChannel {
       const locationInstance = new Location(latitude, longitude, { name, address, url, description } as any)
       const { type: _t, latitude: _la, longitude: _lo, name: _n, address: _a, url: _u, description: _d, ...rest } = whatsappMsg.options as Record<string, any>
       const result = await this.client.sendMessage(whatsappMsg.to, locationInstance, rest)
-      return result.id._serialized
+      return result?.id?._serialized ?? generateMessageId()
     }
 
     const result = await this.client.sendMessage(
@@ -220,7 +220,7 @@ export class WhatsAppChannel implements MessageChannel {
       whatsappMsg.options
     )
 
-    return result.id._serialized
+    return result?.id?._serialized ?? generateMessageId()
   }
 
   onMessage(handler: MessageHandler): void {
