@@ -195,6 +195,68 @@ return {
 
 ---
 
+## Phase 3.2 — Request response capture (data flow between steps)
+
+### Motivation
+
+Today `request` steps are fire-and-forget: the HTTP response body, status, and headers are discarded. If you need a single field from an API response in the next `message` step, you would need a `script` step making its own HTTP call — duplicating request logic.
+
+### Design
+
+The `request` step always captures the HTTP response and makes it available as transient data for subsequent steps in the same action pipeline:
+
+```yaml
+actions:
+  create_ticket:
+    steps:
+      - request:
+          name: ticket
+          url: "https://api.example.com/tickets"
+          method: POST
+          headers:
+            Authorization: "Bearer token"
+      - message:
+          body: "Ticket {{response.id}} created — status: {{response.status}}"
+```
+
+**Rules:**
+- The response body (parsed as JSON) is accessible via `{{response.*}}` in `resolveVars`.
+- Response `status` (number) is always available as `{{response.status}}`.
+- The response is **transient** — it lives only for the duration of the action pipeline and is never persisted to the graph state.
+- If an action has multiple `request` steps, each overwrites `response` (only the last request's response is available).
+- If the request fails (all retries exhausted), `response` is not set; subsequent steps simply see no response vars.
+- Non-JSON responses store the raw body as a string in `{{response.body}}`.
+
+### Script step integration (Phase 3.1)
+
+When a `script` step follows a `request`, it receives the response in its input context so it can process it without making its own HTTP call:
+
+```yaml
+actions:
+  add_song:
+    steps:
+      - request:
+          name: search-song
+          url: "https://api.spotify.com/search?q={{message}}"
+      - script:
+          file: scripts/process_song.lua
+          exports:
+            song_id: string
+      - message:
+          body: "Added song: {{song_id}}"
+```
+
+The script receives `{ state, request: { status, body, headers } }`.
+
+### Implementation
+
+- `sendRequest()` changes return type from `Promise<void>` to `Promise<{ status: number; body: unknown; headers: Record<string, string> } | null>` (null on failure after retries).
+- `runStep()` stores the result in a transient `response` field on the execution context.
+- `resolveVars()` gains resolution for `{{response.*}}` patterns.
+- No schema changes needed — the YAML config stays identical.
+
+---
+
 ## Phase 4 — Web UI (v2: full configuration)
 
 - Reach full parity with everything configurable today via YAML (bots, graphs, nodes, edges, actions, state, webhooks), but editable 100% visually from the Web UI.
@@ -429,6 +491,68 @@ return {
     songs_added = #songs
 }
 ```
+
+---
+
+## Phase 3.2 — Request response capture (data flow between steps)
+
+### Motivation
+
+Today `request` steps are fire-and-forget: the HTTP response body, status, and headers are discarded. If you need a single field from an API response in the next `message` step, you would need a `script` step making its own HTTP call — duplicating request logic.
+
+### Design
+
+The `request` step always captures the HTTP response and makes it available as transient data for subsequent steps in the same action pipeline:
+
+```yaml
+actions:
+  create_ticket:
+    steps:
+      - request:
+          name: ticket
+          url: "https://api.example.com/tickets"
+          method: POST
+          headers:
+            Authorization: "Bearer token"
+      - message:
+          body: "Ticket {{response.id}} created — status: {{response.status}}"
+```
+
+**Rules:**
+- The response body (parsed as JSON) is accessible via `{{response.*}}` in `resolveVars`.
+- Response `status` (number) is always available as `{{response.status}}`.
+- The response is **transient** — it lives only for the duration of the action pipeline and is never persisted to the graph state.
+- If an action has multiple `request` steps, each overwrites `response` (only the last request's response is available).
+- If the request fails (all retries exhausted), `response` is not set; subsequent steps simply see no response vars.
+- Non-JSON responses store the raw body as a string in `{{response.body}}`.
+
+### Script step integration (Phase 3.1)
+
+When a `script` step follows a `request`, it receives the response in its input context so it can process it without making its own HTTP call:
+
+```yaml
+actions:
+  add_song:
+    steps:
+      - request:
+          name: search-song
+          url: "https://api.spotify.com/search?q={{message}}"
+      - script:
+          file: scripts/process_song.lua
+          exports:
+            song_id: string
+      - message:
+          body: "Added song: {{song_id}}"
+```
+
+The script receives `{ state, request: { status, body, headers } }`.
+
+### Implementation
+
+- `sendRequest()` changes return type from `Promise<void>` to `Promise<{ status: number; body: unknown; headers: Record<string, string> } | null>` (null on failure after retries).
+- `runStep()` stores the result in a transient `response` field on the execution context.
+- `resolveVars()` gains resolution for `{{response.*}}` patterns.
+- No schema changes needed — the YAML config stays identical.
 
 ---
 
