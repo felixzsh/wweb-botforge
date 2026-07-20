@@ -10,8 +10,8 @@ let configPath: string
 
 export function getDefaultConfigPath(): string {
   const home = process.env.HOME || os.homedir()
-  const userConfig = path.join(home, '.config', 'botforje', 'config.yml')
-  const systemConfig = '/etc/botforje/config.yml'
+  const userConfig = path.join(home, '.config', 'botforje-js', 'config.yml')
+  const systemConfig = '/etc/botforje-js/config.yml'
 
   if (fsSync.existsSync(userConfig)) return userConfig
   if (fsSync.existsSync(systemConfig)) return systemConfig

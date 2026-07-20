@@ -1,5 +1,5 @@
 {
-  "name": "botforje",
+  "name": "botforje-js",
   "version": "0.0.2",
   "description": "Create powerful WhatsApp bots with YAML configuration",
   "scripts": {
@@ -70,7 +70,7 @@
   },
   "dependencies": {
     "@types/express": "^5.0.3",
-    "botforje": "link:",
+    "botforje-js": "link:",
     "commander": "^12.1.0",
     "express": "^5.1.0",
     "fuse.js": "^7.4.2",
@@ -84,7 +84,7 @@
     "node": ">=22.13.0"
   },
   "bin": {
-    "botforje": "dist/cli.js"
+    "botforje-js": "dist/cli.js"
   },
   "files": [
     "dist",

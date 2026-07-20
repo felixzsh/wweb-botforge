@@ -27,7 +27,7 @@ describe('Fleet lifecycle integration', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-fleet-int-'))
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-js-fleet-int-'))
     mockConfigDir = tempDir
     outbox = new OutboxService()
     fleet = new BotFleet(outbox)

@@ -52,7 +52,7 @@ export class BotFleet {
 
       const dataDir = getDataDir()
       fs.mkdirSync(dataDir, { recursive: true })
-      const dbPath = path.join(dataDir, 'botforje.db')
+      const dbPath = path.join(dataDir, 'botforje-js.db')
       this.graphStateService = new GraphStateService(dbPath)
       this.authService = new AuthService(dbPath)
 
@@ -101,7 +101,7 @@ export class BotFleet {
       return
     }
 
-    this.logger.info('Stopping Botforje...')
+    this.logger.info('Stopping Botforje-js...')
 
     try {
       await this.outboxService.shutdown()
@@ -111,7 +111,7 @@ export class BotFleet {
       this.bots.clear()
 
       this.isRunning = false
-      this.logger.info('Botforje stopped successfully')
+      this.logger.info('Botforje-js stopped successfully')
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
       this.logger.error(`Error stopping Bot Fleet: ${msg}`)

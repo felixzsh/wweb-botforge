@@ -112,7 +112,7 @@ export class ApiServer {
         endpoints.config = '/api/config'
       }
       res.json({
-        service: 'Botforje API',
+        service: 'Botforje-js API',
         endpoints,
       })
     })

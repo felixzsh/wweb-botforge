@@ -1,13 +1,13 @@
-# Botforje
+# Botforje-js
 
-[![npm version](https://img.shields.io/npm/v/botforje.svg)](https://www.npmjs.com/package/botforje)
+[![npm version](https://img.shields.io/npm/v/botforje-js.svg)](https://www.npmjs.com/package/botforje-js)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.13-brightgreen.svg)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/felixzsh/botforje/pulls)
 
 **Create multiple WhatsApp bots without writing code** - Just configure in YAML!
 
-Botforje lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
+Botforje-js lets you create and manage multiple WhatsApp bots by simply editing a configuration file. No programming required! Built on top of [WhatsApp Web JS](https://github.com/pedroslopez/whatsapp-web.js).
 
 ## What Can You Do?
 
@@ -31,7 +31,7 @@ Botforje lets you create and manage multiple WhatsApp bots by simply editing a c
 ### 1. Install
 
 ```bash
-npm install -g botforje
+npm install -g botforje-js
 ```
 
 ### 2. Setup & Start as System Service
@@ -40,16 +40,16 @@ The daemon is configured automatically during install. Start it with:
 
 ```bash
 # Start the service
-systemctl --user start botforje
+systemctl --user start botforje-js
 
 # Enable auto-start on boot
-systemctl --user enable botforje
+systemctl --user enable botforje-js
 ```
 
 ### 3. Authenticate Your Bot
 
 ```bash
-botforje auth <botId>
+botforje-js auth <botId>
 ```
 
 Shows a QR code to link your WhatsApp account. Once scanned, the bot is authenticated and ready.
@@ -57,8 +57,8 @@ Shows a QR code to link your WhatsApp account. Once scanned, the bot is authenti
 ### 4. Check Status
 
 ```bash
-botforje status
-journalctl --user -u botforje -f    # real-time logs
+botforje-js status
+journalctl --user -u botforje-js -f    # real-time logs
 ```
 
 ## Configuration Guide
@@ -77,7 +77,7 @@ default_timeout: 300               # Global default timeout for graph sessions (
 
 ### Architecture
 
-Botforje uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
+Botforje-js uses three catalogs — **Actions**, **Graphs**, and **Bots** — all defined in a single YAML map:
 
 - **Actions**: Reusable behaviors — text replies, request calls, cooldowns. Not tied to any specific bot.
 - **Graphs**: Conversation state machines. A graph owns a set of nodes connected by fuzzy-matched edges. Each bot references exactly one graph.
@@ -344,31 +344,31 @@ Once installed and configured, manage your bot service:
 
 ```bash
 # Check service status
-systemctl --user status botforje
+systemctl --user status botforje-js
 
 # View logs in real-time
-journalctl --user -u botforje -f
+journalctl --user -u botforje-js -f
 
 # Restart service
-systemctl --user restart botforje
+systemctl --user restart botforje-js
 
 # Stop service
-systemctl --user stop botforje
+systemctl --user stop botforje-js
 
 # Disable auto-start
-systemctl --user disable botforje
+systemctl --user disable botforje-js
 ```
 
 ## Troubleshooting
 
 **Service not starting?**
 - Check if `xvfb` is installed: `which xvfb`
-- Verify config file: `cat ~/.config/botforje/config.yml`
-- Check service logs: `journalctl --user -u botforje -n 50`
+- Verify config file: `cat ~/.config/botforje-js/config.yml`
+- Check service logs: `journalctl --user -u botforje-js -n 50`
 
 **QR code not showing?**
 - Ensure no other WhatsApp sessions are active
-- Restart the service: `systemctl --user restart botforje`
+- Restart the service: `systemctl --user restart botforje-js`
 
 **Messages not responding?**
 - Check bot status in logs

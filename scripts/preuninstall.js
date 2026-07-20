@@ -11,10 +11,10 @@ function uninstallService() {
   const isRoot = process.getuid && process.getuid() === 0;
   const homeDir = os.homedir();
 
-  const userServicePath = path.join(homeDir, '.config', 'systemd', 'user', 'botforje.service');
-  const userConfigDir = path.join(homeDir, '.config', 'botforje');
-  const systemServicePath = '/etc/systemd/system/botforje.service';
-  const systemConfigDir = '/etc/botforje';
+  const userServicePath = path.join(homeDir, '.config', 'systemd', 'user', 'botforje-js.service');
+  const userConfigDir = path.join(homeDir, '.config', 'botforje-js');
+  const systemServicePath = '/etc/systemd/system/botforje-js.service';
+  const systemConfigDir = '/etc/botforje-js';
 
   const isUserService = fs.existsSync(userServicePath);
   const isSystemService = fs.existsSync(systemServicePath);
@@ -26,17 +26,17 @@ function uninstallService() {
   const servicePath = isUserService ? userServicePath : systemServicePath;
   const configDir = isUserService ? userConfigDir : systemConfigDir;
 
-  console.log('\nUninstalling Botforje service...\n');
+  console.log('\nUninstalling Botforje-js service...\n');
 
   try {
     console.log('  Stopping service...');
-    execSync(`systemctl ${scopeFlag}stop botforje 2>/dev/null`, { stdio: 'inherit', timeout: 10000 });
+    execSync(`systemctl ${scopeFlag}stop botforje-js 2>/dev/null`, { stdio: 'inherit', timeout: 10000 });
   } catch {
     console.log('  (service was not running)');
   }
 
   try {
-    execSync(`systemctl ${scopeFlag}disable botforje 2>/dev/null`, { stdio: 'ignore' });
+    execSync(`systemctl ${scopeFlag}disable botforje-js 2>/dev/null`, { stdio: 'ignore' });
   } catch {}
 
   fs.unlinkSync(servicePath);

@@ -27,7 +27,7 @@ describe('Message flow end-to-end', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-graph-int-'))
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'botforje-js-graph-int-'))
     mockConfigDir = tempDir
     outbox = new OutboxService()
     fleet = new BotFleet(outbox)

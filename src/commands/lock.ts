@@ -11,11 +11,11 @@ export async function runLock(key?: string, configPath?: string): Promise<void> 
 
     const dataDir = getDataDir()
     fs.mkdirSync(dataDir, { recursive: true })
-    const dbPath = path.join(dataDir, 'botforje.db')
+    const dbPath = path.join(dataDir, 'botforje-js.db')
     const auth = new AuthService(dbPath)
 
     if (auth.isLocked()) {
-      console.error('Botforje is already locked. Run `botforje unlock` first to reset the key.')
+      console.error('Botforje-js is already locked. Run `botforje-js unlock` first to reset the key.')
       process.exit(1)
     }
 
@@ -27,7 +27,7 @@ export async function runLock(key?: string, configPath?: string): Promise<void> 
     const secret = auth.lock(key)
 
     console.log('\n' + '='.repeat(60))
-    console.log('BOTFORJE AUTH KEY')
+    console.log('BOTFORJE-JS AUTH KEY')
     console.log('='.repeat(60))
     console.log(`\n${secret}\n`)
     console.log('-'.repeat(60))

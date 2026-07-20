@@ -9,7 +9,7 @@ import { getLogger } from '../helpers/logger'
 
 export function getWwebCacheDir(): string {
   const cacheHome = process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache')
-  return path.join(cacheHome, 'botforje')
+  return path.join(cacheHome, 'botforje-js')
 }
 
 let globalConfig: ConfigFile | undefined

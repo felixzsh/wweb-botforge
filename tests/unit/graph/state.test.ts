@@ -8,7 +8,7 @@ describe('GraphStateService', () => {
   let service: GraphStateService
 
   beforeEach(() => {
-    dbPath = path.join(os.tmpdir(), `botforje-graph-state-test-${Date.now()}.db`)
+    dbPath = path.join(os.tmpdir(), `botforje-js-graph-state-test-${Date.now()}.db`)
     service = new GraphStateService(dbPath)
   })
 

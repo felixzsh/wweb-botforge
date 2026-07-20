@@ -13,17 +13,17 @@ Optional but recommended auth mechanism to protect the API and the future Web UI
 - It's stored in **sqlite** (not in `config.yml`), since it's an operational secret that can be regenerated, not declarative configuration.
 - Hash comparison always uses `crypto.timingSafeEqual` to avoid timing attacks.
 
-### `botforje lock` command
+### `botforje-js lock` command
 
 - No protection is active by default. If `address` ≠ `localhost`, a **warning** is emitted recommending running `lock`.
-- `botforje lock`:
+- `botforje-js lock`:
   - Generates a random `key` (32+ characters).
-  - Accepts an optional parameter: `botforje lock --key=<value>` so the user can supply their own key (e.g. automated/CI deployments). The code **only validates format and length (32+)**, it doesn't generate it itself in that case.
+  - Accepts an optional parameter: `botforje-js lock --key=<value>` so the user can supply their own key (e.g. automated/CI deployments). The code **only validates format and length (32+)**, it doesn't generate it itself in that case.
   - Hashes the key (SHA-256) and stores the hash in sqlite (overwrites if one already existed).
   - Prints the key to stdout **once only**, with a warning that it cannot be recovered afterward and must be saved somewhere safe.
   - Invalidates all active web sessions (deletes the sessions table or marks them invalid).
 
-### `botforje unlock` command
+### `botforje-js unlock` command
 
 - Requires the current `key` as confirmation (hashes the input and compares it against the stored hash).
 - If it matches: deletes the hash from sqlite, disables the auth requirement on API/Web UI, invalidates active sessions.
@@ -267,7 +267,7 @@ The script receives `{ state, request: { status, body, headers } }`.
 
 Vision: a **separate** login service, external to Botforje, that manages users/clients/plans and redirects to the correct Botforje instance (VPS) where their bots live, with the session already authenticated and scoped only to their bots.
 
-**Botforje still knows nothing about users.** It only learns to trust signed, scope-limited tokens.
+**Botforje-js still knows nothing about users.** It only learns to trust signed, scope-limited tokens.
 
 ### Proposed mechanism
 
@@ -295,7 +295,7 @@ Vision: a **separate** login service, external to Botforje, that manages users/c
 
 # Botforje — Roadmap
 
-> Rename: `wweb-botforge` → **Botforje**
+> Rename: \`wweb-botforge\` → **Botforje-js**
 > Name origin: no direct semantic connection, chosen purely for how it sounds.
 
 ---
@@ -312,17 +312,17 @@ Optional but recommended auth mechanism to protect the API and the future Web UI
 - It's stored in **sqlite** (not in `config.yml`), since it's an operational secret that can be regenerated, not declarative configuration.
 - Hash comparison always uses `crypto.timingSafeEqual` to avoid timing attacks.
 
-### `botforje lock` command
+### `botforje-js lock` command
 
 - No protection is active by default. If `address` ≠ `localhost`, a **warning** is emitted recommending running `lock`.
-- `botforje lock`:
+- `botforje-js lock`:
   - Generates a random `key` (32+ characters).
-  - Accepts an optional parameter: `botforje lock --key=<value>` so the user can supply their own key (e.g. automated/CI deployments). The code **only validates format and length (32+)**, it doesn't generate it itself in that case.
+  - Accepts an optional parameter: `botforje-js lock --key=<value>` so the user can supply their own key (e.g. automated/CI deployments). The code **only validates format and length (32+)**, it doesn't generate it itself in that case.
   - Hashes the key (SHA-256) and stores the hash in sqlite (overwrites if one already existed).
   - Prints the key to stdout **once only**, with a warning that it cannot be recovered afterward and must be saved somewhere safe.
   - Invalidates all active web sessions (deletes the sessions table or marks them invalid).
 
-### `botforje unlock` command
+### `botforje-js unlock` command
 
 - Requires the current `key` as confirmation (hashes the input and compares it against the stored hash).
 - If it matches: deletes the hash from sqlite, disables the auth requirement on API/Web UI, invalidates active sessions.
@@ -566,7 +566,7 @@ The script receives `{ state, request: { status, body, headers } }`.
 
 Vision: a **separate** login service, external to Botforje, that manages users/clients/plans and redirects to the correct Botforje instance (VPS) where their bots live, with the session already authenticated and scoped only to their bots.
 
-**Botforje still knows nothing about users.** It only learns to trust signed, scope-limited tokens.
+**Botforje-js still knows nothing about users.** It only learns to trust signed, scope-limited tokens.
 
 ### Proposed mechanism
 

@@ -36,7 +36,7 @@ async function apiGet(path: string, apiBase: string): Promise<any> {
 
     req.on('error', (err: any) => {
       if (err.code === 'ECONNREFUSED') {
-        reject(new Error('Daemon is not running. Start it with: botforje daemon'))
+        reject(new Error('Daemon is not running. Start it with: botforje-js daemon'))
       } else {
         reject(err)
       }

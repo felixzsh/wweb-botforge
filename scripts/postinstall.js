@@ -13,10 +13,10 @@ const BANNER = `
 `;
 
 console.log(BANNER);
-console.log(`  Botforje v${require('../package.json').version} installed!\n`);
+console.log(`  Botforje-js v${require('../package.json').version} installed!\n`);
 
 const scriptDir = __dirname;
-const templatePath = path.join(scriptDir, '..', 'service', 'botforje.service.template');
+const templatePath = path.join(scriptDir, '..', 'service', 'botforje-js.service.template');
 const exampleConfigPath = path.join(scriptDir, '..', 'config.example.yml');
 
 function renderServiceFile(template, vars) {
@@ -52,12 +52,12 @@ async function setupSystemd() {
 
   if (isRoot) {
     serviceDir = '/etc/systemd/system';
-    configDir = '/etc/botforje';
+    configDir = '/etc/botforje-js';
     scopeLabel = 'system';
     wantedBy = 'multi-user.target';
   } else {
     serviceDir = path.join(homeDir, '.config', 'systemd', 'user');
-    configDir = path.join(homeDir, '.config', 'botforje');
+    configDir = path.join(homeDir, '.config', 'botforje-js');
     scopeLabel = 'user';
     wantedBy = 'default.target';
   }
@@ -90,7 +90,7 @@ async function setupSystemd() {
     WANTED_BY: wantedBy,
   });
 
-  const servicePath = path.join(serviceDir, 'botforje.service');
+  const servicePath = path.join(serviceDir, 'botforje-js.service');
   fs.writeFileSync(servicePath, serviceContent);
 
   return { scope: scopeLabel, configDir, servicePath, isRoot, homeDir };
@@ -102,8 +102,8 @@ async function main() {
   if (result === 'no-systemd') {
     console.log('  (systemd not detected — run manually)\n');
     console.log('  ── Next steps ──\n');
-    console.log('    Start daemon:       botforje daemon');
-    console.log('    Authenticate:       botforje auth <botId>\n');
+    console.log('    Start daemon:       botforje-js daemon');
+    console.log('    Authenticate:       botforje-js auth <botId>\n');
     return;
   }
 
@@ -124,15 +124,15 @@ async function main() {
   if (scope === 'system') {
     console.log(`  ── Next steps ──\n`);
     console.log(`    Edit config:        ${configDir}/config.yml`);
-    console.log(`    Start service:      systemctl enable --now botforje`);
-    console.log(`    View logs:          journalctl -u botforje -f`);
-    console.log(`    Authenticate:       sudo botforje auth <botId>\n`);
+    console.log(`    Start service:      systemctl enable --now botforje-js`);
+    console.log(`    View logs:          journalctl -u botforje-js -f`);
+    console.log(`    Authenticate:       sudo botforje-js auth <botId>\n`);
   } else {
     console.log(`  ── Next steps ──\n`);
     console.log(`    Edit config:        ${configDir}/config.yml`);
-    console.log(`    Start service:      systemctl --user enable --now botforje`);
-    console.log(`    View logs:          journalctl --user -u botforje -f`);
-    console.log(`    Authenticate:       botforje auth <botId>\n`);
+    console.log(`    Start service:      systemctl --user enable --now botforje-js`);
+    console.log(`    View logs:          journalctl --user -u botforje-js -f`);
+    console.log(`    Authenticate:       botforje-js auth <botId>\n`);
   }
 }
 

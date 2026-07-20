@@ -1,5 +1,5 @@
 [Unit]
-Description=Botforje - WhatsApp Bot Service
+Description=Botforje-js - WhatsApp Bot Service
 After=network.target
 Documentation=https://github.com/felixzsh/botforje
 
@@ -10,7 +10,7 @@ Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=botforje
+SyslogIdentifier=botforje-js
 LimitNOFILE=65536
 PrivateTmp=true
 

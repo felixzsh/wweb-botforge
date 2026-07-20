@@ -1,5 +1,5 @@
 export function runGuide() {
-  const guide = `# Botforje — AI Agent Configuration Guide
+  const guide = `# Botforje-js — AI Agent Configuration Guide
 
 Framework for running config-driven WhatsApp bots. All behavior is defined in YAML — no code required.
 
@@ -38,7 +38,7 @@ WhatsApp message
 Place config files in a directory structure. File names become IDs.
 
 \`\`\`
-~/.config/botforje/
+~/.config/botforje-js/
   config.yml              # global settings only
   actions/                # each file = one action, filename = action ID
     greet.yml
@@ -269,14 +269,14 @@ bots:
 
 ## Complete Modular Example
 
-\`~/.config/botforje/config.yml\`:
+\`~/.config/botforje-js/config.yml\`:
 
 \`\`\`yaml
 chromium_path: "/usr/bin/chromium"
 log_level: "info"
 \`\`\`
 
-\`~/.config/botforje/actions/greet.yml\`:
+\`~/.config/botforje-js/actions/greet.yml\`:
 
 \`\`\`yaml
 steps:
@@ -284,7 +284,7 @@ steps:
       body: "Hev {{senderName}}! How can I help you today?"
 \`\`\`
 
-\`~/.config/botforje/actions/menu.yml\`:
+\`~/.config/botforje-js/actions/menu.yml\`:
 
 \`\`\`yaml
 steps:
@@ -292,7 +292,7 @@ steps:
       body: "Main menu:\\n1. Hours\\n2. Contact\\n0. Exit"
 \`\`\`
 
-\`~/.config/botforje/actions/hours.yml\`:
+\`~/.config/botforje-js/actions/hours.yml\`:
 
 \`\`\`yaml
 steps:
@@ -300,7 +300,7 @@ steps:
       body: "Mon-Fri 9am-6pm"
 \`\`\`
 
-\`~/.config/botforje/actions/farewell.yml\`:
+\`~/.config/botforje-js/actions/farewell.yml\`:
 
 \`\`\`yaml
 steps:
@@ -308,7 +308,7 @@ steps:
       body: "Thanks, have a great day!"
 \`\`\`
 
-\`~/.config/botforje/actions/invalid.yml\`:
+\`~/.config/botforje-js/actions/invalid.yml\`:
 
 \`\`\`yaml
 steps:
@@ -316,7 +316,7 @@ steps:
       body: "Invalid option. Choose a number from the menu."
 \`\`\`
 
-\`~/.config/botforje/graphs/support.yml\`:
+\`~/.config/botforje-js/graphs/support.yml\`:
 
 \`\`\`yaml
 root: greet
@@ -354,7 +354,7 @@ nodes:
     edges: []
 \`\`\`
 
-\`~/.config/botforje/bots/support.yml\`:
+\`~/.config/botforje-js/bots/support.yml\`:
 
 \`\`\`yaml
 graph: support
@@ -388,7 +388,7 @@ If \`key\` is not set, the API is open (suitable for localhost-only or reverse-p
 Liveness probe. Always responds without authentication.
 
 \`\`\`json
-{ "status": "ok", "timestamp": "2025-01-01T00:00:00.000Z", "service": "Botforje API" }
+{ "status": "ok", "timestamp": "2025-01-01T00:00:00.000Z", "service": "Botforje-js API" }
 \`\`\`
 
 #### GET /api/status
@@ -549,10 +549,10 @@ curl http://localhost:3000/api/config/status
 ## Quick Start CLI Commands
 
 \`\`\`
-botforje daemon                 # Start the bot daemon
-botforje status                 # Show bot session status
-botforje auth <botId>           # Authenticate a bot
-botforje guide                  # Show this guide
+botforje-js daemon                 # Start the bot daemon
+botforje-js status                 # Show bot session status
+botforje-js auth <botId>           # Authenticate a bot
+botforje-js guide                  # Show this guide
 \`\`\`
 `
 

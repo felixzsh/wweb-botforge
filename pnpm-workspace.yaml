@@ -2,4 +2,4 @@ allowBuilds:
   puppeteer: true
   unrs-resolver: true
 overrides:
-  botforje: 'link:'
+  botforje-js: 'link:'

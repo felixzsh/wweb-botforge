@@ -1,8 +1,8 @@
-# Botforje — Architecture & Design
+# Botforje-js — Architecture & Design
 
 ## Overview
 
-Botforje is a config-driven WhatsApp bot framework. Bots, graphs, and
+Botforje-js is a config-driven WhatsApp bot framework. Bots, graphs, and
 actions are defined entirely in YAML — no code required to add or modify bot
 behavior. The runtime loads YAML config at startup, maps it to domain objects,
 and orchestrates WhatsApp sessions, message routing, graph execution, and
